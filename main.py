@@ -57,8 +57,6 @@ if __name__ == '__main__':
     else:
         gui = False
         # print help
-        sys.argv[1] = '-h'
-        # Parse commandline arguments
         parser = argparse.ArgumentParser()
         args = parsecommandline(parser)
         parser.print_help()

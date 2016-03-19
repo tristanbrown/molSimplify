@@ -12,19 +12,6 @@ from numpy import cross, dot
 # import local modules
 from Classes.globalvars import *
 
-########################################
-### module for running bash commands ###
-########################################
-def mybash(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)        
-        if line == '' and p.poll() != None:
-            break
-    return ''.join(stdout)
-    
 ###############################
 ### distance between points ###
 ###############################
@@ -348,7 +335,8 @@ def getcubes(molf,folder,gui,flog):
         if not glob.glob('density.cub') and not glob.glob(cubedir+resd+'-density.cub'):
             tt = mybash(com)
             os.remove('input1')
-            os.rename('density.cub',cubedir+resd+'-density.cub')
+            if glob.glob('density.cub'):
+                os.rename('density.cub',cubedir+resd+'-density.cub')
         #################################################
         inputtxt = '5\n9\n3\n2\n' # generate ELF
         f = open('input1','w')
@@ -358,7 +346,8 @@ def getcubes(molf,folder,gui,flog):
         if not glob.glob('ELF.cub') and not glob.glob(cubedir+resd+'-ELF.cub'):
                 tt = mybash(com)
                 os.remove('input1')
-                os.rename('ELF.cub',cubedir+resd+'-ELF.cub')
+                if glob.glob('ELF.cub'):
+                    os.rename('ELF.cub',cubedir+resd+'-ELF.cub')
         #################################################
         inputtxt = '5\n5\n3\n2\n' # generate spin density
         f = open('input1','w')
@@ -368,12 +357,14 @@ def getcubes(molf,folder,gui,flog):
         if not glob.glob('spindensity.cub') and not glob.glob(cubedir+resd+'-spindensity.cub'):
                 tt = mybash(com)
                 os.remove('input1')
-                os.rename('spindensity.cub',cubedir+resd+'-spindensity.cub')
+                if glob.glob('spindensity.cub'):
+                    os.rename('spindensity.cub',cubedir+resd+'-spindensity.cub')
         #################################################
         if not glob.glob(cubedir+resd+'-denalpha.cub'):
             cubespin(cubedir+resd+'-density.cub',cubedir+resd+'-spindensity.cub') # generate spin densities
-            os.rename('denalpha.cub',cubedir+resd+'-denalpha.cub')
-            os.rename('denbeta.cub',cubedir+resd+'-denbeta.cub')
+            if glob.glob('denalpha.cub'):
+                os.rename('denalpha.cub',cubedir+resd+'-denalpha.cub')
+                os.rename('denbeta.cub',cubedir+resd+'-denbeta.cub')
         #################################################
 
 #########################################

@@ -12,20 +12,16 @@ from Scripts.postparse import *
 from Scripts.postmold import *
 from Scripts.postmwfn import *
 # import std modules
-import os, sys, subprocess, time, math, shutil
+import os, sys, glob, subprocess, time, math, shutil
 
-########################################
-### module for running bash commands ###
-########################################
-def mybash(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)        
-        if line == '' and p.poll() != None:
-            break
-    return ''.join(stdout)
+######################
+### check multiwfn ###
+######################
+def checkmultiwfn(mdir):
+    if not glob.glob(mdir):
+        return False
+    else:
+        return True
 
 ####################################
 #### Main postprocessing driver ####
@@ -45,12 +41,17 @@ def postproc(rundir,args,globs):
         choice = qBoxInfo(args.gui.pWindow,'Post processing','Parsing the results will take a while..Please be patient. Start?')
     # locate output files
     pdir = args.postdir if args.postdir else globs.rundir
-    cmd = "find . -name *out"
-    logfile = pdir+'/post.log'
-    flog = open(logfile,'a')
-    flog.write('\n\n\n##### Date: '+time.strftime('%m/%d/%Y %H:%M')+'#####\n\n')
+    cmd = "find '"+pdir+"' -name *out"
     t = mybash(cmd)
     resf = t.splitlines()
+    logfile = pdir+"/post.log"
+    if not os.path.isdir(pdir):
+        print '\nSpecified directory '+pdir+' does not exist..\n\n'
+        if args.gui:
+            args.gui.mEd.setText('\nSpecified directory '+pdir+' does not exist.\n\n'+args.gui.mEd.toPlainText())
+        return
+    flog = open(logfile,'a')
+    flog.write('\n\n\n##### Date: '+time.strftime('%m/%d/%Y %H:%M')+'#####\n\n')
     # run summary report
     if args.pres:
         print '\nGetting runs summary..\n\n'
@@ -67,7 +68,7 @@ def postproc(rundir,args,globs):
             args.gui.mEd.setText('\nGetting NBO summary..\n\n'+args.gui.mEd.toPlainText())
         nbopost(resf,pdir,args.gui,flog)
     # locate molden files
-    cmd = "find . -name *molden"
+    cmd = "find "+"'"+pdir+"'"+" -name *molden"
     t = mybash(cmd)
     molf = t.splitlines()
     # parse molecular orbitals

@@ -12,28 +12,15 @@ from geometry import *
 from io import *
 from Classes.globalvars import *
 # import std modules
-import os, sys, subprocess
+import os, sys
 import pybel, openbabel
-
-########################################
-### module for running bash commands ###
-########################################
-def mybash(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)        
-        if line == '' and p.poll() != None:
-            break
-    return ''.join(stdout)
 
 ######################################################
 ### get directories for ChEMBL/emolecules database ###
 ######################################################
 def setupdb(dbselect):
     globs = globalvars()
-    dbdir = os.path.relpath(globs.cdir+'/ChemDB/')+'/'
+    dbdir = os.path.relpath(globs.chemdbdir+'/ChemDB/')+'/'
     # get files in directory
     dbfiles = os.listdir(dbdir)
     # search for db files
@@ -228,8 +215,8 @@ def dbsearch(rundir,args,globs):
     ### convert to SMILES/SMARTS if file
     if not args.dbbase:
         if args.gui:
-            qqb = qBoxError(args.gui.DBWindow,'Warning',"No database file found within "+globs.cdir+'/ChemDB. Search not possible.')
-        print "No database file found within "+globs.cdir+'/ChemDB. Search not possible.'
+            qqb = qBoxError(args.gui.DBWindow,'Warning',"No database file found within "+globs.chemdbdir+'/ChemDB. Search not possible.')
+        print "No database file found within "+globs.chemdbdir+'/ChemDB. Search not possible.'
         return True
     if args.dbsim:
         if '.smi' in args.dbsim:

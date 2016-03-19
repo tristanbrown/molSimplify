@@ -8,6 +8,7 @@
 
 # import std modules
 import os, sys, subprocess, time
+from Classes.globalvars import *
 
 ############################
 ### find between strings ###

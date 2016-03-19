@@ -37,7 +37,7 @@ def writeinputp(args,fname):
 ########## write options to input file  #############
 #####################################################
 def writeinputf(args):
-    f = open('geninput.inp','w')
+    f = open(args['-rundir']+'/geninput.inp','w')
     f.write("# Input file generated from GUI options\n")
     for key, val in args.iteritems():
         if len(val) > 0:
@@ -73,6 +73,9 @@ def grabguivars(gui):
     args['-oxstate'] = gui.doxs.currentText()
     args['-spin'] = gui.dspin.currentText()
     args['-rundir'] = gui.etrdir.text()
+    rdir = args['-rundir']
+    if rdir[1] == '/':
+         args['-rundir'] = rdir[:-1]
     args['-suff'] = gui.etsuff.text()
     ### binding molecule options ###
     if gui.chkM.getState():
@@ -163,8 +166,11 @@ def grabdbguivars(gui):
         args['-dbsbonds'] = ''
     if args['-dbmw']=='<':
         args['-dbmw'] = ''
+    rdir = gui.etrdir.text()
+    if rdir[-1]=='/':
+        rdir = rdir[:-1]
     ### write input file ###
-    writeinputc(args,'dbinput.inp')
+    writeinputc(args,rdir+'/dbinput.inp')
     return args
     
     
@@ -177,6 +183,9 @@ def grabguivarsP(gui):
     args['-postp'] = ''
     args['-postdir'] = gui.etpdir.text()
     args['-postqc'] = gui.pqcode.currentText()
+    rdir = args['-postdir']
+    if rdir[-1]=='/':
+        rdir = rdir[:-1]
     if gui.psum.getState()==1:
         args['-pres'] = ''
     if gui.pwfnav.getState()==1:
@@ -192,7 +201,7 @@ def grabguivarsP(gui):
     if gui.pnbo.getState()==1:
         args['-pnbo'] = ''
     ### write input file ###
-    writeinputp(args,'postproc.inp')
+    writeinputp(args,rdir+'/postproc.inp')
     
     
 #################################################

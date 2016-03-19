@@ -152,10 +152,12 @@ def core_load(installdir,usercore,mcores):
                     core.OBmol.make3D('mmff94',0)
             except IOError:
                 emsg = 'Failed converting file ' +usercore+' to molecule..Check your file.\n'
+                print emsg
                 return False,emsg
             core.ident = usercore.split('.')[0]
         else:
             emsg = 'Core file '+usercore+' does not exist. Exiting..\n'
+            print emsg
             return False,emsg
     ### if not, try converting from SMILES
     else:

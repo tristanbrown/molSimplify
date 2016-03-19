@@ -10,7 +10,7 @@
 import os, sys, subprocess, time, re
 # import local modules
 from Scripts.postparse import *
-
+from Classes.globalvars import *
 
 
 class AtomClass:
@@ -20,19 +20,6 @@ class AtomClass:
   xyz = ['0.0','0.0','0.0']
   # number of s,p,d primitives | number of s,p,d and total shells, primitives
   ns,np,nd,nf,nsc,npc,ndc,nfc,totc = (0,)*9
-
-########################################
-### module for running bash commands ###
-########################################
-def mybash(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)        
-        if line == '' and p.poll() != None:
-            break
-    return ''.join(stdout)
 
 ####################################
 ### get range for S,P,D orbitals ###

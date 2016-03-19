@@ -124,10 +124,16 @@ def constrgen(installdir,rundir,args,globs):
     ligs0 = []
     ligocc0 = []
     coord = False if not args.coord else int(args.coord)
+    if args.gui:
+        args.gui.iWtxt.setText('\n----------------------------------------------------------------------------------\n'+
+                                'Random generation started\nGenerating ligand combinations.\n\n'+args.gui.iWtxt.toPlainText())
+        args.gui.app.processEvents()
     if args.lig:
         for i,l in enumerate(args.lig):
             ligs0.append(l)
             ligentry,emsg = lig_load(installdir,l,licores) # check ligand
+            if emsg:
+                return False,emsg
             if args.ligocc:
                 if len(args.ligocc) < i and len(args.lig)==1:
                     args.ligocc.append(coord)

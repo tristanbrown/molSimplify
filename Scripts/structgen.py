@@ -387,7 +387,7 @@ def ffoptd(ff,mol,connected,ccatoms):
 ####### Uses force field to estimate optimum ########
 ############ backbone positioning ###################
 #################################################
-def getconnection(core,catom,toconnect):
+def getconnection(core,cm,catom,toconnect):
     ff = 'UFF'
     metals = range(21,31)+range(39,49)+range(72,81)
     ### get hydrogens
@@ -414,7 +414,7 @@ def getconnection(core,catom,toconnect):
                 am.atoms[ii].setcoords(P)
                 dd = 0 
                 for idx in range(0,toconnect):
-                    dd += distance(core.centermass(),am.atoms[idx].coords())
+                    dd += distance(cm,am.atoms[idx].coords())
                 if (am.mindistmol() > 0.0):
                     d0 = dd+0.5*(log(core.mindist(am)*am.mindistmol()))
                 if d0 > mdist:
@@ -483,6 +483,10 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     #   - emsg: error messages
     if globs.debug:
         print '\nGenerating complex with ligands and occupations:',ligs,ligoc
+    if args.gui:
+        args.gui.iWtxt.setText('\n----------------------------------------------------------------------------------\n'+
+                                      '\nGenerating complex with ligands: '+ ' '.join(ligs)+'\n'+args.gui.iWtxt.toPlainText())
+        args.gui.app.processEvents()
     # import gui options
     if args.gui:
         from Classes.qBox import qBoxWarning
@@ -1195,6 +1199,9 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
     #   - emsg: error messages
     if globs.debug:
         print '\nGenerating complex with ligands and occupations:',ligs,ligoc
+    if args.gui:
+        args.gui.iWtxt.setText('\nGenerating complex with core:'+args.core+' and ligands: '+ ' '.join(ligs)+'\n'+args.gui.iWtxt.toPlainText())
+        args.gui.app.processEvents()
     # import gui options
     if args.gui:
         from Classes.qBox import qBoxWarning
@@ -1266,22 +1273,11 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
     ccatoms = args.ccatoms if args.ccatoms else [0]
     core3D = mol3D()
     core3D.copymol3D(core)
+    cmcore = core3D.centermass()
     if args.calccharge and 'y' in args.calccharge.lower():
         if args.oxstate:
             romans={'0':'0','I':'1','II':'2','III':'3','IV':'4','V':'5','VI':'6'}
             core3D.charge = int(romans[args.oxstate])
-    # remove hydrogens if existing
-    Hlist = []
-    for catom in ccatoms:
-        hhs = core3D.getHsbyIndex(catom)
-        if len(hhs)> 0 :
-            Hlist.append(core3D.getHsbyIndex(catom)[0])
-    Hlist.sort(reverse=True) # sort list
-    for hh in Hlist:
-        core3D.deleteatom(hh)
-        for icat, catom in enumerate(ccatoms):
-            if catom > hh:
-                ccatoms[icat] -= 1
     ###############################
     #### loop over ligands and ####
     ### begin functionalization ###
@@ -1311,21 +1307,33 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     if not conflags[cidxconn]:
                         totconn = ccatoms.count(ccatoms[totlig]) # total connection points
                         alconn = ccatoms[:totlig].count(ccatoms[totlig]) # already connected
-                        cpoints = getconnection(core,ccatoms[totlig],totconn)
+                        cpoints = getconnection(core,cmcore,ccatoms[totlig],totconn)
                         conflags[cidxconn] = True
                         confcount = 0 
                     else:
                         confcount += 1
                     cpoint = cpoints[confcount]
                     mcoords = core3D.getAtom(ccatoms[totlig]).coords() # metal coordinates in backbone
+                    # connection atom save
+                    conatom3D = atom3D(core3D.getAtom(ccatoms[totlig]).sym,core3D.getAtom(ccatoms[totlig]).coords())
                 else:
                     cpoint = core3D.getAtom(ccatoms[totlig]).coords()
                     conatoms = core3D.getBondedAtoms(ccatoms[totlig])
                     # find real connection atom
-                    atclose = core3D.getClosestAtomnoHs2(ccatoms[totlig])
+                    metclose = core3D.findcloseMetal(core3D.getAtom(ccatoms[totlig]))
+                    mindist = 1000
+                    for cat in conatoms:
+                        if core3D.getAtom(cat).distance(core3D.getAtom(metclose)) < mindist:
+                            atclose = cat
+                            mindist = core3D.getAtom(cat).distance(core3D.getAtom(ccatoms[totlig]))
                     mcoords = core3D.getAtom(atclose).coords() # connection coordinates in backbone
-                    delatoms = [conat for conat in conatoms if conat!=atclose]
-                    delatoms.append(ccatoms[totlig])
+                    # connection atom save
+                    conatom3D = atom3D(core3D.getAtom(atclose).sym,core3D.getAtom(atclose).coords())
+                    delatoms = core3D.findsubMol(ccatoms[totlig],atclose) # find old ligand
+                    # find shifting if needed
+                    if len(ccatoms) > totlig+1:
+                        lshift = len([a for a in delatoms if a < ccatoms[totlig+1]])
+                        ccatoms[totlig+1] -= lshift
                     core3D.deleteatoms(delatoms)
                 # load ligand
                 lig,emsg = lig_load(installdir,ligand,licores) # load ligand
@@ -1447,11 +1455,13 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     # get distance from bonds table or vdw radii
                     if MLb and MLb[i]:
                         if 'c' in MLb[i].lower():
-                            bondl = core3D.getAtom(ccatoms[totlig]).rad + lig3D.getAtom(atom0).rad
+                            bondl = conatom3D.rad + lig3D.getAtom(atom0).rad
                         else:
                             bondl = float(MLb[i]) # check for custom
                     else:
-                        bondl = getbondlength(args,core3D.getAtom(ccatoms[totlig]).sym,core3D,lig3D,totlig,atom0,ligand,MLbonds)
+                        mm3D = mol3D()
+                        mm3D.addatom(conatom3D)
+                        bondl = getbondlength(args,conatom3D.sym,mm3D,lig3D,0,atom0,ligand,MLbonds)
                     # get correct distance for center of mass
                     u = vecdiff(cpoint,mcoords)
                     lig3D = aligntoaxis2(lig3D, cpoint, mcoords, u, bondl)
@@ -1645,6 +1655,9 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
         print 'WARNING: Generated complex is not good!\n'
         if args.gui:
             qqb = qBoxWarning(args.gui.mainWindow,'Warning','Generated complex in folder '+rootdir+' is no good!')
+    if args.gui:
+        args.gui.iWtxt.setText('In folder '+pfold+' generated '+str(Nogeom)+' structures!\n'+args.gui.iWtxt.toPlainText())
+        args.gui.app.processEvents()
     print '\nIn folder '+pfold+' generated ',Nogeom,' structures!'
     return strfiles, emsg
 
