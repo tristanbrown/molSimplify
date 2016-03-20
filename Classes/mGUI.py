@@ -35,11 +35,12 @@ class mGUI():
         csize = self.getscreensize()
         self.app = app
         # build for regular screen
-        if csize[0] > 1800:
-            self.initGUIref()
-        # build for macbook 11"
-        elif csize[0] < 1400:
+        if csize[0] < 1400:
             self.initGUIrefMAC11()
+        # build for macbook 11"
+        else:
+            self.initGUIref()
+
     ### builds the gui
     def initGUIref(self):
         '''
