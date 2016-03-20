@@ -671,7 +671,7 @@ class mGUI():
         ###########################
         # create window
         self.pWindow = mWgen(0.4,0.5,'Post-processing') # jobscript window
-        c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
+        #c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
         c3p = mPic(self.pWindow,globs.installdir+'/icons/wft3.png',0.04,0.4,0.2)
         #c2p = mPic(self.pWindow,globs.installdir+'/icons/wft2.png',0.04,0.035,0.2)
         # top text
@@ -1357,7 +1357,7 @@ class mGUI():
         ###########################
         # create window
         self.pWindow = mWgen(0.4,0.5,'Post-processing') # jobscript window
-        c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
+        #c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
         c3p = mPic(self.pWindow,globs.installdir+'/icons/wft3.png',0.04,0.4,0.2)
         #c2p = mPic(self.pWindow,globs.installdir+'/icons/wft2.png',0.04,0.035,0.2)
         # top text
