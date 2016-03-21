@@ -70,6 +70,30 @@ class mGUI():
             if len(mwfn) > 1 : 
                 f.write("MULTIWFN="+mwfn[0]+'\n')
             f.close()
+        else:
+            self.wwindow = QMainWindow() 
+            self.wwindow.resize(0.5,0.5)
+            writef = False
+            instdir = globs.installdir
+            mwfn = globs.multiwfn
+            cdbdir = globs.chemdbdir
+            if not glob.glob(globs.multiwfn[1:-1]):
+                QMessageBox.information(self.wwindow,'Setup',"It looks like the Multiwfn executable is not configured or does not exist. Please follow the next steps to configure it.")
+                QMessageBox.information(self.wwindow,'Multiwfn',"Please specify the path to the Multiwfn executable.")
+                mwfn = QFileDialog.getOpenFileName(self.wwindow,'Specify the path to the Multiwfn executable (for post-processing).')
+                writef = True
+            if not os.path.isdir(globs.chemdbdir):
+                QMessageBox.information(self.wwindow,'Setup',"It looks like the Chemical Database directory is not configured or does not exist. Please follow the next steps to configure it.")
+                QMessageBox.information(self.wwindow,'Chem DB',"Please select the directory containing chemical databases.")
+                cdbdir = QFileDialog.getExistingDirectory(self.wwindow,'Select the directory containing chemical databases.')
+                writef = True
+            if writef:
+                f = open(homedir+'/.molSimplify','w')
+                f.write("INSTALLDIR="+instdir+'\n')
+                f.write("CHEMDBDIR="+cdbdir+'\n')
+                if len(mwfn) > 0 :
+                    f.write("MULTIWFN="+mwfn[0]+'\n')
+                f.close()
         ### end set-up configuration file ###
         ### create main window
         self.mainWindow = mWindow(0.7,0.8) # main window
@@ -756,6 +780,30 @@ class mGUI():
             if len(mwfn) > 1 : 
                 f.write("MULTIWFN="+mwfn[0]+'\n')
             f.close()
+        else:
+            self.wwindow = QMainWindow() 
+            self.wwindow.resize(0.5,0.5)
+            writef = False
+            instdir = globs.installdir
+            mwfn = globs.multiwfn
+            cdbdir = globs.chemdbdir
+            if not glob.glob(globs.multiwfn[1:-1]):
+                QMessageBox.information(self.wwindow,'Setup',"It looks like the Multiwfn executable is not configured or does not exist. Please follow the next steps to configure it.")
+                QMessageBox.information(self.wwindow,'Multiwfn',"Please specify the path to the Multiwfn executable.")
+                mwfn = QFileDialog.getOpenFileName(self.wwindow,'Specify the path to the Multiwfn executable (for post-processing).')
+                writef = True
+            if not os.path.isdir(globs.chemdbdir):
+                QMessageBox.information(self.wwindow,'Setup',"It looks like the Chemical Database directory is not configured or does not exist. Please follow the next steps to configure it.")
+                QMessageBox.information(self.wwindow,'Chem DB',"Please select the directory containing chemical databases.")
+                cdbdir = QFileDialog.getExistingDirectory(self.wwindow,'Select the directory containing chemical databases.')
+                writef = True
+            if writef:
+                f = open(homedir+'/.molSimplify','w')
+                f.write("INSTALLDIR="+instdir+'\n')
+                f.write("CHEMDBDIR="+cdbdir+'\n')
+                if len(mwfn) > 0 :
+                    f.write("MULTIWFN="+mwfn[0]+'\n')
+                f.close()
         ### end set-up configuration file ###
         ### create main window
         self.mainWindow = mWindow(0.85,0.85) # main window
@@ -1587,6 +1635,7 @@ class mGUI():
             QMessageBox.warning(self.mainWindow,'Warning','No ligands are specified.')
             return False
         else:
+            args['-lig']=args['-lig'].replace(' ','')
             lls = args['-lig'].split(',')
             liglist = []
             # check if multiple ligands in .smi file
@@ -1604,7 +1653,7 @@ class mGUI():
                 if isinstance(l,unicode):
                     ll = unicodedata.normalize('NFKD',l).encode('ascii','ignore')
                 else:
-                    ll = l 
+                    ll = l
                 lig,emsg = lig_load(globs.installdir+'/',ll,licores)
                 if emsg:
                     QMessageBox.warning(self.mainWindow,'Error',emsg)

@@ -1,0 +1,7 @@
+# Input file generated from GUI options
+-postdir ./Runs
+-pcharge 
+-pwfninfo 
+-pres 
+-postp 
+-postqc TeraChem

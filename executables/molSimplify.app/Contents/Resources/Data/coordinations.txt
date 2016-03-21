@@ -1,0 +1,12 @@
+2: linear	li
+3: trigonal planar	tpl
+4: tetrahedral	thd
+4: square planar	sqp
+5: trigonal bipyramidal	tbp
+5: square pyramidal	spy
+6: octahedral	oct
+6: trigonal prismatic	tpr
+7: pentagonal bipyramidal	pbp
+
+
+

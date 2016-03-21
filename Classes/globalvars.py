@@ -72,8 +72,6 @@ class globalvars:
         # create default molSimplify for mac
         if OSX and not glob.glob(homedir+'/.'+self.PROGRAM) and not runfromcmd:
             txt = 'INSTALLDIR=/Applications/'+self.PROGRAM+'.app/Contents/Resources\n'
-            txt += 'CHEMDBDIR='+homedir+'/ChemDB\n'
-            txt += 'MULTIWFN=/Applications/'+self.PROGRAM+'.app/Contents/Resources/Multiwfn/Multiwfn_mac/Multiwfn\n'
             f = open(homedir+'/.'+self.PROGRAM,'w')
             f.write(txt)
             f.close()
@@ -92,7 +90,7 @@ class globalvars:
             if 'CHEMDBDIR' in d.keys():
                 self.chemdbdir = d['CHEMDBDIR']
             else:
-                self.chemdbdir = cdir+'/CHEMDB'
+                self.chemdbdir = '"'+cdir+'/CHEMDB'+'"'
             if 'MULTIWFN' in d.keys():
                 self.multiwfn = '"'+d['MULTIWFN']+'"'
             else:

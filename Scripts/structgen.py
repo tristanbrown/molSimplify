@@ -252,7 +252,7 @@ def getbondlength(args,metal,m3D,lig3D,matom,atom0,ligand,MLbonds):
 ###############################
 ### FORCE FIELD OPTIMIZATION ##
 ###############################
-def ffopt(ff,mol,connected,constopt):
+def ffopt(ff,mol,connected,constopt,frozenats):
     # INPUT
     #   - ff: force field to use, available MMFF94, UFF< Ghemical, GAFF
     #   - mol: mol3D to be ff optimized
@@ -299,7 +299,9 @@ def ffopt(ff,mol,connected,constopt):
                 constr.AddDistanceConstraint(midx[0]+1,catom+1,dma) # indexing babel
         ### freeze metal
         constr.AddAtomConstraint(midx[0]+1) # indexing babel
-        #constr.AddIgnore(midx[0]+1) # indexing babel
+        ### freeze small ligands
+        for cat in frozenats:
+            constr.AddAtomConstraint(cat+1) # indexing babel
         ### set up forcefield
         forcefield = openbabel.OBForceField.FindForceField(ff)
         obmol = mol.OBmol.OBMol
@@ -334,7 +336,7 @@ def ffopt(ff,mol,connected,constopt):
 ################################################
 ### FORCE FIELD OPTIMIZATION for custom cores ##
 ################################################
-def ffoptd(ff,mol,connected,ccatoms):
+def ffoptd(ff,mol,connected,ccatoms,frozenats):
     # INPUT
     #   - ff: force field to use, available MMFF94, UFF< Ghemical, GAFF
     #   - mol: mol3D to be ff optimized
@@ -365,9 +367,9 @@ def ffoptd(ff,mol,connected,ccatoms):
     ### freeze metals
     for indm in indmtls:
         constr.AddAtomConstraint(indm+1) # indexing babel
-    ### freeze connection points
-#    for cat in ccatoms:
-#        constr.AddAtomConstraint(cat+1) # indexing babel
+    ### freeze small ligands
+    for cat in frozenats:
+        constr.AddAtomConstraint(cat+1) # indexing babel
     ### set up forcefield
     forcefield = openbabel.OBForceField.FindForceField(ff)
     obmol = mol.OBmol.OBMol
@@ -506,6 +508,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     smilesligs = 0  # count how many smiles strings
     issmiles = []   # index of SMILES ligands
     connected = []  # indices in core3D of ligand atoms connected to metal
+    frozenats = []  # atoms to be frozen in optimization
     ### load bond data ###
     MLbonds = loaddata(installdir+'/Data/ML.dat')
     ### calculate occurrences, denticities etc for all ligands ###
@@ -637,7 +640,8 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     smiles = True
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
-                    lig = ffopt(args.ff,lig,lig.cat,0)
+                    if len(lig.OBmol.atoms) > 3:
+                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -881,55 +885,6 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     cml = auxm.centermass()
                     cmc = [(rc0[ij]+rc1[ij]+rc2[ij])/3 for ij in range(0,3)]
                     lig3D.translate(vecdiff(cmc,cml))
-                    '''
-                    elif (denticity == 3):
-                    # OLD tridentate (deprecated
-                    # connection atom in backbone
-                    batoms,backbatoms = getnupdateb(backbatoms,denticity)
-                    if len(batoms) < 1 :
-                        if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
-                        emsg = 'Connecting all ligands is not possible. Check your input!'
-                        break
-                    # connection atom
-                    atom0 = catoms[1]
-                    # align molecule according to connection atom and shadow atom
-                    lig3D.alignmol(lig3D.getAtom(atom0),m3D.getAtom(batoms[1]))
-                    print batoms
-                    # rotate around primary axis
-                    r1 = lig3D.getAtom(atom0).coords() # connection atomn
-                    r2 = lig3D.centermass() # center of mass
-                    rrot = r1
-                    theta,u = rotation_params(mcoords,r1,r2) 
-                    lig3Db = mol3D()
-                    lig3Db.copymol3D(lig3D)
-                    lig3D = rotate_around_axis(lig3D,rrot,u,theta)
-                    lig3Db = rotate_around_axis(lig3Db,rrot,u,theta-180)
-                    d1 = distance(lig3D.centermass(),mcoords)
-                    d2 = distance(lig3Db.getAtom(atom0).coords(),mcoords)
-                    lig3D = lig3D if (d1 < d2)  else lig3Db # pick best one
-                    # rotate around secondary axis
-                    u = vecdiff(lig3D.centermass(),mcoords)
-                    r21 = vecdiff(lig3D.getAtom(catoms[2]).coords(),mcoords)
-                    alatom = batoms[2] if totlig < 3 else batoms[0] # alignment reference atom
-                    r21n = vecdiff(m3D.getAtom(alatom).coords(),mcoords)
-                    theta = 180*np.arccos(np.dot(r21,r21n)/(la.norm(r21)*la.norm(r21n)))/np.pi
-                    lig3Db = mol3D()
-                    lig3Db.copymol3D(lig3D)
-                    lig3D = rotate_around_axis(lig3D,mcoords,u,theta)
-                    lig3Db = rotate_around_axis(lig3Db,mcoords,u,theta-180)
-                    d1 = distance(lig3D.getAtom(catoms[2]).coords(),m3D.getAtom(batoms[0]).coords())
-                    d2 = distance(lig3Db.getAtom(catoms[2]).coords(),m3D.getAtom(batoms[0]).coords())
-                    lig3D = lig3D if (d1 < d2)  else lig3Db # pick best one                    
-                    # get distance from bonds table or vdw radii
-                    if MLb and MLb[i]:
-                        bondl = float(MLb[i]) # check for custom
-                    else:
-                        bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
-                    # get correct distance for center of mass
-                    cmdist = bondl - distance(r1,mcoords)+distance(lig3D.centermass(),mcoords)
-                    lig3D = setcmdistance(lig3D, mcoords, cmdist)
-                    '''
                 elif (denticity == 4):
                     # connection atom in backbone
                     batoms,backbatoms = getnupdateb(backbatoms,denticity)
@@ -1042,17 +997,20 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 auxm = mol3D()
                 auxm.copymol3D(lig3D)
                 complex3D.append(auxm)
+                if lig3D.natoms < 4:
+                    for latdix in range(0,lig3D.natoms):
+                        frozenats.append(latdix+core3D.natoms)
                 # combine molecules
                 core3D = core3D.combine(lig3D)
                 if args.calccharge and 'y' in args.calccharge.lower():
                     core3D.charge += lig3D.charge
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffopt(args.ff,core3D,connected,1)
+                    core3D = ffopt(args.ff,core3D,connected,1,frozenats)
             totlig += denticity
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffopt(args.ff,core3D,connected,2)
+        core3D = ffopt(args.ff,core3D,connected,2,frozenats)
     ###############################
     return core3D,complex3D,emsg
 
@@ -1214,6 +1172,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
     issmiles = []   # index of SMILES ligands
     dentl = []      # denticity of ligands
     connected = []  # indices in core3D of ligand atoms connected to metal
+    frozenats = []  # list of frozen atoms for optimization
     ### load bond data ###
     MLbonds = loaddata(installdir+'/Data/ML.dat')
     ### calculate occurrences, denticities etc for all ligands ###
@@ -1345,7 +1304,8 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     smiles = True
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
-                    lig = ffopt(args.ff,lig,lig.cat,0)
+                    if len(lig.OBmol.atoms) > 3:
+                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -1466,6 +1426,10 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     u = vecdiff(cpoint,mcoords)
                     lig3D = aligntoaxis2(lig3D, cpoint, mcoords, u, bondl)
                     connected.append(core3D.natoms+atom0)
+                    # list of frozen atoms (small ligands)
+                    if lig3D.natoms < 4:
+                        for latdix in range(0,lig3D.natoms):
+                            frozenats.append(latdix+core3D.natoms)
                     # combine molecules
                     core3D = core3D.combine(lig3D)
                 else:
@@ -1475,11 +1439,11 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     core3D.charge += lig3D.charge
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffoptd(args.ff,core3D,connected,ccatoms)
+                    core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats)
             totlig += 1
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffoptd(args.ff,core3D,connected,ccatoms)
+        core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats)
     return core3D,emsg
 
 ##########################################
