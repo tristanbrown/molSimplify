@@ -77,7 +77,7 @@ class mGUI():
             instdir = globs.installdir
             mwfn = globs.multiwfn
             cdbdir = globs.chemdbdir
-            if not glob.glob(globs.multiwfn[1:-1]):
+            if not os.path.isfile(globs.multiwfn[1:-1]):
                 QMessageBox.information(self.wwindow,'Setup',"It looks like the Multiwfn executable is not configured or does not exist. Please follow the next steps to configure it.")
                 QMessageBox.information(self.wwindow,'Multiwfn',"Please specify the path to the Multiwfn executable.")
                 mwfn = QFileDialog.getOpenFileName(self.wwindow,'Specify the path to the Multiwfn executable (for post-processing).')
@@ -787,7 +787,7 @@ class mGUI():
             instdir = globs.installdir
             mwfn = globs.multiwfn
             cdbdir = globs.chemdbdir
-            if not glob.glob(globs.multiwfn[1:-1]):
+            if not os.path.isfile(globs.multiwfn[1:-1]):
                 QMessageBox.information(self.wwindow,'Setup',"It looks like the Multiwfn executable is not configured or does not exist. Please follow the next steps to configure it.")
                 QMessageBox.information(self.wwindow,'Multiwfn',"Please specify the path to the Multiwfn executable.")
                 mwfn = QFileDialog.getOpenFileName(self.wwindow,'Specify the path to the Multiwfn executable (for post-processing).')

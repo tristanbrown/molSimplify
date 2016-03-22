@@ -15,26 +15,13 @@ from Classes.mButton import *
 from Classes.mMenubar import *
 from Classes.globalvars import *
 from Classes.mol3D import mol3D
+from Scripts.generator import startgen
 from Scripts.grabguivars import *
-from Scripts.generator import *
 from Scripts.io import *
 from Scripts.addtodb import *
 import sys, os, random, shutil, unicodedata, inspect, glob, time
 #from imolecule import *
 import pybel
-
-########################################
-### module for running bash commands ###
-########################################
-def mybash(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)        
-        if line == '' and p.poll() != None:
-            break
-    return ''.join(stdout)
 
 
 class mGUI():
@@ -48,11 +35,12 @@ class mGUI():
         csize = self.getscreensize()
         self.app = app
         # build for regular screen
-        if csize[0] > 1800:
-            self.initGUIref()
-        # build for macbook 11"
-        elif csize[0] < 1400:
+        if csize[0] < 1400:
             self.initGUIrefMAC11()
+        # build for macbook 11"
+        else:
+            self.initGUIref()
+
     ### builds the gui
     def initGUIref(self):
         '''
@@ -62,6 +50,7 @@ class mGUI():
         '''
         ### check for configuration file ###
         homedir = os.path.expanduser("~")
+        globs = globalvars() # global variables
         configfile = False if not glob.glob(homedir+'/.molSimplify') else True
         if not configfile:
             self.wwindow = QMainWindow() 
@@ -81,8 +70,31 @@ class mGUI():
             if len(mwfn) > 1 : 
                 f.write("MULTIWFN="+mwfn[0]+'\n')
             f.close()
+        else:
+            self.wwindow = QMainWindow() 
+            self.wwindow.resize(0.5,0.5)
+            writef = False
+            instdir = globs.installdir
+            mwfn = globs.multiwfn
+            cdbdir = globs.chemdbdir
+            if not os.path.isfile(globs.multiwfn[1:-1]):
+                QMessageBox.information(self.wwindow,'Setup',"It looks like the Multiwfn executable is not configured or does not exist. Please follow the next steps to configure it.")
+                QMessageBox.information(self.wwindow,'Multiwfn',"Please specify the path to the Multiwfn executable.")
+                mwfn = QFileDialog.getOpenFileName(self.wwindow,'Specify the path to the Multiwfn executable (for post-processing).')
+                writef = True
+            if not os.path.isdir(globs.chemdbdir):
+                QMessageBox.information(self.wwindow,'Setup',"It looks like the Chemical Database directory is not configured or does not exist. Please follow the next steps to configure it.")
+                QMessageBox.information(self.wwindow,'Chem DB',"Please select the directory containing chemical databases.")
+                cdbdir = QFileDialog.getExistingDirectory(self.wwindow,'Select the directory containing chemical databases.')
+                writef = True
+            if writef:
+                f = open(homedir+'/.molSimplify','w')
+                f.write("INSTALLDIR="+instdir+'\n')
+                f.write("CHEMDBDIR="+cdbdir+'\n')
+                if len(mwfn) > 0 :
+                    f.write("MULTIWFN="+mwfn[0]+'\n')
+                f.close()
         ### end set-up configuration file ###
-        globs = globalvars() # global variables
         ### create main window
         self.mainWindow = mWindow(0.7,0.8) # main window
         ### build menu bar
@@ -97,8 +109,8 @@ class mGUI():
         ###############################################
         self.txtgpar = mRtext(self.mainWindow,0.4,0.175,0.2,0.05,'General parameters','',18,'r','c')
         ctip = 'Top directory for job folders'
-        self.rtrdir = mRtext(self.mainWindow,0.36,0.245,0.1,0.05,'Jobs dir:',ctip,14,'r','r')
-        self.etrdir = mEtext(self.mainWindow,0.475,0.24,0.15,0.05,'Runs',ctip,14,'r','l')
+        self.rtrdir = mRtext(self.mainWindow,0.335,0.245,0.1,0.05,'Jobs dir:',ctip,14,'r','r')
+        self.etrdir = mEtext(self.mainWindow,0.445,0.24,0.1,0.05,globs.rundir,ctip,14,'r','l')
         ctip = 'Suffix for job directories'
         self.rtsuff = mRtext(self.mainWindow,0.36,0.31,0.1,0.05,'Suffix for dir:',ctip,14,'r','r')
         self.etsuff = mEtext(self.mainWindow,0.475,0.305,0.15,0.05,'',ctip,14,'r','l')
@@ -252,6 +264,10 @@ class mGUI():
         ctip = 'Search for ligand/binding species in chemical databases'
         self.searchDB = mButton(self.mainWindow,0.065,0.84,0.1,0.065,'Search DB',ctip,12)
         self.searchDB.clicked.connect(self.searchDBW)
+        # button for browsing rundir
+        ctip = 'Browse running directory'
+        self.butpbrdir = mButton(self.mainWindow,0.55,0.2385,0.07,0.05,'Browse..',ctip,12)
+        self.butpbrdir.clicked.connect(self.dirload)
         # view ligand
         ctip = 'Generate 2D ligand representation'
         self.butDrl = mButton(self.mainWindow,0.125,0.78,0.085,0.05,'Draw ligands',ctip,12)
@@ -680,7 +696,7 @@ class mGUI():
         ###########################
         # create window
         self.pWindow = mWgen(0.4,0.5,'Post-processing') # jobscript window
-        c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
+        #c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
         c3p = mPic(self.pWindow,globs.installdir+'/icons/wft3.png',0.04,0.4,0.2)
         #c2p = mPic(self.pWindow,globs.installdir+'/icons/wft2.png',0.04,0.035,0.2)
         # top text
@@ -689,7 +705,7 @@ class mGUI():
         ctip = 'Select top jobs directory'
         self.butpd = mButton(self.pWindow,0.15,0.2,0.2,0.1,'Select directory',ctip,14)
         self.butpd.clicked.connect(self.pdload)
-        self.etpdir = mEtext(self.pWindow,0.375,0.215,0.2,0.07,'./Runs',ctip,14,'r','l')
+        self.etpdir = mEtext(self.pWindow,0.375,0.215,0.2,0.07,globs.rundir,ctip,14,'r','l')
         # select qc code
         ctip = 'Select QC code'
         qcav = ['TeraChem','GAMESS']
@@ -734,8 +750,8 @@ class mGUI():
         self.editor = mEdtext(self.EdWindow,0.05,0.05,0.75,0.9,'',12,'r','l')
         self.Ed = mButton(self.EdWindow,0.5,0.5,0.125,0.05,'Enter QC input',ctip,14)
         ### information window
-        self.iWind = mWgen(0.35,0.2,'Working..') # information window
-        self.iWtxt = mRtext(self.iWind,0.2,0.35,0.6,0.3,'Program is busy..Please wait.','',20,'r','r')
+        self.iWind = mWgen(0.5,0.4,'Log') # information window
+        self.iWtxt = mEdtext(self.iWind,0.1,0.1,0.8,0.8,'Program started..',14,'n','l')
     def initGUIrefMAC11(self):
         '''
         ######################
@@ -744,6 +760,7 @@ class mGUI():
         '''
         ### check for configuration file ###
         homedir = os.path.expanduser("~")
+        globs = globalvars() # global variables
         configfile = False if not glob.glob(homedir+'/.molSimplify') else True
         if not configfile:
             self.wwindow = QMainWindow() 
@@ -763,8 +780,31 @@ class mGUI():
             if len(mwfn) > 1 : 
                 f.write("MULTIWFN="+mwfn[0]+'\n')
             f.close()
+        else:
+            self.wwindow = QMainWindow() 
+            self.wwindow.resize(0.5,0.5)
+            writef = False
+            instdir = globs.installdir
+            mwfn = globs.multiwfn
+            cdbdir = globs.chemdbdir
+            if not os.path.isfile(globs.multiwfn[1:-1]):
+                QMessageBox.information(self.wwindow,'Setup',"It looks like the Multiwfn executable is not configured or does not exist. Please follow the next steps to configure it.")
+                QMessageBox.information(self.wwindow,'Multiwfn',"Please specify the path to the Multiwfn executable.")
+                mwfn = QFileDialog.getOpenFileName(self.wwindow,'Specify the path to the Multiwfn executable (for post-processing).')
+                writef = True
+            if not os.path.isdir(globs.chemdbdir):
+                QMessageBox.information(self.wwindow,'Setup',"It looks like the Chemical Database directory is not configured or does not exist. Please follow the next steps to configure it.")
+                QMessageBox.information(self.wwindow,'Chem DB',"Please select the directory containing chemical databases.")
+                cdbdir = QFileDialog.getExistingDirectory(self.wwindow,'Select the directory containing chemical databases.')
+                writef = True
+            if writef:
+                f = open(homedir+'/.molSimplify','w')
+                f.write("INSTALLDIR="+instdir+'\n')
+                f.write("CHEMDBDIR="+cdbdir+'\n')
+                if len(mwfn) > 0 :
+                    f.write("MULTIWFN="+mwfn[0]+'\n')
+                f.close()
         ### end set-up configuration file ###
-        globs = globalvars() # global variables
         ### create main window
         self.mainWindow = mWindow(0.85,0.85) # main window
         ### build menu bar
@@ -779,8 +819,8 @@ class mGUI():
         ###############################################
         self.txtgpar = mRtext(self.mainWindow,0.4,0.175,0.2,0.05,'General parameters','',18,'r','c')
         ctip = 'Top directory for job folders'
-        self.rtrdir = mRtext(self.mainWindow,0.36,0.245,0.1,0.05,'Jobs dir:',ctip,14,'r','r')
-        self.etrdir = mEtext(self.mainWindow,0.475,0.24,0.15,0.05,'Runs',ctip,14,'r','l')
+        self.rtrdir = mRtext(self.mainWindow,0.335,0.245,0.1,0.05,'Jobs dir:',ctip,14,'r','r')
+        self.etrdir = mEtext(self.mainWindow,0.445,0.24,0.1,0.05,globs.rundir,ctip,14,'r','l')
         ctip = 'Suffix for job directories'
         self.rtsuff = mRtext(self.mainWindow,0.36,0.31,0.1,0.05,'Suffix for dir:',ctip,14,'r','r')
         self.etsuff = mEtext(self.mainWindow,0.475,0.305,0.15,0.05,'',ctip,14,'r','l')
@@ -934,6 +974,10 @@ class mGUI():
         ctip = 'Search for ligand/binding species in chemical databases'
         self.searchDB = mButton(self.mainWindow,0.065,0.84,0.1,0.065,'Search DB',ctip,12)
         self.searchDB.clicked.connect(self.searchDBW)
+        # button for browsing rundir
+        ctip = 'Browse running directory'
+        self.butpbrdir = mButton(self.mainWindow,0.55,0.2385,0.07,0.05,'Browse..',ctip,12)
+        self.butpbrdir.clicked.connect(self.dirload)
         # view ligand
         ctip = 'Generate 2D ligand representation'
         self.butDrl = mButton(self.mainWindow,0.125,0.78,0.085,0.05,'Draw ligands',ctip,12)
@@ -1362,7 +1406,7 @@ class mGUI():
         ###########################
         # create window
         self.pWindow = mWgen(0.4,0.5,'Post-processing') # jobscript window
-        c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
+        #c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
         c3p = mPic(self.pWindow,globs.installdir+'/icons/wft3.png',0.04,0.4,0.2)
         #c2p = mPic(self.pWindow,globs.installdir+'/icons/wft2.png',0.04,0.035,0.2)
         # top text
@@ -1371,7 +1415,7 @@ class mGUI():
         ctip = 'Select top jobs directory'
         self.butpd = mButton(self.pWindow,0.15,0.2,0.2,0.1,'Select directory',ctip,14)
         self.butpd.clicked.connect(self.pdload)
-        self.etpdir = mEtext(self.pWindow,0.375,0.215,0.2,0.07,'./Runs',ctip,14,'r','l')
+        self.etpdir = mEtext(self.pWindow,0.375,0.215,0.2,0.07,globs.rundir,ctip,14,'r','l')
         # select qc code
         ctip = 'Select QC code'
         qcav = ['TeraChem','GAMESS']
@@ -1416,8 +1460,8 @@ class mGUI():
         self.editor = mEdtext(self.EdWindow,0.05,0.05,0.75,0.9,'',12,'r','l')
         self.Ed = mButton(self.EdWindow,0.5,0.5,0.125,0.05,'Enter QC input',ctip,14)
         ### information window
-        self.iWind = mWgen(0.35,0.2,'Working..') # information window
-        self.iWtxt = mRtext(self.iWind,0.2,0.35,0.6,0.3,'Program is busy..Please wait.','',20,'r','r')
+        self.iWind = mWgen(0.5,0.4,'Log') # information window
+        self.iWtxt = mEdtext(self.iWind,0.1,0.1,0.8,0.8,'Program started..',14,'n','l')
     '''
     #############################
     ### Callbacks for buttons ###
@@ -1489,7 +1533,10 @@ class mGUI():
             self.etDBsmicat.setDisabled(True)
     ### perform post-processing
     def postproc(self):
-        defaultparams = ['main.py','-i','postproc.inp']
+        rdir = self.etpdir.text()
+        if rdir[-1]=='/':
+            rdir = rdir[:-1]
+        defaultparams = ['main.py','-i',rdir+'/postproc.inp']
         grabguivarsP(self)
         self.pWindow.close()
         emsg = startgen(defaultparams,True,self)
@@ -1514,8 +1561,14 @@ class mGUI():
         tt = mRtext(dbinfw,0.5,0.5,0.1,0.1,'Searching...','',14,'r','c')
         dbinfw.show()
          ### collects all the info and passes it to molSimplify ###
+        rdir = self.etrdir.text()
+        if rdir[-1]=='/':
+            rdir = rdir[:-1]
+        # create running dir if not existing
+        if not os.path.isdir(rdir):
+            os.mkdir(rdir)
         args = grabdbguivars(self)
-        defaultparams = ['main.py','-i','dbinput.inp']
+        defaultparams = ['main.py','-i',rdir+'/dbinput.inp']
         emsg = startgen(defaultparams,True,self)
         if not emsg:
             choice = QMessageBox.information(self.DBWindow,'DONE','Search is done..')
@@ -1542,22 +1595,28 @@ class mGUI():
     ### run generation
     def runGUI(self):
         ### collects all the info and passes it to molSimplify ###
+        rdir = self.etrdir.text()
+        if rdir[-1]=='/':
+            rdir = rdir[:-1]
+        # creat running dir if not existing
+        if not os.path.isdir(rdir):
+            os.mkdir(rdir)
+        # get parameters
         args = grabguivars(self)
-        defaultparams = ['main.py','-i','geninput.inp']
+        defaultparams = ['main.py','-i',rdir+'/geninput.inp']
         self.iWind.setWindowModality(2)
         self.iWind.show()
         msgBox = QMessageBox()
         if len(args['-rgen']) > 0:
             msgBox.setText("Random generation initiated. This process might take some time.")
-        else:
-            msgBox.setText("Structure generation initiated. This process might take some time.")
+        #else:
+            #msgBox.setText("Structure generation initiated. This process might take some time.")
         msgBox.setIcon(1)
         msgBox.setInformativeText('Please be patient. OK?')
         msgBox.setWindowTitle('Running..')
         msgBox.exec_()
         # do the generation
         emsg = startgen(defaultparams,True,self)
-        self.iWind.hide() 
         if not emsg:
             QMessageBox.information(self.mainWindow,'Done','Structure generation terminated successfully!')
         else:
@@ -1565,11 +1624,18 @@ class mGUI():
     ### draw ligands
     def drawligs(self):
         ### collects all the info and passes it to molSimplify ###
+        rdir = self.etrdir.text()
+        if rdir[-1]=='/':
+            rdir = rdir[:-1]
+        # creat running dir if not existing
+        if not os.path.isdir(rdir):
+            os.mkdir(rdir)
         args = grabguivars(self)
         if len(args['-lig']) < 1:
             QMessageBox.warning(self.mainWindow,'Warning','No ligands are specified.')
             return False
         else:
+            args['-lig']=args['-lig'].replace(' ','')
             lls = args['-lig'].split(',')
             liglist = []
             # check if multiple ligands in .smi file
@@ -1587,7 +1653,7 @@ class mGUI():
                 if isinstance(l,unicode):
                     ll = unicodedata.normalize('NFKD',l).encode('ascii','ignore')
                 else:
-                    ll = l 
+                    ll = l
                 lig,emsg = lig_load(globs.installdir+'/',ll,licores)
                 if emsg:
                     QMessageBox.warning(self.mainWindow,'Error',emsg)
@@ -1596,28 +1662,31 @@ class mGUI():
             fcount = 0
             while glob.glob('ligs'+str(fcount)+'.smi'):
                 fcount += 1
-            outputf  = 'ligs'+str(fcount)+'.smi'
-            outf = pybel.Outputfile("smi",outputf)
+            outputf  = 'ligs.smi'
+            outbase = rdir+'/ligs'+str(fcount)
+            outf = pybel.Outputfile("smi",outputf,overwrite=True)
             for mol in ligs:
                 outf.write(mol)
             # convert to svg
-            cmd = "babel -ismi "+outputf+" -O "+outputf[:-3]+"svg -xC -xi"
+            cmd = "babel -ismi "+outputf+" -O "+outbase+".svg -xC -xi"
             t = mybash(cmd)
             print t
-            os.remove(outputf)
-            # check if convert utility exists #
-            s = mybash('which convert')
-            if len(s) == 0 :
-                QMessageBox.information(self.mainWindow,'Done','2D representation of ligands generated in file ' +outputf[:-3]+'svg !')
+            if glob.glob(outputf):
+                os.remove(outputf)
             else:
-                ####################
-                ### draw ligands ###
-                ####################
-                s = mybash('convert -density 1200 ligs0.svg ligs.png')
-                print s
+                QMessageBox.information(self.mainWindow,'Error','Image could not be generated\n.')
+                return
+            ####################
+            ### draw ligands ###
+            ####################
+            s = mybash('convert -density 1200 '+outbase+'.svg '+outbase+'.png')
+            print s
+            if not glob.glob(outbase+'.png') :
+                QMessageBox.information(self.mainWindow,'Done','2D representation of ligands generated in file ' +outbase+'.svg !')
+            else:
                 # create window
                 self.lwindow = mWgen(0.4,0.5,'Ligands') # jobscript window
-                c1p = mPic2(self.lwindow,globs.cdir+'/ligs.png',0.0,0.0,0.5,0.5)
+                c1p = mPic2(self.lwindow,outbase+'.png',0.0,0.0,0.5,0.5)
                 self.lwindow.show()
                 # button for closing window
                 ctip = 'Close current window'
@@ -1638,7 +1707,11 @@ class mGUI():
         name = QFileDialog.getOpenFileName(self.EdWindow,'Open File')[0]
         if name != '':
             loadfrominputfile(self,name)
-            
+    ### load directory
+    def dirload(self):
+        name = QFileDialog.getExistingDirectory(self.mainWindow,'Select Directory')
+        if len(name) >0 and name[0] != '':
+            self.etrdir.setText(name)
     ### save as input file
     def qdumpS(self,gui):
         name = QFileDialog.getSaveFileName(self.mainWindow,'Save as..','.',"Input files * (*)")[0]
@@ -1795,8 +1868,9 @@ class mGUI():
     def setupp(self):
             self.pWindow.setWindowModality(2)
             self.pWindow.show()
-    ### load file
+    ### load directory
     def pdload(self):
         name = QFileDialog.getExistingDirectory(self.pWindow,'Select Directory')
         if len(name) >0 and name[0] != '':
             self.etpdir.setText(name)
+

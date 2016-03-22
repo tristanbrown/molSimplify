@@ -173,7 +173,9 @@ def parseinput(args):
             if (l[0]=='-ccatoms'):
                 args.ccatoms = [int(ll)-1 for ll in l[1:]]
             if (l[0]=='-rundir'):
-                args.rundir = l[1].strip('\n')
+                args.rundir = line.split("#")[0].strip('\n')
+                args.rundir = args.rundir.split('-rundir')[1]
+                args.rundir = args.rundir.lstrip(' ')
                 if (args.rundir[-1]=='/'):
                     args.rundir = args.rundir[:-1]
             if (l[0]=='-suff'):
@@ -374,7 +376,9 @@ def parseinput(args):
             if (l[0]=='-postqc'):
                 args.postqc = l[1]
             if (l[0]=='-postdir'):
-                args.postdir = l[1]
+                args.postdir = line.split("#")[0].strip('\n')
+                args.postdir = args.postdir.split('-postdir')[1]
+                args.postdir = args.postdir.lstrip(' ')
             if (l[0]=='-pres'):
                 args.pres = True
             if (l[0]=='-pwfninfo'):

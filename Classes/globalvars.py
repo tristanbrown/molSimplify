@@ -90,15 +90,15 @@ class globalvars:
             if 'CHEMDBDIR' in d.keys():
                 self.chemdbdir = d['CHEMDBDIR']
             else:
-                self.chemdbdir = '"'+cdir+'/CHEMDB'+'"'
+                self.chemdbdir = "'"+cdir+'/CHEMDB'+"'"
             if 'MULTIWFN' in d.keys():
-                self.multiwfn = '"'+d['MULTIWFN']+'"'
+                self.multiwfn = "'"+d['MULTIWFN']+"'"
             else:
-                self.multiwfn = '"'+cdir+'/Multiwfn'+'"'
+                self.multiwfn = "'"+cdir+'/Multiwfn'+"'"
         else:
             self.installdir = cdir
             self.chemdbdir = cdir+'/CHEMDB'
-            self.multiwfn = '"'+cdir+'/Multiwfn'+'"'
+            self.multiwfn = "'"+cdir+'/Multiwfn'+"'"
         # global settings
         self.nosmiles = 0 # number of smiles ligands
         self.rundir = homedir+'/Runs/'# Jobs directory

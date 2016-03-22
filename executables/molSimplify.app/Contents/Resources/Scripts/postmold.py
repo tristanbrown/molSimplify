@@ -10,7 +10,7 @@
 import os, sys, subprocess, time, re
 # import local modules
 from Scripts.postparse import *
-
+from Classes.globalvars import *
 
 
 class AtomClass:
@@ -20,19 +20,6 @@ class AtomClass:
   xyz = ['0.0','0.0','0.0']
   # number of s,p,d primitives | number of s,p,d and total shells, primitives
   ns,np,nd,nf,nsc,npc,ndc,nfc,totc = (0,)*9
-
-########################################
-### module for running bash commands ###
-########################################
-def mybash(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)        
-        if line == '' and p.poll() != None:
-            break
-    return ''.join(stdout)
 
 ####################################
 ### get range for S,P,D orbitals ###
@@ -228,7 +215,8 @@ def parse(folder,molf):
                 tstr += ("{0:.1f}".format(avoccup/totoccups)).ljust(8)
                 txt += tstr + '\n'
     outtxt = header+txt
-    rsd = resd.replace('/','_')
+    rsd = os.path.relpath(resd,folder)
+    rsd = rsd.replace('/','_')
     f=open(folder+'/MO_files/'+rsd+'-'+moln+'_orbs.txt','w')
     f.write(outtxt)
     f.close()
@@ -275,7 +263,7 @@ def parsed(orbf):
 ##################################
 def getresd(dirf):
     # get results files
-    resfiles=mybash("find "+dirf+" -name *_orbs.txt")
+    resfiles=mybash("find '"+dirf+"' -name *_orbs.txt")
     resfiles=filter(None,re.split('\n',resfiles))
     txt = 'Filename                                                              e0(base)   d-band      e-homo      e-lumo      e-fermi     e-gap     [Hartree]  Av-Occup\n'
     txt += '--------------------------------------------------------------------------------------------------------------------------------------------------------------\n'

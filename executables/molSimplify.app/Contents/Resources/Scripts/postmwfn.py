@@ -12,19 +12,6 @@ from numpy import cross, dot
 # import local modules
 from Classes.globalvars import *
 
-########################################
-### module for running bash commands ###
-########################################
-def mybash(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)        
-        if line == '' and p.poll() != None:
-            break
-    return ''.join(stdout)
-    
 ###############################
 ### distance between points ###
 ###############################
@@ -326,17 +313,14 @@ def getcubes(molf,folder,gui,flog):
     resf = []
     txt=[]
     for numi,resf in enumerate(molf):
-        if resf[0]=='.':
-            resf = resf[2:]
-            resd = resf.rsplit('/',1)[0]
-            resd = resd.replace('/','_')
-        if (resd=='.'):
-            resd = 'cfold'
+        resd = os.path.relpath(resf,folder)
+        resd = resd.split('.molden')[0]
+        resd = resd.replace('/','_')
         cubedir = folder+'/Cube_files/'
-        flog.write('Processing '+resd+'\n')
-        print 'Processing ',resd
+        flog.write('Processing '+resf+'\n')
+        print 'Processing ',resf
         if gui:
-            gui.mEd.setText('Processing '+resd+'\n'+gui.mEd.toPlainText())
+            gui.mEd.setText('Processing '+resf+'\n'+gui.mEd.toPlainText())
             gui.app.processEvents()
         #################################################
         ### generate density cube ###
@@ -344,8 +328,8 @@ def getcubes(molf,folder,gui,flog):
         f = open('input1','w')
         f.write(inputtxt)
         f.close()
-        com = Multiwfn+' ' + resf + ' < input1'
-        if not glob.glob('density.cub') and not glob.glob(cubedir+resd+'-density.cub'):
+        com = Multiwfn+' ' + "'"+ resf + "'"+' < input1'
+        if not glob.glob(cubedir+resd+'-density.cub'):
             tt = mybash(com)
             os.remove('input1')
             if glob.glob('density.cub'):
@@ -355,8 +339,8 @@ def getcubes(molf,folder,gui,flog):
         f = open('input1','w')
         f.write(inputtxt)
         f.close()
-        com = Multiwfn+' ' + resf + ' < input1'
-        if not glob.glob('ELF.cub') and not glob.glob(cubedir+resd+'-ELF.cub'):
+        com = Multiwfn+' ' + "'"+ resf + "'"+' < input1'
+        if not glob.glob(cubedir+resd+'-ELF.cub'):
                 tt = mybash(com)
                 os.remove('input1')
                 if glob.glob('ELF.cub'):
@@ -366,8 +350,8 @@ def getcubes(molf,folder,gui,flog):
         f = open('input1','w')
         f.write(inputtxt)
         f.close()
-        com = Multiwfn+' ' + resf + ' < input1'
-        if not glob.glob('spindensity.cub') and not glob.glob(cubedir+resd+'-spindensity.cub'):
+        com = Multiwfn+' ' + "'"+ resf + "'"+ ' < input1'
+        if not glob.glob(cubedir+resd+'-spindensity.cub'):
                 tt = mybash(com)
                 os.remove('input1')
                 if glob.glob('spindensity.cub'):
@@ -394,12 +378,9 @@ def getwfnprops(molf,folder,gui,flog):
     # loop over folders
     txt=[]
     for numi,resf in enumerate(molf):
-        if resf[0]=='.':
-            resf = resf[2:]
-            resd = resf.rsplit('/',1)[0]
-            resd = resd.replace('/','_')
-        if (resd=='.'):
-            resd = 'cfold'
+        resd = os.path.relpath(resf,folder)
+        resd = resd.split('.molden')[0]
+        resd = resd.replace('/','_')
         #################################################
         print 'Processing ',resf
         flog.write('Processing '+resf+'\n')
@@ -453,12 +434,9 @@ def getcharges(molf,folder,gui,flog):
     header += "-----------------------------------------------------------------------------------------\n"
     txt=[]
     for numi,resf in enumerate(molf):
-        if resf[0]=='.':
-            resf = resf[2:]
-            resd = resf.rsplit('/',1)[0]
-            resd = resd.replace('/','_')
-        if (resd=='.'):
-            resd = 'cfold'
+        resd = os.path.relpath(resf,folder)
+        resd = resd.split('.molden')[0]
+        resd = resd.replace('/','_')
         # get metal index in molden file
         f = open(resf,'r')
         ss = f.read()
@@ -486,7 +464,7 @@ def getcharges(molf,folder,gui,flog):
             f = open('input1','w')
             f.write(inputtxt)
             f.close()
-            com = Multiwfn+' ' + resf + ' < input1 > '+outfile1
+            com = Multiwfn+' ' +"'"+ resf +"'"+ " < input1 > '"+outfile1+"'"
             tt = mybash(com)
             os.remove('input1')
         f = open(outfile1,'r')
@@ -509,7 +487,7 @@ def getcharges(molf,folder,gui,flog):
             f = open('input1','w')
             f.write(inputtxt)
             f.close()
-            com = Multiwfn+' ' + resf + ' < input1 > '+outfile2
+            com = Multiwfn+' '+"'" + resf +"'"+ " < input1 > '"+outfile2+"'"
             tt = mybash(com)
             os.remove('input1')
         f = open(outfile2,'r')
@@ -529,7 +507,7 @@ def getcharges(molf,folder,gui,flog):
             f = open('input1','w')
             f.write(inputtxt)
             f.close()
-            com = Multiwfn+' ' + resf + ' < input1 > '+outfile3
+            com = Multiwfn+' ' +"'"+ resf +"'"+ " < input1 > '"+outfile3+"'"
             tt = mybash(com)
             os.remove('input1')
         f = open(outfile3,'r')
@@ -569,11 +547,9 @@ def deloc(molf,folder,gui,flog):
         resd = resf.rsplit('/',1)[0]
         moln = resf.rsplit('/',1)[-1]
         moln = moln.split('.molden')[0]
-        if resd[0]=='.' and resd[1]=='/':
-            resd = resd[2:]
-        elif resd[0]=='.':
-            resd == resd[1:]
+        resd = os.path.relpath(resd,folder)
         resd = resd.replace('/','_')+'_'+moln
+        print resd
         outfile = folder+'/Deloc_files/'+resd+'-deloc.txt'
         print 'Processing  '+resd+' and writing output to '+outfile
         flog.write('Processing  '+resd+'\n')
@@ -612,14 +588,15 @@ def deloc(molf,folder,gui,flog):
             f = open('input0','w')
             f.write(inputtxt)
             f.close()
-            com = Multiwfn+' ' + resf + ' < input0 > '+outfile
+            com = Multiwfn+' ' +"'"+ resf +"'"+ " < input0 > '"+outfile+"'"
             tt = mybash(com)
+            print tt
             # check if seg fault
             skipc = False
             if 'Segmentation' in tt or 'core dumped' in tt:
                 skipc = True
             # read outputfile and check
-            f = open(outfile)
+            f = open(outfile,'r')
             ssf = f.read()
             f.close()
             # if error redo
@@ -631,7 +608,7 @@ def deloc(molf,folder,gui,flog):
                 tt = mybash(com)
             os.remove('input0')
         # check if good
-        f = open(outfile)
+        f = open(outfile,'r')
         ssf = f.read()
         f.close()
         parse = False

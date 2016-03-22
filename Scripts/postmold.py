@@ -215,7 +215,8 @@ def parse(folder,molf):
                 tstr += ("{0:.1f}".format(avoccup/totoccups)).ljust(8)
                 txt += tstr + '\n'
     outtxt = header+txt
-    rsd = resd.replace('/','_')
+    rsd = os.path.relpath(resd,folder)
+    rsd = rsd.replace('/','_')
     f=open(folder+'/MO_files/'+rsd+'-'+moln+'_orbs.txt','w')
     f.write(outtxt)
     f.close()
@@ -262,7 +263,7 @@ def parsed(orbf):
 ##################################
 def getresd(dirf):
     # get results files
-    resfiles=mybash("find "+dirf+" -name *_orbs.txt")
+    resfiles=mybash("find '"+dirf+"' -name *_orbs.txt")
     resfiles=filter(None,re.split('\n',resfiles))
     txt = 'Filename                                                              e0(base)   d-band      e-homo      e-lumo      e-fermi     e-gap     [Hartree]  Av-Occup\n'
     txt += '--------------------------------------------------------------------------------------------------------------------------------------------------------------\n'

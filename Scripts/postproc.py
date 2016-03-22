@@ -32,7 +32,6 @@ def postproc(rundir,args,globs):
         from Classes.qBox import qBoxInfo
         from Classes.qBox import qBoxError
         from Classes.mWindow import mWgen
-        from Classes.mText import mRtext
         from Classes.mText import mEdtext
         args.gui.pwind = mWgen(0.5,0.4,'Log') # information window
         args.gui.mEd = mEdtext(args.gui.pwind,0.1,0.1,0.8,0.8,'Post-processing started..',12,'n','c')

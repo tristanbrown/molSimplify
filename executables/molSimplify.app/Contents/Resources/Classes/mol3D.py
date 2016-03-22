@@ -247,17 +247,47 @@ class mol3D:
     #######################################
     ### finds closest metal in molecule ###
     #######################################
-    def findcloseMetal(self,Rp):
+    def findcloseMetal(self,atom0):
         # OUTPUT
         #   - mm: indices of all metals in the molecule
         mm = []
         mindist = 1000
         for i,atom in enumerate(self.atoms):
             if atom.ismetal():
-                if distance(atom.coords(),Rp) < mindist:
-                    mindist = distance(atom.coords(),Rp)
+                if distance(atom.coords(),atom0.coords()) < mindist:
+                    mindist = distance(atom.coords(),atom0.coords())
                     mm = i 
         return mm
+        
+    ##############################################
+    ### finds submolecule based on connections ###
+    ##############################################
+    def findsubMol(self,atom0,atomN):
+        # INPUT
+        #   - atom0: index of start of submolecule
+        #   - atomN: index of atom to separate molecule
+        # OUTPUT
+        #   - subm: indices of all atoms in submolecule
+        subm = []
+        conatoms = self.getBondedAtoms(atom0)
+        conatoms.append(atom0)
+        if atomN in conatoms:
+            conatoms.remove(atomN)
+        subm += conatoms
+        while len(conatoms) > 0:
+            for atidx in subm:
+                if atidx != atomN:
+                    newcon = self.getBondedAtoms(atidx)
+                    if atomN in newcon:
+                        newcon.remove(atomN)
+                    for newat in newcon:
+                        if newat not in conatoms and newat not in subm:
+                            conatoms.append(newat)
+                            subm.append(newat)
+                if atidx in conatoms:
+                    conatoms.remove(atidx)
+        subm.sort()
+        return subm
         
     ########################################
     ### returns a specific atom by index ###

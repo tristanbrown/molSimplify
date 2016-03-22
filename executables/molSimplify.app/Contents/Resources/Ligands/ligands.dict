@@ -4,7 +4,8 @@ amine:amine.mol,ami,0
 ammonia:ammonia.mol,ammo,0
 benzene:benzene.mol,bnz,4 
 bipy:bipy.mol,bip,0 1
-bpabipy:BPAbipy.xyz,bpabp,0 13 26 48 30
+bipyridine:bipy.mol,bip,0 1
+bpabipy:BPAbipy.mol,bpabp,0 13 26 48 30
 bromide:bromide.smi,brode,0
 bromine:bromine.mol,brom,0
 carbonyl:carbonyl.mol,crbn,0
@@ -12,7 +13,7 @@ carboxyl:carboxyl.mol,crbx,1
 chloride:chloride.smi,chlde,0
 chlorine:chlorine.mol,chlo,0
 cyanide:cyanide.mol,cyan,0
-edta:edta.xyz,edta,0 1 2 3 4 5
+edta:edta.mol,edta,0 1 2 3 4 5
 ethyl:ethyl.mol,eth,1
 fluorine:fluorine.mol,fluo,0
 hydrocyanide:hydrocyanide.mol,hydc,1
@@ -25,10 +26,12 @@ methanal:methanal.mol,metha,0
 methyl:methyl.mol,meth,0
 nitro:nitro.mol,nit,1
 nitroso:nitroso.mol,nits,0
-oxygen:oxygen.xyz,oxd,0
+oxygen:oxygen.mol,oxd,0
 pph3:PPh3.mol,pph,2
+pyr:pyridine.mol,pyrd,3
 pyridine:pyridine.mol,pyrd,3
 terpy:terpy.mol,trpy,0 1 2
+terpyridine:terpy.mol,trpy,0 1 2
 thiocyanate:thiocyanate.mol,thcynt,0
 thiol:thiol.mol,thil,0
 tpp:tpp.mol,tpp,0 1 2 3

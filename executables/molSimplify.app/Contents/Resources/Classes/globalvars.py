@@ -7,7 +7,7 @@
 ##########    within the program       #############
 ####################################################
 
-import os, inspect, glob, platform, sys
+import os, inspect, glob, platform, sys, subprocess
 from math import sqrt 
 
 # atoms dictionary contains atomic mass, atomic number, covalent radius, data from http://www.webelements.com/ (last accessed May 13th 2015)
@@ -33,6 +33,19 @@ elementsbynum=['H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','
                     'Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr',
                     'Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe']
 
+########################################
+### module for running bash commands ###
+########################################
+def mybash(cmd):
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout = []
+    while True:
+        line = p.stdout.readline()
+        stdout.append(line)        
+        if line == '' and p.poll() != None:
+            break
+    return ''.join(stdout)
+
 class globalvars:
     def __init__(self):
         ###### PROGRAM NAME ######
@@ -55,8 +68,14 @@ class globalvars:
         cdir2 = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) # script directory
         cdir = cdir2.rsplit('/',1)[0]
         cdir2 = cdir
-        ###### check for ~/.molSimplify ######
         homedir = os.path.expanduser("~")
+        # create default molSimplify for mac
+        if OSX and not glob.glob(homedir+'/.'+self.PROGRAM) and not runfromcmd:
+            txt = 'INSTALLDIR=/Applications/'+self.PROGRAM+'.app/Contents/Resources\n'
+            f = open(homedir+'/.'+self.PROGRAM,'w')
+            f.write(txt)
+            f.close()
+        ###### check for ~/.molSimplify ######
         if glob.glob(homedir+'/.'+self.PROGRAM):
             f = open(homedir+'/.'+self.PROGRAM,'r')
             s = filter(None,f.read().splitlines())
@@ -71,25 +90,18 @@ class globalvars:
             if 'CHEMDBDIR' in d.keys():
                 self.chemdbdir = d['CHEMDBDIR']
             else:
-                self.chemdbdir = cdir+'/CHEMDB'
+                self.chemdbdir = "'"+cdir+'/CHEMDB'+"'"
             if 'MULTIWFN' in d.keys():
-                self.multiwfn = '"'+d['MULTIWFN']+'"'
+                self.multiwfn = "'"+d['MULTIWFN']+"'"
             else:
-                self.multiwfn = '"'+cdir+'/Multiwfn'+'"'
+                self.multiwfn = "'"+cdir+'/Multiwfn'+"'"
         else:
             self.installdir = cdir
-            self.installdir = cdir+'/CHEMDB'
-            self.multiwfn = '"'+cdir+'/Multiwfn'+'"'
-        # set current directory
-        if OSX and not runfromcmd:
-            # get installation directory
-            cdir = '/Applications/'+self.PROGRAM+'.app/Contents/Resources'
-            self.installdir = cdir
-            cdir2 = homedir
+            self.chemdbdir = cdir+'/CHEMDB'
+            self.multiwfn = "'"+cdir+'/Multiwfn'+"'"
         # global settings
         self.nosmiles = 0 # number of smiles ligands
-        self.rundir = cdir2+'/Runs/'# Jobs directory
-        self.cdir = cdir2 # current directory
+        self.rundir = homedir+'/Runs/'# Jobs directory
         self.generated = 0 
         self.debug = True # additional output for debuggin
     def amass(self):
