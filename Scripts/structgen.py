@@ -252,7 +252,7 @@ def getbondlength(args,metal,m3D,lig3D,matom,atom0,ligand,MLbonds):
 ###############################
 ### FORCE FIELD OPTIMIZATION ##
 ###############################
-def ffopt(ff,mol,connected,constopt,frozenats):
+def ffopt(ff,mol,connected,constopt,frozenats,frozenangles):
     # INPUT
     #   - ff: force field to use, available MMFF94, UFF< Ghemical, GAFF
     #   - mol: mol3D to be ff optimized
@@ -293,7 +293,7 @@ def ffopt(ff,mol,connected,constopt,frozenats):
         ### add distance constraints
         for catom in connected:
             dma = mol.getAtom(midx[0]).distance(mol.getAtom(catom))
-            if constopt==1:
+            if constopt==1 or frozenangles:
                 constr.AddAtomConstraint(catom+1) # indexing babel
             else:
                 constr.AddDistanceConstraint(midx[0]+1,catom+1,dma) # indexing babel
@@ -509,6 +509,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     issmiles = []   # index of SMILES ligands
     connected = []  # indices in core3D of ligand atoms connected to metal
     frozenats = []  # atoms to be frozen in optimization
+    freezeangles = False # custom angles imposed
     ### load bond data ###
     MLbonds = loaddata(installdir+'/Data/ML.dat')
     ### calculate occurrences, denticities etc for all ligands ###
@@ -641,7 +642,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if len(lig.OBmol.atoms) > 3:
-                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats)
+                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,freezeangles)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -1006,11 +1007,11 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     core3D.charge += lig3D.charge
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffopt(args.ff,core3D,connected,1,frozenats)
+                    core3D = ffopt(args.ff,core3D,connected,1,frozenats,freezeangles)
             totlig += denticity
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffopt(args.ff,core3D,connected,2,frozenats)
+        core3D = ffopt(args.ff,core3D,connected,2,frozenats,freezeangles)
     ###############################
     return core3D,complex3D,emsg
 
@@ -1305,7 +1306,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if len(lig.OBmol.atoms) > 3:
-                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats)
+                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,False)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D

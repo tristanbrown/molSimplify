@@ -1,0 +1,4 @@
+chown root /usr/local/bin/brew
+/usr/local/bin/brew install imagemagick
+/usr/local/bin/brew install ghostscript
+/usr/local/bin/brew link --overwrite ghostscript

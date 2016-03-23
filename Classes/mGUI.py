@@ -20,7 +20,7 @@ from Scripts.grabguivars import *
 from Scripts.io import *
 from Scripts.addtodb import *
 import sys, os, random, shutil, unicodedata, inspect, glob, time
-#from imolecule import *
+from imolecule import *
 import pybel
 
 
@@ -93,6 +93,8 @@ class mGUI():
                 f.write("CHEMDBDIR="+cdbdir+'\n')
                 if len(mwfn) > 0 :
                     f.write("MULTIWFN="+mwfn[0]+'\n')
+                else:
+                    f.write("MULTIWFN=/bin/bash\n")
                 f.close()
         ### end set-up configuration file ###
         ### create main window
@@ -100,7 +102,7 @@ class mGUI():
         ### build menu bar
         self.menubar0 = mMenubar(self.mainWindow,self)
         ### place title top
-        self.txtprogram = mRtext(self.mainWindow,0.4,0.05,0.2,0.1,'molSimplify','',30,'B','c')
+        clogo = mPic(self.mainWindow,globs.installdir+'/icons/logo.png',0.375,0.06,0.25)
         ### place logo bottom and developers text
         c = mPic(self.mainWindow,globs.installdir+'/icons/hjklogo.png',0.4,0.9,0.2)
         self.txtdev = mRtext(self.mainWindow,0.175,0.91,0.3,0.05,'Developed by','',14,'r','c')
@@ -810,7 +812,7 @@ class mGUI():
         ### build menu bar
         self.menubar0 = mMenubar(self.mainWindow,self)
         ### place title top
-        self.txtprogram = mRtext(self.mainWindow,0.4,0.025,0.2,0.1,'molSimplify','',30,'B','c')
+        clogo = mPic(self.mainWindow,globs.installdir+'/icons/logo.png',0.375,0.06,0.25)
         ### place logo bottom and developers text
         c = mPic(self.mainWindow,globs.installdir+'/icons/hjklogo.png',0.4,0.875,0.2)
         self.txtdev = mRtext(self.mainWindow,0.175,0.91,0.3,0.05,'Developed by','',14,'r','c')
@@ -1659,16 +1661,22 @@ class mGUI():
                     QMessageBox.warning(self.mainWindow,'Error',emsg)
                 else:
                     ligs.append(lig.OBmol)
+            if len(ligs)==0:
+                return
             fcount = 0
-            while glob.glob('ligs'+str(fcount)+'.smi'):
+            while glob.glob(rdir+'/ligs'+str(fcount)+'.png'):
                 fcount += 1
             outputf  = 'ligs.smi'
-            outbase = rdir+'/ligs'+str(fcount)
+            locf = 'ligs'+str(fcount)
+            outbase = rdir+'/'+locf
             outf = pybel.Outputfile("smi",outputf,overwrite=True)
             for mol in ligs:
                 outf.write(mol)
             # convert to svg
-            cmd = "babel -ismi "+outputf+" -O "+outbase+".svg -xC -xi"
+            if globs.osx:
+                cmd = "/usr/local/bin/obabel -ismi "+outputf+" -O "+locf+".svg -xC -xi"
+            else:
+                cmd = "obabel -ismi "+outputf+" -O "+locf+".svg -xC -xi"
             t = mybash(cmd)
             print t
             if glob.glob(outputf):
@@ -1679,11 +1687,17 @@ class mGUI():
             ####################
             ### draw ligands ###
             ####################
-            s = mybash('convert -density 1200 '+outbase+'.svg '+outbase+'.png')
-            print s
-            if not glob.glob(outbase+'.png') :
-                QMessageBox.information(self.mainWindow,'Done','2D representation of ligands generated in file ' +outbase+'.svg !')
+            if globs.osx:
+                cmd = '/usr/local/bin/convert -density 1200 '+locf+'.svg '+locf+'.png'
             else:
+                cmd = 'convert -density 1200 '+locf+'.svg '+locf+'.png'
+            s = mybash(cmd)
+            print s
+            if not glob.glob(locf+'.png') :
+                QMessageBox.information(self.mainWindow,'Done','2D representation of ligands generated in file ' +outbase+'.svg ! Conversion to png failed.')
+            else:
+                os.remove(locf+".svg")
+                shutil.move(locf+'.png',outbase+'.png')
                 # create window
                 self.lwindow = mWgen(0.4,0.5,'Ligands') # jobscript window
                 c1p = mPic2(self.lwindow,outbase+'.png',0.0,0.0,0.5,0.5)
@@ -1763,7 +1777,6 @@ class mGUI():
         if fname != '':
             fname = os.path.relpath(fname)
             fname = unicodedata.normalize('NFKD',fname).encode('ascii','ignore')
-            #fname = 'Runs/Fetrpy2/irote.xyz'
             notebook.draw(fname) # draw molecule in browser
     ### enable extra molecule input
     def enableemol(self):
@@ -1866,6 +1879,20 @@ class mGUI():
     ###############################
     ### enable Jobscript input
     def setupp(self):
+            # check if Multiwfn exists
+            globs = globalvars()
+            inputtxt = '0\n0\n' 
+            f = open('input1','w')
+            f.write(inputtxt)
+            f.close()
+            com = globs.multiwfn
+            tt = mybash(com + '< input1')
+            os.remove('input1')
+            if not 'Multifunctional Wavefunction Analyzer' in tt:
+                self.pch.setDisabled(True)
+                self.pwfnav.setDisabled(True)
+                self.pcub.setDisabled(True)
+                self.pdeloc.setDisabled(True)
             self.pWindow.setWindowModality(2)
             self.pWindow.show()
     ### load directory

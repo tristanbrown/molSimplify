@@ -63,6 +63,7 @@ class globalvars:
             Linux = True
         elif platform.system().lower() in 'darwin':
             OSX = True
+        self.osx = OSX
         ### get cwd
         cfile = inspect.getfile(inspect.currentframe()) # script filename (usually with path)
         cdir2 = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) # script directory

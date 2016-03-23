@@ -20,7 +20,7 @@ import pybel, openbabel
 ######################################################
 def setupdb(dbselect):
     globs = globalvars()
-    dbdir = os.path.relpath(globs.chemdbdir+'/ChemDB/')+'/'
+    dbdir = os.path.relpath(globs.chemdbdir)+'/'
     # get files in directory
     dbfiles = os.listdir(dbdir)
     # search for db files
@@ -132,12 +132,18 @@ def getsimilar(smi,nmols,dbselect,finger):
     #######################################
     ## get database files
     [dbsdf,dbfs] = setupdb(dbselect)
-    if dbfs:
-        com = "obabel "+dbfs+" simres.sdf -xf"+finger+" -s'"+smi+"' -at"+nmols
+    globs = globalvars()
+    if globs.osx:
+        obab = '/usr/local/bin/obabel'
     else:
-        com = "obabel "+dbsdf+" simres.sdf -xf"+finger+" -s'"+smi+"' -at"+nmols
+        obab = 'obabel'
+    if dbfs:
+        com = obab+" "+dbfs+" -O simres.sdf -xf"+finger+" -s'"+smi+"' -at"+nmols
+    else:
+        com = obab+" "+dbsdf+" -O simres.sdf -xf"+finger+" -s'"+smi+"' -at"+nmols
     ## perform search using bash commandline
     res = mybash(com)
+    print res
     ## check output and print error if nothing was found
     if ('errors' in res):
         ss = 'No matches were found in DB. Log info:\n'+res
@@ -207,6 +213,10 @@ def matchsmarts(smarts,outf,catoms,nres):
 ##### Main driver for db search ####
 ####################################
 def dbsearch(rundir,args,globs):
+    if globs.osx:
+        obab = '/usr/local/bin/obabel'
+    else:
+        obab = 'obabel'
     if args.gui:
         from Classes.qBox import qBoxInfo
         from Classes.qBox import qBoxError
@@ -215,8 +225,8 @@ def dbsearch(rundir,args,globs):
     ### convert to SMILES/SMARTS if file
     if not args.dbbase:
         if args.gui:
-            qqb = qBoxError(args.gui.DBWindow,'Warning',"No database file found within "+globs.chemdbdir+'/ChemDB. Search not possible.')
-        print "No database file found within "+globs.chemdbdir+'/ChemDB. Search not possible.'
+            qqb = qBoxError(args.gui.DBWindow,'Warning',"No database file found within "+globs.chemdbdir+'. Search not possible.')
+        print "No database file found within "+globs.chemdbdir+'. Search not possible.'
         return True
     if args.dbsim:
         if '.smi' in args.dbsim:
@@ -264,7 +274,10 @@ def dbsearch(rundir,args,globs):
         # get database
         [dbsdf,dbfs] = setupdb(args.dbbase)
         # convert to smiles and print to output
-        cmd = "obabel "+dbsdf+" -f0 -l100 -o"+outf[-3:]+" -O "+outf
+        if globs.osx:
+            cmd = "/usr/local/bin/obabel "+dbsdf+" -f0 -l100 -o"+outf[-3:]+" -O "+outf
+        else:
+            cmd = obab+" "+dbsdf+" -f0 -l100 -o"+outf[-3:]+" -O "+outf
         print cmd
         t = mybash(cmd)
         print t
@@ -289,19 +302,21 @@ def dbsearch(rundir,args,globs):
     if squery:
         # screen database
         squery += " -at"+nmols
-        cmd = "obabel "+outputf+" --filter "+squery+" "+outf
+        cmd = obab+" "+outputf+" --filter "+squery+" -O "+outf
         t = mybash(cmd)
         print t
         os.remove(outputf)
     else:
         # convert to smiles and print to output
-        cmd = "obabel -isdf "+outputf+" -o"+outf[-3:]+" "+outf+" --unique"
+        cmd = obab+" -isdf "+outputf+" -o"+outf[-3:]+" -O "+outf+" --unique"
+        print cmd
         t = mybash(cmd)
         print t
         os.remove(outputf)
     # strip metals and clean-up, remove duplicates etc
     flag = stripsalts(outf,args.dbresults)
-    cmd = "obabel -ismi "+outf+" -osmi "+outf+" --unique"
+    print cmd
+    cmd = obab+" -ismi "+outf+" -osmi -O "+outf+" --unique"
     t = mybash(cmd)
     # check if defined connection atoms
     if args.dbcatoms:
@@ -311,8 +326,7 @@ def dbsearch(rundir,args,globs):
     # do pattern matching
     nres = 50 if not args.dbresults else int(args.dbresults)
     flag = matchsmarts(smistr,outf,catoms,nres)
-    cmd = "obabel -ismi "+outf+" -O "+outf[:-3]+"svg -xC -xi"
-    t = mybash(cmd)
+    os.rename(outf,args.rundir+'/'+outf)
     print t
     return False
         

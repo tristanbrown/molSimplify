@@ -169,6 +169,7 @@ def grabdbguivars(gui):
     rdir = gui.etrdir.text()
     if rdir[-1]=='/':
         rdir = rdir[:-1]
+    args['-rundir'] = rdir
     ### write input file ###
     writeinputc(args,rdir+'/dbinput.inp')
     return args
