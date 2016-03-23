@@ -1292,8 +1292,9 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     delatoms = core3D.findsubMol(ccatoms[totlig],atclose) # find old ligand
                     # find shifting if needed
                     if len(ccatoms) > totlig+1:
-                        lshift = len([a for a in delatoms if a < ccatoms[totlig+1]])
-                        ccatoms[totlig+1] -= lshift
+                        for cccat in range(totlig+1,len(ccatoms)):
+                            lshift = len([a for a in delatoms if a < ccatoms[cccat]])
+                            ccatoms[cccat] -= lshift
                     core3D.deleteatoms(delatoms)
                 # load ligand
                 lig,emsg = lig_load(installdir,ligand,licores) # load ligand
@@ -1497,23 +1498,27 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
     ############ END FUNCTIONALIZING ###########
     # generate multiple geometric arrangements
     Nogeom = int(args.bindnum) if args.bindnum and args.bind else 1 # number of different combinations
-    ligname = '' # name of folder
+    ligname = '' # name of file
     nosmiles = 0 
-    # generate name of the folder
+    # generate name of the file
     for l in ligands:
         if l not in licores.keys():
-            if args.sminame:
-                if globs.nosmiles > 1:
-                    ismidx = nosmiles
-                else:
-                    ismidx = 0 
-                if len(args.sminame) > ismidx:
-                    l = args.sminame[ismidx][0:2]
-                else:
-                    l = l = 'smi'+str(nosmiles)
+            if '.xyz' in l or '.mol' in l:
+                l = l.split('.')[-1]
+                l = l.rsplit('/')[-1]
             else:
-                l = 'smi'+str(nosmiles)
-            nosmiles += 1
+                if args.sminame:
+                    if globs.nosmiles > 1:
+                        ismidx = nosmiles
+                    else:
+                        ismidx = 0 
+                    if len(args.sminame) > ismidx:
+                        l = args.sminame[ismidx][0:2]
+                    else:
+                        l = l = 'smi'+str(nosmiles)
+                else:
+                    l = 'smi'+str(nosmiles)
+                nosmiles += 1
         ligname += ''.join("%s" % l[0:2])
     if args.bind:
         # load bind, add hydrogens and convert to mol3D
@@ -1607,7 +1612,7 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
                 strfiles.append(fname+'B')
                 del an3Db
     else:
-        fname = rootdir+'/'+args.core[0:3]+ligname
+        fname = rootdir+'/'+core.ident[0:3]+ligname
         core3D.writexyz(fname)
         strfiles.append(fname)
     pfold = rootdir.split('/',1)[-1]

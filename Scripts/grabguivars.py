@@ -120,6 +120,18 @@ def grabguivars(gui):
             args['-ctrloption'] = gui.qcgedctrl.toPlainText()
             args['-scfoption'] = gui.qcgedscf.toPlainText()
             args['-statoption'] = gui.qcgedstat.toPlainText()
+        elif args['-qccode'].lower() in 'qchem':
+            args['-charge'] = gui.etqcQch.text()
+            if gui.chch.getState():
+                args['-calccharge'] = 'yes'
+            args['-spin'] = gui.etqcQspin.text()
+            args['-runtyp'] = gui.qcQcalc.currentText()
+            args['-basis'] = gui.etqcQbasis.text()
+            args['-remoption'] = gui.qcQeditor.toPlainText()
+            args['-exchange'] = gui.etqcQex.text()
+            args['-correlation'] = gui.etqcQcor.text()
+            if gui.chQun:
+                args['-unrestricted'] = '1'
     ### jobscript options ###
     if gui.chkJ.getState():
         args['-jsched'] = gui.scheduler.currentText()
@@ -306,8 +318,6 @@ def loadfrominputfile(gui,fname):
                 idx = 2
             gui.dffba.setCurrentIndex(idx)
         ### Quantum Chemistry options ###
-        qct = False
-        qcg = False
         if '-qccode'==st[0]:
             gui.chkI.setChecked(True)
             gui.enableqeinput()
@@ -324,16 +334,23 @@ def loadfrominputfile(gui,fname):
             gui.etqctmethod.setText(st[-1])
         if '-basis'==st[0]:
             gui.etqctbasis.setText(st[-1])
+            gui.etqcQbasis.setText(st[-1])
         if '-dispersion'==st[0]:
             gui.qctsel.setCurrentText(st[-1])
         if '-qoption'==st[0]:
             gui.qceditor.setText(gui.qceditor.toPlainText()+'\n'+st[-1])
         if '-charge'==st[0]:
             gui.etqcgch.setText(st[-1])
+            gui.etqctch.setText(st[-1])
+            gui.etqcQch.setText(st[-1])
         if '-spin'==st[0]:
             gui.etqcgspin.setText(st[-1])
+            gui.etqctspin.setText(st[-1])
+            gui.etqcQspin.setText(st[-1])
         if '-runtyp'==st[0]:
             gui.qcgcalc.setCurrentText(st[-1])
+            gui.qctcalc.setCurrentText(st[-1])
+            gui.qcQcalc.setCurrentText(st[-1])
         if '-method'==st[0]:
             gui.etqcgmethod.setText(st[-1])
         if '-gbasis'==st[0]:
@@ -352,6 +369,14 @@ def loadfrominputfile(gui,fname):
             gui.qcgedscf.setText(gui.qcgedscf.toPlainText()+'\n'+st[-1])
         if '-statoption'==st[0]:
             gui.qcgedstat.setText(gui.qcgedstat.toPlainText()+'\n'+st[-1])
+        if '-remoption'==st[0]:
+            gui.qcQeditor.setText(gui.qcQeditor.toPlainText()+'\n'+st[-1])
+        if '-exchange'==st[0]:
+            gui.etqcQex.setText(st[-1])
+        if '-correlation'==st[0]:
+            gui.etqcQcor.setText(st[-1])
+        if '-unrestricted'==st[0]:
+            gui.chQun.setChecked(True)
         ### jobscript options ###
         if '-jsched'==st[0]:
             gui.chkJ.setChecked(True)

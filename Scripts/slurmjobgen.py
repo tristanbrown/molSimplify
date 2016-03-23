@@ -80,14 +80,19 @@ def slurmjobgen(args,jobdirs):
                         tc = True
             if not tc:
                 output.write('terachem terachem_input > tc.out')
-        elif args.qccode and args.qccode in 'GAMESS gamess gam Gamess':
+        elif args.qccode and ('gam' in args.qccode.lower() or 'qch' in args.qccode.lower()):
             gm = False
+            qch = False
             if args.jcommand:
                 for jc in args.jcommand:
                     if 'rungms' in jc:
                         gm = True
-            if not gm:
+                    if 'qchem' in jc:
+                        qch = True
+            if not gm and 'gam' in args.qccode.lower():
                 output.write('rungms gam.inp '+cpus +' > gam.out')
+            elif not qch and 'qch' in args.qccode.lower():
+                output.write('qchem qch.inp '+cpus +' > qch.out')
         else:
             print 'No supported QC code requested. Please input execution command manually'
         output.close()

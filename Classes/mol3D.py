@@ -256,7 +256,13 @@ class mol3D:
             if atom.ismetal():
                 if distance(atom.coords(),atom0.coords()) < mindist:
                     mindist = distance(atom.coords(),atom0.coords())
-                    mm = i 
+                    mm = i
+        # if no metal, find heaviest atom
+        if len(mm)==0:
+            maxaw = 0 
+        for i,atom in enumerate(self.atoms):
+            if atom.atno > maxaw:
+                mm = i
         return mm
         
     ##############################################

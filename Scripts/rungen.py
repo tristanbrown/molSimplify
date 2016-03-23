@@ -9,13 +9,13 @@
 
 from structgen import *
 from io import *
-#from tcgen import *
 from gamgen import *
 from sgejobgen import *
+from tcgen import *
+from qgen import *
 from slurmjobgen import *
 import argparse, sys, os, shutil, itertools
 from collections import Counter
-from tcgen import *
 import pybel
 
 #######################################
@@ -429,14 +429,17 @@ def rungen(installdir,rundir,args,chspfname,globs):
                     args.charge = args.charge[0]
                 if args.spin and (isinstance(args.spin, list)):
                     args.spin = args.spin[0]
-                if args.qccode in 'terachem tc Terachem TeraChem TERACHEM TC':
+                if args.qccode.lower() in 'terachem tc Terachem TeraChem TERACHEM TC':
                     jobdirs = multitcgen(args,strfiles)
                     print 'TeraChem input files generated!'
-                elif args.qccode in 'gamess gam Gamess GAMESS':
+                elif 'gam' in args.qccode.lower():
                     jobdirs = multigamgen(args,strfiles)
                     print 'GAMESS input files generated!'
+                elif 'qch' in args.qccode.lower():
+                    jobdirs = multiqgen(args,strfiles)
+                    print 'QChem input files generated!'
                 else:
-                    print 'Only TeraChem and GAMESS are supported right now.\n'
+                    print 'Only TeraChem, GAMESS and QChem are supported right now.\n'
             # generate jobscripts
             if args.jsched and not emsg:
                 if args.jsched in 'SBATCH SLURM slurm sbatch':
