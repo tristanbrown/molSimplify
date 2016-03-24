@@ -97,6 +97,10 @@ def gamgen(args,strfiles,method):
           jobparams['NGAUSS']=args.ngauss.upper()
     if method:
           jobparams['DFTTYP']=method.upper()
+    if (args.runtyp and 'en' in args.runtyp.lower()):
+        jobparams['run'] = 'ENERGY'
+    elif (args.runtyp and 'ts' in args.runtyp.lower()):
+        jobparams['run'] = 'SADPOINT'
     # Now we're ready to start building the input file and the job script
     for i,jobd in enumerate(jobdirs):
         output=open(jobd+'/gam.inp','w')

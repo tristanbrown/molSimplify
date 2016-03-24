@@ -89,6 +89,10 @@ def tcgen(args,strfiles,method):
                 unrestricted=True
         else:
             jobparams['method'] = 'b3lyp'
+    if (args.runtyp and 'en' in args.runtyp.lower()):
+        jobparams['run'] = 'energy'
+    elif (args.runtyp and 'ts' in args.runtyp.lower()):
+        jobparams['run'] = 'ts'
     if (args.gpus):
         jobparams['gpus'] = args.gpus
     if (args.dispersion):
@@ -124,7 +128,7 @@ def tcgen(args,strfiles,method):
        elif jobparams['levelshift'] != 'yes':
           print("Warning! You're doing an unrestricted calculation but have set levelshift = %s" %(jobparams['levelshift']))
        if not jobparams.has_key('levelshiftvala'):
-          jobparams['levelshiftvala']='1.6'
+          jobparams['levelshiftvala']='1.0'
        if not jobparams.has_key('levelshiftvalb'):
           jobparams['levelshiftvalb']='0.1'
     # Now we're ready to start building the input file

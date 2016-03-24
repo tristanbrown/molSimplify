@@ -540,7 +540,7 @@ class mGUI():
         self.rtqctspin = mRtext(self.qctWindow,0.50,0.2,0.15,0.1,'Spin:',ctip,14,'r','r')
         self.etqctspin = mEtext(self.qctWindow,0.675,0.2,0.1,0.08,'1',ctip,14,'r','l')
         # drop menu for selecting type of calculation
-        qcav = ['energy','minimize']
+        qcav = ['energy','minimize','ts']
         ctip = 'Specify calculation type, default: minimize'
         self.rtqctcalc = mRtext(self.qctWindow,0.09,0.3,0.2,0.1,'Calculation:',ctip,14,'r','r')
         self.qctcalc = mDbox(self.qctWindow,0.315,0.3,0.2,0.08,qcav,ctip,14)
@@ -594,7 +594,7 @@ class mGUI():
         self.chQun = mCheck(self.qcQWindow,0.60,0.2,0.25,0.07,'Unrestricted',ctip,14)
         self.chQun.setChecked(True)
         # drop menu for selecting type of calculation
-        qcav = ['energy','minimize']
+        qcav = ['energy','minimize','ts']
         ctip = 'Specify calculation type, default: minimize'
         self.rtqcQcalc = mRtext(self.qcQWindow,0.09,0.3,0.2,0.1,'Calculation:',ctip,14,'r','r')
         self.qcQcalc = mDbox(self.qcQWindow,0.315,0.3,0.175,0.08,qcav,ctip,14)
@@ -642,7 +642,7 @@ class mGUI():
         self.rtqcgspin = mRtext(self.qcgWindow,0.50,0.155,0.125,0.1,'Spin:',ctip,14,'r','r')
         self.etqcgspin = mEtext(self.qcgWindow,0.675,0.15,0.06,0.07,'1',ctip,14,'r','l')
         # drop menu for selecting type of calculation
-        qcav = ['energy','minimize']
+        qcav = ['energy','minimize','ts']
         ctip = 'Specify calculation type, default: minimize'
         self.rtqcgcalc = mRtext(self.qcgWindow,0.09,0.235,0.2,0.1,'Calculation:',ctip,14,'r','r')
         self.qcgcalc = mDbox(self.qcgWindow,0.315,0.23,0.2,0.07,qcav,ctip,14)

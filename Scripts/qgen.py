@@ -79,6 +79,10 @@ def qgen(args,strfiles,method):
         jobparams['EXCHANGE']=method
     if not args.unrestricted:
         jobparams['UNRESTRICTED']='false'
+    if (args.runtyp and 'en' in args.runtyp.lower()):
+        jobparams['run'] = 'SP'
+    elif (args.runtyp and 'ts' in args.runtyp.lower()):
+        jobparams['run'] = 'TS'
     # Just carry over spin and charge keywords if they're set. Could do checks, none for now.
     if args.spin:
        jobparams['SPIN']=args.spin
