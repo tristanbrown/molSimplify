@@ -88,6 +88,7 @@ def grabguivars(gui):
         args['-place'] = gui.dmolp.currentText()
         args['-bphi'] = gui.etplacephi.text()
         args['-btheta'] = gui.etplacetheta.text()
+        args['-bref'] = gui.etmaskbind.text()
     ### force field optimization ###
     if gui.chkFF.getState():
         args['-ff'] = gui.dff.currentText()
@@ -146,7 +147,88 @@ def grabguivars(gui):
         args['-jcommand'] = gui.jcomm.toPlainText()
     writeinputf(args)
     return args
-    
+
+#########################################################
+##########  grabs GUI options for terachem  #############
+#########################################################
+def grabguivarstc(gui):
+    globs = globalvars()
+    # list with arguments
+    args = dict()
+    args['-charge'] = gui.etqctch.text()
+    args['-spin'] = gui.etqctspin.text()
+    args['-runtyp'] = gui.qctcalc.currentText()
+    args['-method'] = gui.etqctmethod.text()
+    args['-basis'] = gui.etqctbasis.text()
+    args['-dispersion'] = gui.qctsel.currentText()
+    args['-qoption'] = gui.qceditor.toPlainText()
+    ### write input file ###
+    writeinputc(args,globs.homedir+'/.tcdefinput.inp')
+    return args
+
+######################################################
+##########  grabs GUI options for GAMESS #############
+######################################################
+def grabguivarsgam(gui):
+    globs = globalvars()
+    # list with arguments
+    args = dict()
+    args['-charge'] = gui.etqcgch.text()
+    args['-spin'] = gui.etqcgspin.text()
+    args['-runtyp'] = gui.qcgcalc.currentText()
+    args['-method'] = gui.etqcgmethod.text()
+    args['-gbasis'] = gui.etqcgbasis.text()
+    args['-ngauss'] = gui.etqcngauss.text()
+    args['-npfunc'] = gui.etqcnpfunc.text()
+    args['-ndfunc'] = gui.etqcndfunc.text()
+    args['-sysoption'] = gui.qcgedsys.toPlainText()
+    args['-ctrloption'] = gui.qcgedctrl.toPlainText()
+    args['-scfoption'] = gui.qcgedscf.toPlainText()
+    args['-statoption'] = gui.qcgedstat.toPlainText()
+    ### write input file ###
+    writeinputc(args,globs.homedir+'/.gamdefinput.inp')
+    return args
+
+#####################################################
+##########  grabs GUI options for QChem #############
+#####################################################
+def grabguivarsqch(gui):
+    globs = globalvars()
+    # list with arguments
+    args = dict()
+    args['-charge'] = gui.etqcQch.text()
+    args['-spin'] = gui.etqcQspin.text()
+    args['-runtyp'] = gui.qcQcalc.currentText()
+    args['-basis'] = gui.etqcQbasis.text()
+    args['-remoption'] = gui.qcQeditor.toPlainText()
+    args['-exchange'] = gui.etqcQex.text()
+    args['-correlation'] = gui.etqcQcor.text()
+    if gui.chQun:
+        args['-unrestricted'] = '1'
+    ### write input file ###
+    writeinputc(args,globs.homedir+'/.qchdefinput.inp')
+    return args
+
+#########################################################
+##########  grabs GUI options for jobscript #############
+#########################################################
+def grabguivarsjob(gui):
+    globs = globalvars()
+    # list with arguments
+    args = dict()
+    args['-jname'] = gui.etjname.text()
+    args['-memory'] = gui.etjmem.text()
+    args['-wtime'] = gui.etjwallt.text()
+    args['-queue'] = gui.etjqueue.text()
+    args['-gpus'] = gui.etjgpus.text()
+    args['-cpus'] = gui.etjcpus.text()
+    args['-modules'] = gui.etjmod.text()
+    args['-joption'] = gui.etjopt.toPlainText()
+    args['-jcommand'] = gui.jcomm.toPlainText()
+    ### write input file ###
+    writeinputc(args,globs.homedir+'/.jobdefinput.inp')
+    return args
+
 ############################################################
 ########## grabs GUI db options to input file  #############
 ############################################################
@@ -215,8 +297,135 @@ def grabguivarsP(gui):
         args['-pnbo'] = ''
     ### write input file ###
     writeinputp(args,rdir+'/postproc.inp')
-    
-    
+#################################################
+########### loads input file to tc  #############
+#################################################
+def loadfrominputtc(gui,fname):
+    f = open(fname,'r')
+    s = f.read()
+    s = filter(None,s.splitlines())
+    f.close()
+    db = False
+    ### general structure generation options ###
+    for ss in s:
+        st = ss.split(None,1)
+        if '-charge'==st[0]:
+            gui.etqctch.setText(st[-1])
+        if 'spin'==st[0]:
+            gui.etqctspin.setText(st[-1])
+        if '-runtyp'==st[0]:
+            gui.qctcalc.setCurrentText(st[-1])
+        if '-method'==st[0]:
+            gui.etqctmethod.setText(st[-1])
+        if '-basis'==st[0]:
+            gui.etqctbasis.setText(st[-1])
+        if '-dispersion'==st[0]:
+            gui.qctsel.setCurrentText(st[-1])
+        if '-qoption'==st[0]:
+            gui.qceditor.setText(gui.qceditor.toPlainText()+'\n'+st[-1])
+        if '-charge'==st[0]:
+            gui.etqctch.setText(st[-1])
+        if '-spin'==st[0]:
+            gui.etqctspin.setText(st[-1])
+        if '-runtyp'==st[0]:
+            gui.qctcalc.setCurrentText(st[-1])
+#####################################################
+########### loads input file to GAMESS  #############
+#####################################################
+def loadfrominputgam(gui,fname):
+    f = open(fname,'r')
+    s = f.read()
+    s = filter(None,s.splitlines())
+    f.close()
+    db = False
+    ### general structure generation options ###
+    for ss in s:
+        st = ss.split(None,1)
+      ### Quantum Chemistry options ###
+        if '-charge'==st[0]:
+            gui.etqcgch.setText(st[-1])
+        if '-spin'==st[0]:
+            gui.etqcgspin.setText(st[-1])
+        if '-runtyp'==st[0]:
+            gui.qcgcalc.setCurrentText(st[-1])
+        if '-method'==st[0]:
+            gui.etqcgmethod.setText(st[-1])
+        if '-gbasis'==st[0]:
+            gui.etqcgbasis.setText(st[-1])
+        if '-ngauss'==st[0]:
+            gui.etqcngauss.setText(st[-1])
+        if '-npfunc'==st[0]:
+            gui.etqcnpfunc.setText(st[-1])
+        if '-ndfunc'==st[0]:
+            gui.etqcndfunc.setText(st[-1])
+        if '-sysoption'==st[0]:
+            gui.qcgedsys.setText(gui.qcgedsys.toPlainText()+'\n'+st[-1])
+        if '-ctrloption'==st[0]:
+            gui.qcgedctrl.setText(gui.qcgedctrl.toPlainText()+'\n'+st[-1])
+        if '-scfoption'==st[0]:
+            gui.qcgedscf.setText(gui.qcgedscf.toPlainText()+'\n'+st[-1])
+        if '-statoption'==st[0]:
+            gui.qcgedstat.setText(gui.qcgedstat.toPlainText()+'\n'+st[-1])
+####################################################
+########### loads input file to QChem  #############
+####################################################
+def loadfrominputqch(gui,fname):
+    f = open(fname,'r')
+    s = f.read()
+    s = filter(None,s.splitlines())
+    f.close()
+    db = False
+    ### general structure generation options ###
+    for ss in s:
+        st = ss.split(None,1)
+      ### Quantum Chemistry options ###
+        if '-basis'==st[0]:
+            gui.etqcQbasis.setText(st[-1])
+        if '-charge'==st[0]:
+            gui.etqcQch.setText(st[-1])
+        if '-spin'==st[0]:
+            gui.etqcQspin.setText(st[-1])
+        if '-runtyp'==st[0]:
+            gui.qcQcalc.setCurrentText(st[-1])
+        if '-remoption'==st[0]:
+            gui.qcQeditor.setText(gui.qcQeditor.toPlainText()+'\n'+st[-1])
+        if '-exchange'==st[0]:
+            gui.etqcQex.setText(st[-1])
+        if '-correlation'==st[0]:
+            gui.etqcQcor.setText(st[-1])
+        if '-unrestricted'==st[0]:
+            gui.chQun.setChecked(True)
+#########################################################
+########### loads input file to jobscripts  #############
+#########################################################
+def loadfrominputjob(gui,fname):
+    f = open(fname,'r')
+    s = f.read()
+    s = filter(None,s.splitlines())
+    f.close()
+    db = False
+    ### general structure generation options ###
+    for ss in s:
+        st = ss.split(None,1)
+        ### jobscript options ###
+        if '-jname'==st[0]:
+            gui.etjname.setText(st[-1])
+        if '-memory'==st[0]:
+            gui.etjmem.setText(st[-1])
+        if '-wtime'==st[0]:
+            gui.etjwallt.setText(st[-1])
+        if '-queue'==st[0]:
+            gui.etjqueue.setText(st[-1])
+        if '-gpus'==st[0]:
+            gui.etjgpus.setText(st[-1])
+        if '-cpus'==st[0]:
+            gui.etjcpus.setText(st[-1])
+        if '-modules'==st[0]:
+            gui.etjmod.setText(st[-1])
+        if '-joption'==st[0]:
+            gui.etjopt.setText(gui.etjopt.toPlainText()+'\n'+st[-1])
+        if '-jcommand'==st[0]:
+            gui.jcomm.setText(gui.jcomm.toPlainText()+'\n'+st[-1])
 #################################################
 ########## loads input file to GUI  #############
 #################################################
@@ -270,28 +479,28 @@ def loadfrominputfile(gui,fname):
         if '-suff'==st[0]:
             gui.etsuff.setText(st[-1])
         ### binding molecule options ###
-        bind = False
         if '-bind'==st[0]:
             gui.chkM.setChecked(True)
             gui.enableemol()
             gui.etbind.setText(st[-1])
-            bind = True
-        if '-bcharge'==st[0] and bind:
+        if '-bcharge'==st[0]:
             gui.etchbind.setText(st[-1])
-        if '-nbind'==st[0] and bind:
+        if '-nbind'==st[0]:
             gui.etnbind.setText(st[-1])
-        if '-nambsmi'==st[0] and bind:
+        if '-nambsmi'==st[0]:
             gui.etbsmi.setText(st[-1])
-        if '-maxd'==st[0] and bind:
+        if '-maxd'==st[0]:
             gui.etplacemax.setText(st[-1])
-        if '-mind'==st[0] and bind:
+        if '-mind'==st[0]:
             gui.etplacemin.setText(st[-1])
-        if '-place'==st[0] and bind:
+        if '-place'==st[0]:
             gui.dmolp.setCurrentText(st[-1])
-        if '-bphi'==st[0] and bind:
+        if '-bphi'==st[0]:
             gui.etplacephi.setText(st[-1])
-        if '-btheta'==st[0] and bind:
+        if '-btheta'==st[0]:
             gui.etplacetheta.setText(st[-1])
+        if '-bref'==st[0]:
+            gui.etmaskbind.setText(st[-1])
         ### force field optimization ###
         ff = False
         if '-ff'==st[0]:
@@ -324,14 +533,6 @@ def loadfrominputfile(gui,fname):
             gui.qcode.setCurrentText(st[-1])
         if '-calccharge'==st[0]:
             gui.chch.setChecked(True)
-        if '-charge'==st[0]:
-            gui.etqctch.setText(st[-1])
-        if 'spin'==st[0]:
-            gui.etqctspin.setText(st[-1])
-        if '-runtyp'==st[0]:
-            gui.qctcalc.setCurrentText(st[-1])
-        if '-method'==st[0]:
-            gui.etqctmethod.setText(st[-1])
         if '-basis'==st[0]:
             gui.etqctbasis.setText(st[-1])
             gui.etqcQbasis.setText(st[-1])
@@ -352,6 +553,7 @@ def loadfrominputfile(gui,fname):
             gui.qctcalc.setCurrentText(st[-1])
             gui.qcQcalc.setCurrentText(st[-1])
         if '-method'==st[0]:
+            gui.etqctmethod.setText(st[-1])
             gui.etqcgmethod.setText(st[-1])
         if '-gbasis'==st[0]:
             gui.etqcgbasis.setText(st[-1])
@@ -397,9 +599,9 @@ def loadfrominputfile(gui,fname):
         if '-modules'==st[0]:
             gui.etjmod.setText(st[-1])
         if '-joption'==st[0]:
-            gui.etjopt.setText(gui.etjopt.toPlainText()+st[-1])
+            gui.etjopt.setText(gui.etjopt.toPlainText()+'\n'+st[-1])
         if '-jcommand'==st[0]:
-            gui.jcomm.setText(gui.jcomm.toPlainText()+st[-1])
+            gui.jcomm.setText(gui.jcomm.toPlainText()+'\n'+st[-1])
         ### database search options ###
         if '-dbsim'==st[0]:
             gui.etcDBsmi.setText(st[-1])

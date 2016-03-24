@@ -232,18 +232,6 @@ class mol3D:
         pmc = distance(cm0,cm1)
         return pmc
         
-    ################################
-    ### finds metals in molecule ###
-    ################################
-    def findMetal(self):
-        # OUTPUT
-        #   - mm: indices of all metals in the molecule
-        mm = []
-        for i,atom in enumerate(self.atoms):
-            if atom.ismetal():
-                mm.append(i)
-        return mm
-    
     #######################################
     ### finds closest metal in molecule ###
     #######################################
@@ -263,6 +251,20 @@ class mol3D:
         for i,atom in enumerate(self.atoms):
             if atom.atno > maxaw:
                 mm = i
+        return mm
+        
+    #########################################
+    ### finds atoms by symbol in molecule ###
+    #########################################
+    def findAtomsbySymbol(self,sym):
+        # INPUT
+        #  - sym: symbol of atom
+        # OUTPUT
+        #   - mm: indices of all atoms with symbol sym in the molecule
+        mm = []
+        for i,atom in enumerate(self.atoms):
+            if atom.sym==sym:
+                mm.append(i)
         return mm
         
     ##############################################
@@ -406,6 +408,40 @@ class mol3D:
                 idx = iat
                 cdist = ds
         return idx
+        
+    ###########################################
+    ### gets point that corresponds to mask ###
+    ###########################################
+    def getMask(self,mask):
+        # INPUT
+        #   - mask: identifier for atoms
+        # OUTPUT
+        #   - P: 3D point corresponding to masked atoms
+        globs = globalvars()
+        elements = globs.elementsbynum()
+        # check center of mass
+        ats = []
+        for entry in mask:
+            if ('com' in entry.lower()) or ('cm' in entry.lower()):
+                return self.centermass()
+            elif '-' in entry:
+                at0 = entry.split('-')[0]
+                at1 = entry.split('-')[-1]
+                for i in range(int(at0),int(at1)+1):
+                    ats.append(i-1) # python indexing
+            elif entry in elements:
+                ats += self.findAtomsbySymbol(entry)
+            else:
+                # try to convert to integer
+                try:
+                    t = int(entry)
+                    ats.append(t-1)
+                except:
+                    return self.centermass()
+        maux = mol3D()
+        for at in ats:
+            maux.addatom(self.getAtom(at))
+        return maux.centermass()
         
     #######################################################
     ### gets closest atom from molecule to another atom ###

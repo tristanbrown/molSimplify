@@ -1528,8 +1528,7 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
         bind.convert2mol3D()
         an3D = bind # change name
         # get core size
-        mindist = core3D.size
-        #mindist = core3D.size
+        mindist = core3D.molsize()
         # assign reference point
         Rp = initcore3D.centermass()
         # Generate base case (separated structures)
@@ -1546,11 +1545,11 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
         ### check if smiles string in binding species
         if bsmi:
             if args.nambsmi: # if name specified use it in file
-                fname = rootdir+'/'+args.core[0:3]+ligname+args.nambsmi[0:2]
+                fname = rootdir+'/'+core.ident[0:3]+ligname+args.nambsmi[0:2]
             else: # else use default
-                fname = rootdir+'/'+args.core[0:3]+ligname+'bsm' 
+                fname = rootdir+'/'+core.ident[0:3]+ligname+'bsm' 
         else: # else use name from binding in dictionary
-            fname = rootdir+'/'+args.core[0:3]+ligname+args.bind[0:2]
+            fname = rootdir+'/'+core.ident[0:3]+ligname+bind.ident[0:2]
         for i in range(0,Nogeom+1):        
             # generate random sequence of parameters for rotate()
             totits = 0 
@@ -1578,14 +1577,19 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
                 # translate
                 an3Db = mol3D()
                 an3Db.copymol3D(an3D)
-                tr3D = protate(an3Db, Rp,[R,theta,phi])
+                # get mask of reference atoms
+                if args.bref:
+                    refbP = an3D.getMask(args.bref)
+                else:
+                    refbP = an3D.centermass()
+                tr3D = protateref(an3Db, Rp, refbP, [R,theta,phi])
                 # rotate center of mass
-                newmol = cmrotate(tr3D,[thetax,thetay,thetaz])
+                newmol = rotateRef(tr3D,refbP,[thetax,thetay,thetaz])
                 if ('theta1' in locals()):
                     an3Db = mol3D()
                     an3Db.copymol3D(an3D)
-                    tr3D2 = protate(an3Db, Rp,[R,theta1,phi])
-                    newmol2 = cmrotate(tr3D2,[thetax,thetay,thetaz])
+                    tr3D2 = protateref(an3Db, Rp,refbP,[R,theta1,phi])
+                    newmol2 = rotateRef(tr3D2,refbP,[thetax,thetay,thetaz])
                     d1 = tr3D.distance(core3D)
                     d2 = tr3D2.distance(core3D)
                     if (d2 > d1):

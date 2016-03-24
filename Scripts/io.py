@@ -289,6 +289,8 @@ def bind_load(installdir,userbind,bindcores):
             except IOError:
                 emsg = 'Failed converting file ' +userbind+' to molecule..Check your file.\n'
                 return False,emsg
+            bind.ident = userbind.rsplit('/')[-1]
+            bind.ident = bind.ident.split('.'+ftype)[0]
         else:
             emsg = 'Binding species file '+userbind+' does not exist. Exiting..\n'
             return False,emsg
@@ -302,6 +304,7 @@ def bind_load(installdir,userbind,bindcores):
             bind.OBmol.make3D('mmff94',0) # add hydrogens and coordinates
             bind.charge = bind.OBmol.charge
             bsmi = True
+            bind.ident = 'smi'
         except IOError:
             emsg = "We tried converting the string '%s' to a molecule but it wasn't a valid SMILES string.\n" % userbind
             emsg += "Furthermore, we couldn't find the binding species structure: '%s' in the binding species dictionary. Try again!\n" % userbind

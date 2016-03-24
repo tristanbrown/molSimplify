@@ -59,45 +59,9 @@ class mGUI():
             self.wwindow.resize(0.5,0.5)
             QMessageBox.information(self.wwindow,'Setup',"It looks like the configuration file '~/.molSimplify' does not exist!Please follow the next steps to configure the file.")
             QMessageBox.information(self.wwindow,'Installation directory',"Please select the top installation directory for the program.")
-            instdir = QFileDialog.getExistingDirectory(self.wwindow,'Select Top Installation Directory for the program')
-            QMessageBox.information(self.wwindow,'Chem DB',"Please select the directory containing chemical databases.")
-            cdbdir = QFileDialog.getExistingDirectory(self.wwindow,'Select the directory containing chemical databases.')
-            QMessageBox.information(self.wwindow,'Multiwfn',"Please specify the path to the Multiwfn executable.")
-            mwfn = QFileDialog.getOpenFileName(self.wwindow,'Specify the path to the Multiwfn executable (for post-processing).')
             f = open(homedir+'/.molSimplify','w')
             if len(instdir) > 1: 
                 f.write("INSTALLDIR="+instdir+'\n')
-            if len(cdbdir) > 1: 
-                f.write("CHEMDBDIR="+cdbdir+'\n')
-            if len(mwfn) > 1 : 
-                f.write("MULTIWFN="+mwfn[0]+'\n')
-            f.close()
-        else:
-            self.wwindow = QMainWindow() 
-            self.wwindow.resize(0.5,0.5)
-            writef = False
-            instdir = globs.installdir
-            mwfn = globs.multiwfn
-            cdbdir = globs.chemdbdir
-            if not os.path.isfile(globs.multiwfn[1:-1]):
-                QMessageBox.information(self.wwindow,'Setup',"It looks like the Multiwfn executable is not configured or does not exist. Please follow the next steps to configure it.")
-                QMessageBox.information(self.wwindow,'Multiwfn',"Please specify the path to the Multiwfn executable.")
-                mwfn = QFileDialog.getOpenFileName(self.wwindow,'Specify the path to the Multiwfn executable (for post-processing).')
-                writef = True
-            if not os.path.isdir(globs.chemdbdir):
-                QMessageBox.information(self.wwindow,'Setup',"It looks like the Chemical Database directory is not configured or does not exist. Please follow the next steps to configure it.")
-                QMessageBox.information(self.wwindow,'Chem DB',"Please select the directory containing chemical databases.")
-                cdbdir = QFileDialog.getExistingDirectory(self.wwindow,'Select the directory containing chemical databases.')
-                writef = True
-            if writef:
-                f = open(homedir+'/.molSimplify','w')
-                f.write("INSTALLDIR="+instdir+'\n')
-                f.write("CHEMDBDIR="+cdbdir+'\n')
-                if len(mwfn) > 0 :
-                    f.write("MULTIWFN="+mwfn[0]+'\n')
-                else:
-                    f.write("MULTIWFN=/bin/bash\n")
-                f.close()
         ### end set-up configuration file ###
         if small:
             self.mainWindow = mWindow(0.85,0.85) # main window
@@ -218,12 +182,18 @@ class mGUI():
         ctip = 'Specify placing minimum/maximum distance (in A) and/or axial/equatorial orientation'
         self.rtplace = mRtext(self.mainWindow,0.65,0.48,0.125,0.05,'Distance:',ctip,14,'r','r')
         ctip = 'Minimum distance between the two molecules. 0 corresponds the marginally non-overlapping configuration'
-        self.etplacemin = mEtext(self.mainWindow,0.785,0.475,0.04,0.05,'',ctip,14,'r','l')
+        self.etplacemin = mEtext(self.mainWindow,0.785,0.475,0.025,0.05,'',ctip,14,'r','l')
         ctip = 'Maximum distance between the two molecules. 0 corresponds the marginally non-overlapping configuration'
-        self.etplacemax = mEtext(self.mainWindow,0.825,0.475,0.04,0.05,'',ctip,14,'r','l')
+        self.etplacemax = mEtext(self.mainWindow,0.81,0.475,0.025,0.05,'',ctip,14,'r','l')
         self.rtplace.setDisabled(True)
         self.etplacemin.setDisabled(True)
         self.etplacemax.setDisabled(True)
+        # mask for atom/center of mass reference
+        ctip = 'Reference atoms in extra molecules to be used for placement(e.g. 1,2 or 1-6 or COM or Fe) Default COM (center mass)'
+        self.rtmaskbind = mRtext(self.mainWindow,0.82,0.485,0.075,0.05,'Reference:',ctip,12,'r','r')
+        self.etmaskbind = mEtext(self.mainWindow,0.90,0.475,0.035,0.05,'COM',ctip,12,'r','l')
+        self.rtmaskbind.setDisabled(True)
+        self.etmaskbind.setDisabled(True)
         # angle/orientation
         ctip = 'Specify placement type or angle. Angle overwrites placement.'
         self.rtplacea = mRtext(self.mainWindow,0.65,0.545,0.125,0.05,'Angle:',ctip,14,'r','r')
@@ -564,9 +534,9 @@ class mGUI():
         self.rtqctadd2 = mRtext(self.qctWindow,0.23,0.60,0.15,0.1,'input',ctip,14,'r','c')
         self.qceditor = mEdtext(self.qctWindow,0.425,0.515,0.375,0.215,'',12,'r','l')
         # button for addition
-        #ctip = 'Load example input'
-        #self.butqctlf = mButton(self.qctWindow,0.1125,0.7875,0.175,0.09,'Load file',ctip,14)
-        #self.butqctlf.clicked.connect(self.qctload)
+        ctip = 'make default'
+        self.butqctlf = mButton(self.qctWindow,0.1125,0.7875,0.225,0.09,'Make default',ctip,14)
+        self.butqctlf.clicked.connect(self.qctdef)
         # button for addition
         ctip = 'Submit input for Quantum Chemistry'
         self.butqctSub = mButton(self.qctWindow,0.4125,0.775,0.2,0.125,'Submit',ctip,14)
@@ -575,8 +545,11 @@ class mGUI():
         ctip = 'Return to main menu'
         self.butqctRet = mButton(self.qctWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
         self.butqctRet.clicked.connect(self.qctWindow.qexitM)
+        # load defaults if existing
+        if glob.glob(globs.homedir+'/.tcdefinput.inp'):
+                loadfrominputtc(self,globs.homedir+'/.tcdefinput.inp')
         #######################################
-        ### create Qchem-qc input window ###
+        #### create Qchem-qc input window #####
         #######################################
         self.qcQWindow = mWgen(0.3,0.4,'Qchem Input') # QC window
         # top text
@@ -614,11 +587,11 @@ class mGUI():
         ctip='Specify additional input here'
         self.rtqcQadd1 = mRtext(self.qcQWindow,0.23,0.55,0.15,0.1,'Additional',ctip,14,'r','c')
         self.rtqcQadd2 = mRtext(self.qcQWindow,0.23,0.60,0.15,0.1,'input',ctip,14,'r','c')
-        self.qcQeditor = mEdtext(self.qcQWindow,0.425,0.515,0.375,0.215,'ECP    lanl2dz',12,'r','l')
+        self.qcQeditor = mEdtext(self.qcQWindow,0.425,0.515,0.375,0.215,'',12,'r','l')
         # button for addition
-        #ctip = 'Load example input'
-        #self.butqctlf = mButton(self.qctWindow,0.1125,0.7875,0.175,0.09,'Load file',ctip,14)
-        #self.butqctlf.clicked.connect(self.qctload)
+        ctip = 'make default'
+        self.butqcQlf = mButton(self.qcQWindow,0.1125,0.7875,0.225,0.09,'Make default',ctip,14)
+        self.butqcQlf.clicked.connect(self.qcqdef)
         # button for addition
         ctip = 'Submit input for Quantum Chemistry'
         self.butqcQSub = mButton(self.qcQWindow,0.4125,0.775,0.2,0.125,'Submit',ctip,14)
@@ -627,6 +600,9 @@ class mGUI():
         ctip = 'Return to main menu'
         self.butqcQRet = mButton(self.qcQWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
         self.butqcQRet.clicked.connect(self.qcQWindow.qexitM)
+        # load defaults if existing
+        if glob.glob(globs.homedir+'/.qchdefinput.inp'):
+            loadfrominputqch(self,globs.homedir+'/.qchdefinput.inp')
         #####################################
         ### create gamess-qc input window ###
         #####################################
@@ -683,9 +659,9 @@ class mGUI():
         self.rtqcgadd4 = mRtext(self.qcgWindow,0.5,0.63,0.15,0.1,'STAT input:',ctip,14,'r','c')
         self.qcgedstat = mEdtext(self.qcgWindow,0.655,0.62,0.225,0.125,'',12,'r','l')
         # button for addition
-        #ctip = 'Load example input'
-        #self.butqcglf = mButton(self.qcgWindow,0.1125,0.7875,0.175,0.09,'Load file',ctip,14)
-        #self.butqcglf.clicked.connect(self.qcgload)
+        ctip = 'make default'
+        self.butqcglf = mButton(self.qcgWindow,0.1125,0.7875,0.225,0.09,'Make default',ctip,14)
+        self.butqcglf.clicked.connect(self.qcgdef)
         # button for addition
         ctip = 'Submit input for Quantum Chemistry'
         self.butqcgSub = mButton(self.qcgWindow,0.4125,0.775,0.2,0.125,'Submit',ctip,14)
@@ -694,6 +670,9 @@ class mGUI():
         ctip = 'Return to main menu'
         self.butqcgRet = mButton(self.qcgWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
         self.butqcgRet.clicked.connect(self.qcgWindow.qexitM)
+        # load defaults if existing
+        if glob.glob(globs.homedir+'/.gamdefinput.inp'):
+                loadfrominputgam(self,globs.homedir+'/.gamdefinput.inp')
         #####################################
         ### create jobscript input window ###
         #####################################
@@ -739,9 +718,9 @@ class mGUI():
         self.rtjadd2 = mRtext(self.jWindow,0.5,0.525,0.15,0.1,'Commands:',ctip,14,'r','c')
         self.jcomm = mEdtext(self.jWindow,0.655,0.485,0.225,0.20,'',12,'r','l')
         # button for addition
-        #ctip = 'Load example input'
-        #self.butqcglf = mButton(self.jWindow,0.1125,0.7875,0.175,0.09,'Load file',ctip,14)
-        #self.butqcglf.clicked.connect(self.jload)
+        ctip = 'make default'
+        self.butqcJlf = mButton(self.jWindow,0.1125,0.7875,0.225,0.09,'Make default',ctip,14)
+        self.butqcJlf.clicked.connect(self.jobdef)
         # button for addition
         ctip = 'Submit input for Quantum Chemistry'
         self.butqcgSub = mButton(self.jWindow,0.4125,0.775,0.2,0.125,'Submit',ctip,14)
@@ -750,6 +729,9 @@ class mGUI():
         ctip = 'Return to main menu'
         self.butqcgRet = mButton(self.jWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
         self.butqcgRet.clicked.connect(self.jWindow.qexitM)
+        # load defaults if existing
+        if glob.glob(globs.homedir+'/.jobdefinput.inp'):
+            loadfrominputjob(self,globs.homedir+'/.jobdefinput.inp')
         ###########################
         ### post-process window ###
         ###########################
@@ -901,8 +883,36 @@ class mGUI():
             self.etcDBsmi.setText(os.path.relpath(name[0]))
     ### enable add to database interface
     def searchDBW(self):
+        globs = globalvars()
         self.cDBWindow.setWindowModality(2)
         self.cDBWindow.show()
+        writef = False
+        instdir = globs.installdir
+        mwfn = globs.multiwfn
+        cdbdir = globs.chemdbdir
+        if not os.path.isdir(globs.chemdbdir):
+            choice = QMessageBox.question(self.cDBWindow,'Database setup','It looks like the Chemical Database directory is not configured or does not exist. Would you like to configure it now?',
+                QMessageBox.Yes, QMessageBox.No)
+            if choice == QMessageBox.Yes:
+                QMessageBox.information(self.cDBWindow,'Chem DB',"Please select the directory containing chemical databases.")
+                cdbdir = QFileDialog.getExistingDirectory(self.cDBWindow,'Select the directory containing chemical databases.')
+                if len(cdbdir) > 0:
+                    writef = True
+        if writef:
+            f = open(globs.homedir+'/.molSimplify','w')
+            f.write("INSTALLDIR="+instdir+'\n')
+            f.write("CHEMDBDIR="+cdbdir+'\n')
+            if len(mwfn) > 1 :
+                f.write("MULTIWFN="+mwfn[0]+'\n')
+            f.close()
+            # get existing databases
+            globsnew = globalvars()
+            dbdir = globsnew.chemdbdir
+            dbs0 = glob.glob(dbdir+"/*.sdf")
+            dbs1 = [d.rsplit('/',1)[-1] for d in dbs0]
+            dbs = [d.split('.',1)[0] for d in dbs1]
+            for d in dbs:
+                self.cDBsel.addItem(d)
     ### callback for database search
     def qaddcDB(self):
         # search database
@@ -1145,6 +1155,8 @@ class mGUI():
             self.rtplacea.setDisabled(False)
             self.etplacephi.setDisabled(False)
             self.etplacetheta.setDisabled(False)
+            self.rtmaskbind.setDisabled(False)
+            self.etmaskbind.setDisabled(False)
         else:
             self.txtamol.setDisabled(True)
             self.rtbind.setDisabled(True)
@@ -1163,6 +1175,8 @@ class mGUI():
             self.rtplacea.setDisabled(True)
             self.etplacephi.setDisabled(True)
             self.etplacetheta.setDisabled(True)
+            self.rtmaskbind.setDisabled(True)
+            self.etmaskbind.setDisabled(True)
     #####################
     #### QEt/g input ####
     #####################
@@ -1177,12 +1191,19 @@ class mGUI():
         elif self.qcode.currentIndex()==2: # generate Qchem input
             self.qcQWindow.setWindowModality(2)
             self.qcQWindow.show()
-    def qctload(self):
-        name = QFileDialog.getOpenFileName(self.qctWindow,'Open File','.',"TeraChem input files")
-        if name[0] != '':
-            f = open(name[0],'r')
-            self.qctWindow.molf = f.read()
-            f.close()
+    # make default button callback
+    def jobdef(self):
+        grabguivarsjob(self)
+        QMessageBox.information(self.mainWindow,'Done','The current settings are the default ones now.')
+    def qctdef(self):
+        grabguivarstc(self)
+        QMessageBox.information(self.mainWindow,'Done','The current settings are the default ones now.')
+    def qcgdef(self):
+        grabguivarsgam(self)
+        QMessageBox.information(self.mainWindow,'Done','The current settings are the default ones now.')
+    def qcqdef(self):
+        grabguivarsqch(self)
+        QMessageBox.information(self.mainWindow,'Done','The current settings are the default ones now.')
     def qcgload(self):
         name = QFileDialog.getOpenFileName(self.qctWindow,'Open File','.',"GAMESS input files")
         if name[0] != '':
@@ -1227,24 +1248,45 @@ class mGUI():
     ###############################
     #### post-processing input ####
     ###############################
-    ### enable Jobscript input
+    ### enable Post processing input
     def setupp(self):
-            # check if Multiwfn exists
-            globs = globalvars()
-            inputtxt = '0\n0\n' 
-            f = open('input1','w')
-            f.write(inputtxt)
+        self.pWindow.setWindowModality(2)
+        self.pWindow.show()
+        # check if Multiwfn exists
+        globs = globalvars()
+        inputtxt = '0\n0\n' 
+        f = open('input1','w')
+        f.write(inputtxt)
+        f.close()
+        writef = False
+        instdir = globs.installdir
+        mwfn = globs.multiwfn
+        cdbdir = globs.chemdbdir
+        if not os.path.isfile(globs.multiwfn[1:-1]):
+            choice = QMessageBox.question(self.pWindow,'Multiwfn setup','It looks like the Multiwfn executable is not configured or does not exist. Would you like to configure it now?',
+                QMessageBox.Yes, QMessageBox.No)
+            if choice == QMessageBox.Yes:
+                QMessageBox.information(self.pWindow,'Multiwfn',"Please select the Multiwfn executable.")
+                mwfn = QFileDialog.getOpenFileName(self.pWindow,'Select the Multiwfn executable.','.')
+                if len(mwfn[0]) > 1:
+                    writef = True
+        if writef:
+            f = open(globs.homedir+'/.molSimplify','w')
+            f.write("INSTALLDIR="+instdir+'\n')
+            if len(cdbdir) > 0:
+                f.write("CHEMDBDIR="+cdbdir+'\n')
+            if len(mwfn) > 0 :
+                f.write("MULTIWFN="+mwfn[0]+"\n")
             f.close()
-            com = globs.multiwfn
-            tt = mybash(com + '< input1')
-            os.remove('input1')
-            if not 'Multifunctional Wavefunction Analyzer' in tt:
-                self.pch.setDisabled(True)
-                self.pwfnav.setDisabled(True)
-                self.pcub.setDisabled(True)
-                self.pdeloc.setDisabled(True)
-            self.pWindow.setWindowModality(2)
-            self.pWindow.show()
+        newglobs = globalvars()
+        com = newglobs.multiwfn
+        tt = mybash(com + '< input1')
+        os.remove('input1')
+        if not 'Multifunctional Wavefunction Analyzer' in tt:
+            self.pch.setDisabled(True)
+            self.pwfnav.setDisabled(True)
+            self.pcub.setDisabled(True)
+            self.pdeloc.setDisabled(True)
     ### load directory
     def pdload(self):
         name = QFileDialog.getExistingDirectory(self.pWindow,'Select Directory')
