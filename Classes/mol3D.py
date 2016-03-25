@@ -238,7 +238,7 @@ class mol3D:
     def findcloseMetal(self,atom0):
         # OUTPUT
         #   - mm: indices of all metals in the molecule
-        mm = []
+        mm = False
         mindist = 1000
         for i,atom in enumerate(self.atoms):
             if atom.ismetal():
@@ -246,11 +246,11 @@ class mol3D:
                     mindist = distance(atom.coords(),atom0.coords())
                     mm = i
         # if no metal, find heaviest atom
-        if len(mm)==0:
-            maxaw = 0 
-        for i,atom in enumerate(self.atoms):
-            if atom.atno > maxaw:
-                mm = i
+        if not mm:
+            maxaw = 0
+            for i,atom in enumerate(self.atoms):
+                if atom.atno > maxaw:
+                    mm = i
         return mm
         
     #########################################

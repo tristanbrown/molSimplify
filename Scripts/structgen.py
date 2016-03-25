@@ -491,7 +491,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         args.gui.app.processEvents()
     # import gui options
     if args.gui:
-        from Classes.qBox import qBoxWarning
+        from Classes.mWidgets import qBoxWarning
     ### initialize variables ###
     emsg, complex3D = False, []
     coordbasef=[['one'],['li'],['tpl'],['thd','sqp'],['tbp','spy'], # list of coordinations
@@ -1163,7 +1163,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         args.gui.app.processEvents()
     # import gui options
     if args.gui:
-        from Classes.qBox import qBoxWarning
+        from Classes.mWidgets import qBoxWarning
     ### initialize variables ###
     emsg, complex3D = False, []
     occs0 = []      # occurrences of each ligand
@@ -1238,6 +1238,19 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         if args.oxstate:
             romans={'0':'0','I':'1','II':'2','III':'3','IV':'4','V':'5','VI':'6'}
             core3D.charge = int(romans[args.oxstate])
+    # remove one hydrogen for each functionalization
+    Hs = []
+    if not args.replig:
+        for ccat in ccatoms:
+            Hs += core3D.getHsbyAtom(core3D.getAtom(ccat))
+    # remove hydrogens and shift ccatoms
+    if len(Hs) > 0:
+        for H in sorted(Hs,reverse=True):
+            core3D.deleteatom(H)
+            # fix indexing
+            for ii,cat in enumerate(ccatoms):
+                if cat > H:
+                    ccatoms[ii] -= 1
     ###############################
     #### loop over ligands and ####
     ### begin functionalization ###
@@ -1465,7 +1478,7 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
     emsg = False
     # import gui options
     if args.gui:
-        from Classes.qBox import qBoxWarning
+        from Classes.mWidgets import qBoxWarning
     # get global variables class
     ############ LOAD DICTIONARIES ############
     mcores = readdict(installdir+'/Cores/cores.dict')

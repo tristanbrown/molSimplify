@@ -157,7 +157,7 @@ def constrgen(installdir,rundir,args,globs):
             emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
         else:
             if args.gui:
-                from Classes.qBox import qBoxError
+                from Classes.mWidgets import qBoxError
                 qqb = qBoxError(args.gui.mainWindow,'Error','No suitable ligand sets were found for random generation. Exiting...')
             else:
                 emsg = 'No suitable ligand sets were found for random generation. Exiting...'
@@ -277,9 +277,9 @@ def checkmultilig(ligs):
 ##############################################
 def rungen(installdir,rundir,args,chspfname,globs):
     try:
-        from Classes.qBox import qBoxFolder
-        from Classes.qBox import qBoxInfo
-        from Classes.qBox import qBoxError
+        from Classes.mWidgets import qBoxFolder
+        from Classes.mWidgets import qBoxInfo
+        from Classes.mWidgets import qBoxError
     except ImportError:
         args.gui = False
     emsg = False
