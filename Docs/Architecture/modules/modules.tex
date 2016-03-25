@@ -299,7 +299,7 @@ List with the difference of two vectors.
 Checks if 3 points in 3D space are colinear. 
 \subsubsection{vecangle()}
 Calculates the angle between 2 vectors in 3D space.
-\subsubsection{rotation_params()}
+\subsubsection{rotation\_params()}
 Based on 3 points R$_0$, R$_1$, R$_2$ in space it calculates the angle between R$_{21}$ and R$_{10}$ and the unit vector perpendicular to the plane spanned by R$_{21}$ and R$_{10}$.
 \subsubsection{kabsch()}
 Aligns one molecule with respect to another to minimize the RMSD value between them using the Kabsch algorithm.
@@ -311,9 +311,9 @@ Rotates a point by a specific angle about a given axis.
 Converts to spherical coordinates and places a point given an angle, reference point and distance.
 \subsubsection{PointRotateSph()} 
 Rotates a point about x,y,z axes in spherical coordinates given 3 angles $\theta_x$, $\theta_y$, $\theta_z$. 
-\subsubsection{reflect_through_plance()} 
+\subsubsection{reflect\_through\_plance()} 
 Reflects a molecule through a plane with given normal vector and point.
-\subsubsection{rotate_around_axis()} 
+\subsubsection{rotate\_around\_axis()} 
 Rotates molecule around specified axis by a given angle.
 \subsubsection{setPdistance()} 
 Translates molecule to set the distance of an atom in its molecule with respect to a reference point.
@@ -383,40 +383,149 @@ Checks and corrects SMILES strings for transition metals.
 Reads dictionary with local extra molecules.
 \subsubsection{loaddata()}
 Loads data for the available backbones.
-\subsubsection{core_load()}
+\subsubsection{core\_load()}
 Loads a core either from the local database, a SMILES string or a file and saves it as an OBmol molecule.
-\subsubsection{lig_load()}
+\subsubsection{lig\_load()}
 Loads a ligand either from the local database, a SMILES string or a file and saves it as an OBmol molecule.
-\subsubsection{bind_load()}
+\subsubsection{bind\_load()}
 Loads an extra molecule either from the local database, a SMILES string or a file and saves it as an OBmol molecule.
 
 \subsection{\texttt{jobgen.py}}
+This script generates the jobscripts.
+\subsubsection{sgejobgen()}
+Generates jobscript for the SGE scheduler. Default parameters are specified and overwritten based on the user's input. 
+\subsubsection{slurmjobgen()}
+Generates jobscript for the SGE scheduler. Default parameters are specified and overwritten based on the user's input. 
 
 \subsection{\texttt{postmold.py}}
+This scripts parses molden files and collects information about the molecular orbitals.
+\subsubsection{getrange()}
+This module locates the indices of the atomic S,P,D orbitals that correspond to the metal in the structure.
+\subsubsection*{parse()}
+This module parses a module file and collects information about the contributions of the metal atomic orbitals to the MOs. It prints this information to a *\_orbs.txt file.
+\subsubsection{parsed()}
+This module parses the generated *\_orbs.txt files and calculates properties such as homo, lumo, fermi energy and d-band center.
+\subsubsection{getresd()}
+This module collects the information from parsed() and prints them into the summary file avorbs.txt.
+\subsubsection{moldpost()}
+Loops over the molden files and coordinates the parsing.
 
 \subsection{\texttt{postmwfn.py}}
+This script uses Multiwfn to perform post processing including population analysis, delocalization indices and cube file generation.
+\subsubsection{calculate\_integral()}
+Calculates an integral by summation.
+\subsubsection{spreadcalc()}
+Calculates probabilistic modes that correspond to mean, variance and skewness of a distribution for electron density, ELF and laplacian.
+\subsubsection{calcHELP()}
+Calculates the HELP value by integration.
+\subsubsection{parsecube()}
+Reads and parses a Gaussian cube file.
+\subsubsection{wfncalc()}
+Coordinates the calculation of wavefunction properties such as density, ELF and HELP values.
+\subsubsection{cubespin()}
+Generates the alpha and beta electron density cube files based on the density and spindensity cube files.
+\subsubsection{getcubes()}
+Generates cube files for the density, spindensity, ELF and alpha and beta spin densities.
+\subsubsection{getwfnprops()}
+Coordinates the calculation of average properties from the cube files and prints a summary in wfnprops.txt.
+\subsubsection{getcharges()}
+Performs population analysis using VDD, Hirshfeld and Mulliken printing the summary in charges.txt.
+\subsubsection{deloc()}
+Calculates the delocalization and the delocalization index for the metal printing the summary in deloc\_res.txt.
 
 \subsection{\texttt{postparse.py}}
+This script gives a summary of the calculation and parses nbo output.
+\subsubsection{nbo\_parser()}
+Parses nbo output and extracts information about charges, contributions of orbitals to NBO etc. 
+\subsubsection{nbopost()}
+Coocrdinates parsing of nbo output and writes the summary to nbo.txt.
+\subsubsection{gampost()}
+Parses output from GAMESS and prints the summary in gam-results.txt.
+\subsubsection{terapost()}
+Parses output from terachem and prints the summary in tera-results.txt.
 
 \subsection{\texttt{postproc.py}}
+This module coordinates the post processing by calling the various routines according to the specified user input.
 
 \subsection{\texttt{qcgen.py}}
+This script generates the input files for quantum chemistry calculations.
+\subsubsection{multitcgen()}
+Loops over multiple DFT functionals and generates the corresponding input files for terachem.
+\subsubsection{tcgen()}
+Generates the input file for terachem.
+\subsubsection{xyz2gxyz()}
+Converts an xyz file to a GAMESS format that will be included in the input file.
+\subsubsection{tcgen()}
+Generates the input file for GAMESS.
+\subsubsection{multigamgen()}
+Loops over multiple DFT functionals and generates the corresponding input files for GAMESS.
+\subsection{\texttt{qcgen.py}}
+\subsubsection{tcgen()}
+Generates the input file for QChem.
+\subsubsection{multitcgen()}
+Loops over multiple DFT functionals and generates the corresponding input files for QChem.
 
 \subsection{\texttt{rungen.py}}
+This script coordinates the generation of the various files in the program including structures, input files and jobscripts.
+\subsubsection{randomgen()}
+Total random generation by selecting ligands with no constraints.
+\subsubsection{getconstsample()}
+Generates all possible combinations of ligands from the database and collects a sample that satisfies the constraints imposed by the user.
+\subsubsection{constrgen()}
+The constrained random generation module parses the constraints imposed by the user, generates a sample that satisfies those constraints and then runs the structure generation routines.
+\subsubsection{multigenruns()}
+Runs the structure generation for multiple charges and spin states.
+\subsubsection{checkmultilig()}
+This module checks if a specified moelcular file contains more than one ligand (from a database search for example). If there are many ligands, it loops over all of them generating all possible complexes.
+\subsubsection{rungen()}
+Main driver for file generation. It builds a folder name for the complex, creates the corresponding directory and then calls the routines for the structure generation, the input file and the jobscript generation.
 
 \subsection{\texttt{structgen.py}}
-
+This is the script that performs the structure generation. 
+\subsubsection{setdiff()}
+Gets the difference between two sets of data (lists).
+\subsubsection{getbackcombs()}
+Lists all possible combinations of connection points in the backbone for a specified geometry.
+\subsubsection{getnupdateb()}
+Returns a combination of connection points that satisfies the denticity of the ligand and also updates the list of available connection points.
+\subsubsection{getsmilescat()}
+Either reads or calculates the connection atoms for a given SMILES string.
+\subsubsection{getsmident()}
+Returns the denticity of a SMILES ligand.
+\subsubsection{modifybackbone()}
+If ligand angles are specified, the backbone is modified to accompany the user input.
+\subsubsection{modifybackbonep()}
+If angles of the backbone points are specified, the backbone is modified to accompany the user input.
+\subsubsection{distortbackbone()}
+Distorts the backbone according to the degree of distortion specified in the input.
+\subsubsection{getbondlength()}
+Returns the approximated metal-ligand bond length. Initially the program looks for the M-L bond length in the database and if doesn't find an exact match it tries to find a similar one. If no similar exists then it approximates the M-L bond length with the sum of the corresponding covalent radii.
+\subsubsection{ffopt()}
+Force field optimization routine. The program converts a mol3D object to an OBmol molecule, sets up a forcefield with appropriate constraints and performs the optimization.
+\subsubsection{ffoptd()}
+Similar to ffopt but for custom cores (different constraints).
+\subsubsection{getconnection()}
+Uses manual search and force field optimization to select the optimum position for adding a ligand to a custom core. The program tries to both minimize steric repulsion between adjacent atoms and to align the center of mass of the new ligand correctly.
+\subsubsection{mcomplex()}
+This module generates metal coordination complexes by gradually adding ligands to a simple metal core. The procedure depends on the denticity of the ligand with various geometric routines performed at each step. Force field optimization can be included here as well.
+\subsubsection{customcore()}
+This module generates complexes by either functionalizing a custom core with additional ligands or by replacing existing ligands with new ones.  Force field optimization can be included here as well.
+\subsubsection{structgen()}
+This module builds the core complexes by calling customcore() or mcomplex() and then places additional molecules around the core. It finally generates the corresponding xyz files and returns the paths to the xyz files.
 \section{Data files}
 \subsection{Core dictionary}
-
+The file cores.dict contains all the cores existing in the local database. Each entry includes a key corresponding to the core name and values corresponding to the mol file of the core, the connection atom(s) index in the structure and the maximum denticity allowed for ligands that are going to functionalize that core.
 \subsection{Ligand dictionary}
+The file ligands.dict contains all the ligands  existing in the local database. Each entry includes a key corresponding to the core name and values corresponding to the ligand mol file, a short unique identifier used in folder naming followed by the indices of the connection atoms in the ligand.
 
 \subsection{Extra molecule dictionary}
-
+The file bind.dict contains all the extra molecules existing in the local database. Each entry includes a key corresponding to the extra molecule's name and the corresponding mol or xyz file.
+\subsection{Simple ligands dictionary}
+The simple\_ligands.dict file contains pairs of popular ligand names with the corresponding SMILES string such as NH3:N. 
 \subsection{Metal-ligand bond lengths}
-
+The file ML.dat contains the DFT calculated values for metal-ligand bond lengths. Each entry includes keys such as: metal, oxidation state, spin multiplicity, element directly connected to the metal and ligand. 
 \subsection{Backbone files}
-
+The backbone files contain the xyz coordinates of the points that comprise the backbone.
 
 
 \end{document}

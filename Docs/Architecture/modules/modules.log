@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99992 (TeX Live 2015) (preloaded format=xelatex 2015.5.24)  24 MAR 2016 21:35
+This is XeTeX, Version 3.14159265-2.6-0.99992 (TeX Live 2015) (preloaded format=xelatex 2015.5.24)  25 MAR 2016 01:52
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -507,24 +507,24 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 File: ./kulik_logo.png Graphic file (type QTm)
  <use  "./kulik_logo.png" > [2]
 File: ./kulik_logo.png Graphic file (type QTm)
- <use  "./kulik_logo.png" > [3])
+ <use  "./kulik_logo.png" > [3]
+File: ./kulik_logo.png Graphic file (type QTm)
+
+<use  "./kulik_logo.png" > [4]
+File: ./kulik_logo.png Graphic file (type QTm)
+ <use  "./kulik_logo.png" > [5])
 \tf@toc=\write4
 \openout4 = `modules.toc'.
 
 File: ./kulik_logo.png Graphic file (type QTm)
 
-<use  "./kulik_logo.png" > [4]
+<use  "./kulik_logo.png" > [6]
 File: ./kulik_logo.png Graphic file (type QTm)
- <use  "./kulik_logo.png" > [5
+ <use  "./kulik_logo.png" > [7
 
 ]
 LaTeX Font Info:    Font shape `OT1/pcr/bx/n' in size <14.4> not available
 (Font)              Font shape `OT1/pcr/b/n' tried instead on input line 65.
-File: ./kulik_logo.png Graphic file (type QTm)
-
-<use  "./kulik_logo.png" > [6]
-File: ./kulik_logo.png Graphic file (type QTm)
- <use  "./kulik_logo.png" > [7]
 File: ./kulik_logo.png Graphic file (type QTm)
 
 <use  "./kulik_logo.png" > [8]
@@ -543,24 +543,66 @@ File: ./kulik_logo.png Graphic file (type QTm)
 File: ./kulik_logo.png Graphic file (type QTm)
 
 <use  "./kulik_logo.png" > [14]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 300.
 File: ./kulik_logo.png Graphic file (type QTm)
  <use  "./kulik_logo.png" > [15]
 File: ./kulik_logo.png Graphic file (type QTm)
 
 <use  "./kulik_logo.png" > [16]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 300.
+File: ./kulik_logo.png Graphic file (type QTm)
+ <use  "./kulik_logo.png" > [17]
+File: ./kulik_logo.png Graphic file (type QTm)
+
+<use  "./kulik_logo.png" > [18]
+File: ./kulik_logo.png Graphic file (type QTm)
+ <use  "./kulik_logo.png" > [19]
+File: ./kulik_logo.png Graphic file (type QTm)
+
+<use  "./kulik_logo.png" > [20]
+File: ./kulik_logo.png Graphic file (type QTm)
+ <use  "./kulik_logo.png" > [21]
+File: ./kulik_logo.png Graphic file (type QTm)
+
+<use  "./kulik_logo.png" > [22]
+File: ./kulik_logo.png Graphic file (type QTm)
+ <use  "./kulik_logo.png" > [23]
+File: ./kulik_logo.png Graphic file (type QTm)
+
+<use  "./kulik_logo.png" > [24]
+File: ./kulik_logo.png Graphic file (type QTm)
+ <use  "./kulik_logo.png" > [25]
+File: ./kulik_logo.png Graphic file (type QTm)
+
+<use  "./kulik_logo.png" > [26]
+Overfull \hbox (5.19855pt too wide) in paragraph at lines 461--462
+\OT1/cmr/m/n/12 Loops over mul-ti-ple DFT func-tion-als and gen-er-ates the cor
+-re-spond-ing in-put files for GAMESS. 
+ []
+
+File: ./kulik_logo.png Graphic file (type QTm)
+<use  "./kulik_logo.png" > [27]
+File: ./kulik_logo.png Graphic file (type QTm)
+ <use  "./kulik_logo.png" > [28]
+File: ./kulik_logo.png Graphic file (type QTm)
+
+<use  "./kulik_logo.png" > [29]
+File: ./kulik_logo.png Graphic file (type QTm)
+ <use  "./kulik_logo.png" > [30]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 531.
+File: ./kulik_logo.png Graphic file (type QTm)
+
+<use  "./kulik_logo.png" > [31]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 531.
  (./modules.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 300.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 300.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 531.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 531.
  ) 
 Here is how much of TeX's memory you used:
- 11974 strings out of 493706
- 163933 string characters out of 6145769
- 258134 words of memory out of 5000000
- 15196 multiletter control sequences out of 15000+600000
+ 11989 strings out of 493706
+ 164179 string characters out of 6145769
+ 267006 words of memory out of 5000000
+ 15211 multiletter control sequences out of 15000+600000
  11735 words of font info for 46 fonts, out of 8000000 for 9000
  1328 hyphenation exceptions out of 8191
  36i,17n,45p,842b,369s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on modules.pdf (17 pages).
+Output written on modules.pdf (32 pages).
