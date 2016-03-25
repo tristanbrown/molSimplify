@@ -644,7 +644,3 @@ def loadfrominputfile(gui,fname):
             gui.etcDBmw1.setText(ssp[-1])
     if db:
         gui.searchDBW()
-        
-        
-        
-        

@@ -218,8 +218,8 @@ def dbsearch(rundir,args,globs):
     else:
         obab = 'obabel'
     if args.gui:
-        from Classes.qBox import qBoxInfo
-        from Classes.qBox import qBoxError
+        from Classes.mWidgets import qBoxInfo
+        from Classes.mWidgets import qBoxError
     ### in any case do similarity search over indexed db ###
     outf = args.dboutputf if args.dboutputf else 'simres.smi' # output file
     ### convert to SMILES/SMARTS if file

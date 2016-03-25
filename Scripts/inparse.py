@@ -24,7 +24,7 @@ def checkinput(args):
     # check if ligands are specified
     if not args.lig and not args.rgen:
         if args.gui:
-            from Classes.qBox import qBoxWarning
+            from Classes.mWidgets import qBoxWarning
             qqb = qBoxWarning(args.gui.mainWindow,'Warning','You specified no ligands. Please use the -lig flag. Core only generation..')
         else:
             print 'WARNING: You specified no ligands. Please use the -lig flag. Forced generation..\n'

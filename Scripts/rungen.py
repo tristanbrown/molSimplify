@@ -9,11 +9,8 @@
 
 from structgen import *
 from io import *
-from gamgen import *
-from sgejobgen import *
-from tcgen import *
-from qgen import *
-from slurmjobgen import *
+from jobgen import *
+from qcgen import *
 import argparse, sys, os, shutil, itertools
 from collections import Counter
 import pybel

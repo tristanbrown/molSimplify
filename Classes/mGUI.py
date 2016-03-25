@@ -7,12 +7,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtWebKitWidgets import *
-from Classes.mWindow import *
+from Classes.mWidgets import *
 from Classes.mGUI import *
-from Classes.mPic import *
-from Classes.mText import *
-from Classes.mButton import *
-from Classes.mMenubar import *
 from Classes.globalvars import *
 from Classes.mol3D import mol3D
 from Scripts.generator import startgen
@@ -236,7 +232,7 @@ class mGUI():
         # add to database
         ctip = 'Add core/ligand/binding species to local database'
         self.butADB = mButton(self.mainWindow,0.175,0.84,0.1,0.065,'Add to local DB',ctip,12)
-        self.butADB.clicked.connect(self.addDB)
+        self.butADB.clicked.connect(self.enableDB)
         # add to database
         ctip = 'Search for ligand/binding species in chemical databases'
         self.searchDB = mButton(self.mainWindow,0.065,0.84,0.1,0.065,'Search DB',ctip,12)
@@ -779,7 +775,7 @@ class mGUI():
         # button for addition
         ctip = 'Run post-processing'
         self.butpR = mButton(self.pWindow,0.4125,0.775,0.2,0.125,'Run',ctip,14)
-        self.butpR.clicked.connect(self.postproc)
+        self.butpR.clicked.connect(self.postprocGUI)
         # button for return
         ctip = 'Return to main menu'
         self.butpret = mButton(self.pWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
@@ -807,7 +803,7 @@ class mGUI():
         if name[0] != '':
             self.etDBsmi.setText(os.path.relpath(name[0]))
     ### enable add to database interface
-    def addDB(self):
+    def enableDB(self):
         self.DBWindow.setWindowModality(2)
         self.DBWindow.show()
     ### callback for addition button, adds to database
@@ -863,7 +859,7 @@ class mGUI():
             self.rtDBsmicat.setDisabled(True)
             self.etDBsmicat.setDisabled(True)
     ### perform post-processing
-    def postproc(self):
+    def postprocGUI(self):
         rdir = self.etpdir.text()
         if rdir[-1]=='/':
             rdir = rdir[:-1]

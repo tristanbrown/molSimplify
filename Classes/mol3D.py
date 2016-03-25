@@ -260,7 +260,7 @@ class mol3D:
         # INPUT
         #  - sym: symbol of atom
         # OUTPUT
-        #   - mm: indices of all atoms with symbol sym in the molecule
+        #  - mm: indices of all atoms with symbol sym in the molecule
         mm = []
         for i,atom in enumerate(self.atoms):
             if atom.sym==sym:
@@ -273,19 +273,19 @@ class mol3D:
     def findsubMol(self,atom0,atomN):
         # INPUT
         #   - atom0: index of start of submolecule
-        #   - atomN: index of atom to separate molecule
+        #   - atomN: index of atom used to separate molecule
         # OUTPUT
         #   - subm: indices of all atoms in submolecule
         subm = []
-        conatoms = self.getBondedAtoms(atom0)
-        conatoms.append(atom0)
+        conatoms = self.getBondedAtoms(atom0) # connected atoms to atom0
+        conatoms.append(atom0) 
         if atomN in conatoms:
-            conatoms.remove(atomN)
-        subm += conatoms
-        while len(conatoms) > 0:
-            for atidx in subm:
-                if atidx != atomN:
-                    newcon = self.getBondedAtoms(atidx)
+            conatoms.remove(atomN)  # check for atomN and remove
+        subm += conatoms # add to submolecule
+        while len(conatoms) > 0: # while list of atoms to check loop
+            for atidx in subm: # loop over initial connected atoms
+                if atidx != atomN: # check for separation atom
+                    newcon = self.getBondedAtoms(atidx) 
                     if atomN in newcon:
                         newcon.remove(atomN)
                     for newat in newcon:
@@ -293,7 +293,7 @@ class mol3D:
                             conatoms.append(newat)
                             subm.append(newat)
                 if atidx in conatoms:
-                    conatoms.remove(atidx)
+                    conatoms.remove(atidx) # remove from list to check
         subm.sort()
         return subm
         
@@ -349,9 +349,9 @@ class mol3D:
                 nats.append(i)
         return nats
         
-    #########################################
-    ### gets list hydrogens from molecule ###
-    #########################################
+    ####################################
+    ### gets hydrogens from molecule ###
+    ####################################
     def getHs(self):
         hlist = []
         for i in range(self.natoms):
@@ -359,9 +359,9 @@ class mol3D:
                 hlist.append(i)
         return hlist
     
-    ##########################################################
+    ###########################################################
     ### returns list of hydrogens bonded to a specific atom ###
-    ##########################################################
+    ###########################################################
     def getHsbyAtom(self,ratom):
         # INPUT
         #   - ratom: reference atom3D
@@ -375,9 +375,9 @@ class mol3D:
                     nHs.append(i)
         return nHs
         
-    ##########################################################
+    ###########################################################
     ### returns list of hydrogens bonded to a specific atom ###
-    ##########################################################
+    ###########################################################
     def getHsbyIndex(self,idx):
         # INPUT
         #   - idx: index of reference atom
@@ -421,9 +421,12 @@ class mol3D:
         elements = globs.elementsbynum()
         # check center of mass
         ats = []
+        # loop over entries in mask
         for entry in mask:
+            # check for center of mass
             if ('com' in entry.lower()) or ('cm' in entry.lower()):
                 return self.centermass()
+            # check for range
             elif '-' in entry:
                 at0 = entry.split('-')[0]
                 at1 = entry.split('-')[-1]
