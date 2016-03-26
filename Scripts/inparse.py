@@ -207,6 +207,8 @@ def parseinput(args):
                 args.btheta = l[1]
             if (l[0]=='-bphi'):
                 args.bphi = l[1]
+            if (l[0]=='-bsep'):
+                args.bsep = l[1]
             if (l[0]=='-bref'):
                 args.bref = l[1:]
             if (l[0]=='-nambsmi'):
@@ -441,6 +443,7 @@ def parsecommandline(parser):
     parser.add_argument("-bcharge","--bcharge",default='0', help="binding species charge, default 0",action="store_true") 
     parser.add_argument("-bphi","--bphi", help="azimuthal angle phi for binding species, default random between 0 and 180",action="store_true") 
     parser.add_argument("-bref","--bref", help="reference atoms for placement of extra molecules, default COM (center of mass). e.g. 1,5 or 1-5, Fe, COM",action="store_true") 
+    parser.add_argument("-bsep","--bsep", help="flag for separating extra molecule in input or xyz file",action="store_true")
     parser.add_argument("-btheta","--btheta", help="polar angle theta for binding species, default random between 0 and 360",action="store_true") 
     parser.add_argument("-geometry","--geometry", help="geometry such as TBP (trigonal bipyramidal)",action="store_true") # geometry
     parser.add_argument("-lig","--lig", help="ligand structure name or SMILES with currently available: "+getligs(installdir),action="store_true") #e.g. acetate (in smilesdict)

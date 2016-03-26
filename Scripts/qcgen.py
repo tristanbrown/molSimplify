@@ -176,7 +176,7 @@ def multigamgen(args,strfiles):
         os.remove(xyzf+'.gxyz')
     return jobdirs
 
-### generate input files ###
+### generate input files for gamess###
 def gamgen(args,strfiles,method):
     # get global variables
     globs = globalvars()
@@ -343,7 +343,7 @@ def multiqgen(args,strfiles):
         os.remove(xyzf+'.xyz')
     return jobdirs
 
-### generate input files ###
+### generate input files for qchem ###
 def qgen(args,strfiles,method):
     # get global variables
     globs = globalvars()
@@ -406,8 +406,17 @@ def qgen(args,strfiles,method):
     for i,jobd in enumerate(jobdirs):
         output=open(jobd+'/qch.inp','w')
         f=open(jobd+'/'+coordfs[i])
-        s = f.readlines()[2:] # read coordinates
+        s0 = f.readlines()[2:] # read coordinates
         f.close()
+        # if separate split to two molecules
+        if args.bsep and '--' in ''.join(s0):
+            idxsplit = [isdx for isdx, ss in enumerate(s0) if '--' in ss][0]
+            s = '--\n'+jobparams['CHARGE']+' '+jobparams['SPIN']+'\n'
+            s += ''.join(s0[:idxsplit])
+            s += '--\n0 1\n'
+            s += ''.join(s0[idxsplit+3:])
+        else:
+            s = s0
         # write rem block
         output.write('$rem\nUNRESTRICTED\t\t' + jobparams['UNRESTRICTED'])
         output.write('\nBASIS\t\t'+jobparams['BASIS']+'\nJOBTYPE\t\t'+jobparams['JOBTYPE'])

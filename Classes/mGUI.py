@@ -121,7 +121,7 @@ class mGUI():
         # force keep hydrogens
         ctip = 'Do not remove hydrogens while connecting ligand to core. default no'
         self.rtkeepHs = mRtext(self.mainWindow,0.025,0.48,0.1,0.05,'Keep Hs:',ctip,14,'r','r')
-        ctip = 'Enter yes/1 or no/0 for each corresponding ligand. e.g. yes,no,yes,yes'
+        ctip = 'Enter yes/no or 1/0 for each corresponding ligand. e.g. yes,no,yes,yes'
         self.etkeepHs = mEtext(self.mainWindow,0.14,0.475,0.15,0.05,'',ctip,14,'r','l')
         # custom M-L bond lengths (A)
         ctip = 'Custom bond length for M-L in Angstrom'
@@ -159,7 +159,7 @@ class mGUI():
         # name of binding molecule from SMILES
         ctip = 'Name of binding molecule using SMILES'
         self.rtbsmi = mRtext(self.mainWindow,0.675,0.325,0.1,0.05,'Name:',ctip,14,'r','r')
-        self.etbsmi = mEtext(self.mainWindow,0.785,0.325,0.15,0.05,'',ctip,14,'r','l')
+        self.etbsmi = mEtext(self.mainWindow,0.785,0.325,0.075,0.05,'',ctip,14,'r','l')
         self.rtbsmi.setDisabled(True)
         self.etbsmi.setDisabled(True)
         # number of binding conformations to generate
@@ -268,6 +268,10 @@ class mGUI():
         ctip = 'Calculate charge based on ox state and ligands'
         self.chch = mCheck(self.mainWindow,0.55,0.425,0.1,0.07,'Calc charge',ctip,14)
         self.chch.setDisabled(True)
+        # charge calculation
+        ctip = 'Separate molecules in xyz or input file with ------'
+        self.chsep = mCheck(self.mainWindow,0.87,0.315,0.1,0.07,'separate',ctip,14)
+        self.chsep.setDisabled(True)        
         ########################
         ### generate sliders ###
         ########################
@@ -464,7 +468,7 @@ class mGUI():
         self.etcDBsmarts = mEtext(self.cDBWindow,0.675,0.35,0.225,0.08,'',ctip,14,'r','l')
         # text for output file
         ctip = 'Please type in output file'
-        self.etcDBoutf = mEtext(self.cDBWindow,0.215,0.58,0.15,0.08,'',ctip,14,'r','l')
+        self.etcDBoutf = mEtext(self.cDBWindow,0.215,0.58,0.15,0.08,'dbres',ctip,14,'r','l')
         self.rtcDBsoutf = mRtext(self.cDBWindow,0.0,0.595,0.175,0.08,'Output file:',ctip,14,'r','r')
         # drop menu for output file
         qcav = ['.smi']#,'.mol','.sdf']
@@ -486,6 +490,10 @@ class mGUI():
         ctip = 'Search database:'
         self.butcDBAub = mButton(self.cDBWindow,0.325,0.8,0.2,0.125,'Search',ctip,14)
         self.butcDBAub.clicked.connect(self.qaddcDB)
+        # button for addition
+        ctip = 'Draw results'
+        self.butcDBd0 = mButton(self.cDBWindow,0.175,0.675,0.15,0.085,'Draw',ctip,14)
+        self.butcDBd0.clicked.connect(self.drawres)
         # button for return
         ctip = 'Return to main menu'
         self.butcDBRet = mButton(self.cDBWindow,0.6,0.875,0.15,0.08,'Return',ctip,14)
@@ -1059,6 +1067,91 @@ class mGUI():
                 ctip = 'Close current window'
                 self.lwclose = mButton(self.lwindow,0.40,0.85,0.2,0.1,'Close',ctip,14)
                 self.lwclose.clicked.connect(self.cwclose)
+    ### draw results from db search
+    def drawres(self):
+        ### collects all the info and passes it to molSimplify ###
+        rdir = self.etrdir.text()
+        if rdir[-1]=='/':
+            rdir = rdir[:-1]
+        # creat running dir if not existing
+        if not os.path.isdir(rdir):
+            os.mkdir(rdir)
+        outf = rdir+'/'+self.etcDBoutf.text()
+        outf = outf.replace(' ','')+'.smi'
+        print outf
+        if not glob.glob(outf):
+            QMessageBox.warning(self.cDBWindow,'Warning','No database results file in '+rdir)
+            return False
+        else:
+            lls = [outf]
+            liglist = []
+            # check if multiple ligands in .smi file
+            for l in lls:
+                if '.smi' in l:
+                    f = open(l,'r')
+                    smis = filter(None,f.read().splitlines())
+                    liglist += smis
+                else:
+                    liglist.append(l)
+            globs = globalvars()
+            licores = readdict(globs.installdir+'/Ligands/ligands.dict')
+            ligs = []
+            for l in liglist:
+                if isinstance(l,unicode):
+                    ll = unicodedata.normalize('NFKD',l).encode('ascii','ignore')
+                else:
+                    ll = l
+                lig,emsg = lig_load(globs.installdir+'/',ll,licores)
+                if emsg:
+                    QMessageBox.warning(self.mainWindow,'Error',emsg)
+                else:
+                    ligs.append(lig.OBmol)
+            if len(ligs)==0:
+                return
+            fcount = 0
+            while glob.glob(rdir+'/ligs'+str(fcount)+'.png'):
+                fcount += 1
+            outputf  = 'ligs.smi'
+            locf = 'ligs'+str(fcount)
+            outbase = rdir+'/'+locf
+            outf = pybel.Outputfile("smi",outputf,overwrite=True)
+            for mol in ligs:
+                outf.write(mol)
+            # convert to svg
+            if globs.osx:
+                cmd = "/usr/local/bin/obabel -ismi "+outputf+" -O "+locf+".svg -xC -xi"
+            else:
+                cmd = "obabel -ismi "+outputf+" -O "+locf+".svg -xC -xi"
+            t = mybash(cmd)
+            print t
+            if glob.glob(outputf):
+                os.remove(outputf)
+            else:
+                QMessageBox.information(self.cDBWindow,'Error','Image could not be generated\n.')
+                return
+            ####################
+            ### draw ligands ###
+            ####################
+            if globs.osx:
+                cmd = '/usr/local/bin/convert -density 1200 '+locf+'.svg '+locf+'.png'
+            else:
+                cmd = 'convert -density 1200 '+locf+'.svg '+locf+'.png'
+            s = mybash(cmd)
+            print s
+            if not glob.glob(locf+'.png') :
+                QMessageBox.information(self.cDBWindow,'Done','2D representation of ligands generated in file ' +outbase+'.svg ! Conversion to png failed.')
+            else:
+                os.remove(locf+".svg")
+                shutil.move(locf+'.png',outbase+'.png')
+                # create window
+                self.lwindow = mWgen(0.4,0.5,'Ligands') # jobscript window
+                c1p = mPic2(self.lwindow,outbase+'.png',0.0,0.0,0.5,0.5)
+                self.lwindow.setWindowModality(2)
+                self.lwindow.show()
+                # button for closing window
+                ctip = 'Close current window'
+                self.lwclose = mButton(self.lwindow,0.40,0.85,0.2,0.1,'Close',ctip,14)
+                self.lwclose.clicked.connect(self.cwclose)
     ### def enable FF input
     def enableffinput(self):
         if self.chkFF.isChecked():
@@ -1153,6 +1246,7 @@ class mGUI():
             self.etplacetheta.setDisabled(False)
             self.rtmaskbind.setDisabled(False)
             self.etmaskbind.setDisabled(False)
+            self.chsep.setDisabled(False)
         else:
             self.txtamol.setDisabled(True)
             self.rtbind.setDisabled(True)
@@ -1173,11 +1267,16 @@ class mGUI():
             self.etplacetheta.setDisabled(True)
             self.rtmaskbind.setDisabled(True)
             self.etmaskbind.setDisabled(True)
+            self.chsep.setDisabled(True)
     #####################
     #### QEt/g input ####
     #####################
     ### callback for QE input
     def qcinput(self):
+        if self.chch.getState():
+            self.etqcgch.setDisabled(True)
+            self.etqctch.setDisabled(True)
+            self.etqcQch.setDisabled(True)
         if self.qcode.currentIndex()==0: # generate terachem input
             self.qctWindow.setWindowModality(2)
             self.qctWindow.show()

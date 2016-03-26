@@ -82,6 +82,8 @@ def grabguivars(gui):
         args['-bind'] = gui.etbind.text()
         args['-bcharge'] = gui.etchbind.text()
         args['-nbind'] = gui.etnbind.text()
+        if gui.chsep.getState():
+            args['-bsep'] = 'yes'
         args['-nambsmi'] = gui.etbsmi.text()
         args['-maxd'] = gui.etplacemax.text()
         args['-mind'] = gui.etplacemin.text()
@@ -483,6 +485,8 @@ def loadfrominputfile(gui,fname):
             gui.chkM.setChecked(True)
             gui.enableemol()
             gui.etbind.setText(st[-1])
+        if '-bsep'==st[0]:
+            gui.chsep.setChecked(True)
         if '-bcharge'==st[0]:
             gui.etchbind.setText(st[-1])
         if '-nbind'==st[0]:

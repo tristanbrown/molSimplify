@@ -1549,8 +1549,6 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
         an3Db.copymol3D(an3D)
         base3D = protate(an3Db,Rp,[20*mindist,0.0,0.0])
         mols = []
-        maxdist = mindist+float(args.maxd) # Angstrom, distance of non-interaction    
-        mindist = mindist+float(args.mind) # Angstrom, distance of non-interaction
         if args.bcharge:
             core3D.charge += int(args.bcharge)
         elif args.calccharge and 'y' in args.calccharge.lower():
@@ -1567,7 +1565,6 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
             # generate random sequence of parameters for rotate()
             totits = 0 
             while True:
-                R = random.uniform(mindist,maxdist) # get random distance, separated for i=0
                 phi = random.uniform(0.0,360.0)
                 theta = random.uniform(-180.0,180.0)
                 if args.bphi:
@@ -1595,6 +1592,15 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
                     refbP = an3D.getMask(args.bref)
                 else:
                     refbP = an3D.centermass()
+                # get maximum distance in the correct direction
+                Pp0 = PointTranslatetoPSph(core3D.centermass(),[0.5,0.5,0.5],[0.01,theta,phi])
+                cmcore = core3D.centermass()
+                uP = [100*Pp0[0]-99*cmcore[0],100*Pp0[1]-99*cmcore[1],100*Pp0[2]-99*cmcore[2]]
+                mindist = core3D.getfarAtomdir(uP)
+                maxdist = mindist+float(args.maxd) # Angstrom, distance of non-interaction    
+                mindist = mindist+float(args.mind) # Angstrom, distance of non-interaction
+                R = random.uniform(mindist,maxdist) # get random distance, separated for i=0
+                # rotate and place according to distance
                 tr3D = protateref(an3Db, Rp, refbP, [R,theta,phi])
                 # rotate center of mass
                 newmol = rotateRef(tr3D,refbP,[thetax,thetay,thetaz])
@@ -1615,8 +1621,12 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
                     break 
                 totits += 1
             if (i > 0):
-                # write new xyz file
-                newmol.writemxyz(core3D,fname+str(i))
+                # write separate xyz file
+                if args.bsep:
+                    core3D.writesepxyz(newmol,fname+str(i))
+                else:
+                    # write new xyz file
+                    newmol.writemxyz(core3D,fname+str(i))
                 # append filename
                 strfiles.append(fname+str(i))
             else:
@@ -1636,12 +1646,13 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
     if args.calccharge and 'y' in args.calccharge.lower():
         args.charge = core3D.charge
     # check for molecule sanity
-    sanity = core3D.sanitycheck(True)
+    sanity,d0 = core3D.sanitycheck(True)
     del core3D
     if sanity:
-        print 'WARNING: Generated complex is not good!\n'
+        print 'WARNING: Generated complex is not good! Minimum distance between atoms:'+"{0:.2f}".format(d0)+'A\n'
         if args.gui:
-            qqb = qBoxWarning(args.gui.mainWindow,'Warning','Generated complex in folder '+rootdir+' is no good!')
+            ssmsg = 'Generated complex in folder '+rootdir+' is no good! Minimum distance between atoms:'+"{0:.2f}".format(d0)+'A\n'
+            qqb = qBoxWarning(args.gui.mainWindow,'Warning',ssmsg)
     if args.gui:
         args.gui.iWtxt.setText('In folder '+pfold+' generated '+str(Nogeom)+' structures!\n'+args.gui.iWtxt.toPlainText())
         args.gui.app.processEvents()
