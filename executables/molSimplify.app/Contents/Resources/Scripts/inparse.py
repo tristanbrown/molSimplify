@@ -24,7 +24,7 @@ def checkinput(args):
     # check if ligands are specified
     if not args.lig and not args.rgen:
         if args.gui:
-            from Classes.qBox import qBoxWarning
+            from Classes.mWidgets import qBoxWarning
             qqb = qBoxWarning(args.gui.mainWindow,'Warning','You specified no ligands. Please use the -lig flag. Core only generation..')
         else:
             print 'WARNING: You specified no ligands. Please use the -lig flag. Forced generation..\n'
@@ -131,6 +131,16 @@ def cleaninput(args):
             else:
                 ls.append(s)
         args.statoption = ls
+    # check remoption
+    if args.remoption:
+        ls = []
+        for i,s in enumerate(args.remoption):
+            if isinstance(s,list):
+                for ss in s:
+                    ls.append(ss)
+            else:
+                ls.append(s)
+        args.remoption = ls
     # convert keepHs to boolean
     if args.keepHs:
         for i,s in enumerate(args.keepHs):
@@ -197,6 +207,10 @@ def parseinput(args):
                 args.btheta = l[1]
             if (l[0]=='-bphi'):
                 args.bphi = l[1]
+            if (l[0]=='-bsep'):
+                args.bsep = l[1]
+            if (l[0]=='-bref'):
+                args.bref = l[1:]
             if (l[0]=='-nambsmi'):
                 args.nambsmi = l[1]
             if (l[0]=='-maxd'):
@@ -283,6 +297,19 @@ def parseinput(args):
                     args.qoption.append(l[1:])
                 else:
                     args.qoption = l[1:]
+            # parse qchem arguments
+            if (l[0]=='-exchange'):
+                args.exchange = l[1]
+            if (l[0]=='-correlation'):
+                args.correlation = l[1]
+            if (l[0]=='-unrestricted'):
+                if '1' in l[1].lower() or 't' in l[1].lower():
+                    args.unrestricted = True
+            if (l[0]=='-remoption'):
+                if args.remoption:
+                    args.remoption.append(l[1:])
+                else:
+                    args.remoption = l[1:]
             # parse gamess arguments
             if (l[0]=='-gbasis'):
                 args.gbasis = l[1]
@@ -415,6 +442,8 @@ def parsecommandline(parser):
     parser.add_argument("-bind","--bind", help="binding species with currently available: "+getbinds(installdir),action="store_true") #e.g. bisulfate, nitrate, perchlorate -> For binding
     parser.add_argument("-bcharge","--bcharge",default='0', help="binding species charge, default 0",action="store_true") 
     parser.add_argument("-bphi","--bphi", help="azimuthal angle phi for binding species, default random between 0 and 180",action="store_true") 
+    parser.add_argument("-bref","--bref", help="reference atoms for placement of extra molecules, default COM (center of mass). e.g. 1,5 or 1-5, Fe, COM",action="store_true") 
+    parser.add_argument("-bsep","--bsep", help="flag for separating extra molecule in input or xyz file",action="store_true")
     parser.add_argument("-btheta","--btheta", help="polar angle theta for binding species, default random between 0 and 360",action="store_true") 
     parser.add_argument("-geometry","--geometry", help="geometry such as TBP (trigonal bipyramidal)",action="store_true") # geometry
     parser.add_argument("-lig","--lig", help="ligand structure name or SMILES with currently available: "+getligs(installdir),action="store_true") #e.g. acetate (in smilesdict)
@@ -439,17 +468,22 @@ def parsecommandline(parser):
     parser.add_argument("-place","--place", help="place binding species relative to core. Takes either angle (0-360) or ax/s for axial side",action="store_true")
     parser.add_argument("-oxstate","--oxstate", help="oxidation state of the metal, used for bond lengths",action="store_true")
     # quantum chemistry options
-    parser.add_argument("-qccode","--qccode", help="quantum chemistry code. Choices: TeraChem or GAMESS",action="store_true") 
+    parser.add_argument("-qccode","--qccode", help="quantum chemistry code. Choices: TeraChem or GAMESS or QChem",action="store_true") 
     parser.add_argument("-charge","--charge", help="charge for system (default: neutral).",action="store_true")
     parser.add_argument("-calccharge","--calccharge", help="Flag to calculate charge.",action="store_true")
     parser.add_argument("-spin","--spin", help="spin multiplicity for system (default: singlet) e.g. 1",action="store_true")
     parser.add_argument("-runtyp","--runtyp", help="run type. Choices: optimization, energy",action="store_true")
     parser.add_argument("-method","--method", help="electronic structure method. Specify UDFT for unrestricted calculation(default: b3lyp) e.g. ub3lyp",action="store_true")
-        # terachem arguments    
-    parser.add_argument("-basis","--basis", help="basis for terachem job (default: LACVP*)",action="store_true")
+    # terachem arguments
+    parser.add_argument("-basis","--basis", help="basis for terachem or qchem job (default: LACVP* or lanl2dz)",action="store_true")
     parser.add_argument("-dispersion","--dispersion", help="dispersion forces. Default: no e.g. d2,d3",action="store_true")
     parser.add_argument("-qoption","--qoption", help="extra arguments for TeraChem in syntax keyword value, e.g. maxit 100",action="store_true")
-        # gamess arguments
+    # qchem arguments
+    parser.add_argument("-exchange","--exchange",help="exchange in qchem job (default b3lyp)",action="store_true")
+    parser.add_argument("-correlation","--correlation",help="correlation in qchem job (default none)",action="store_true")
+    parser.add_argument("-remoption","--remoption", help="extra arguments for qchem $rem block in syntax keyword value, e.g. INCFOCK 0",action="store_true")
+    parser.add_argument("-unrestricted","--unrestricted", help="unrestricted calculation, values: 0/1 False/True",action="store_true")
+    # gamess arguments
     parser.add_argument("-gbasis","--gbasis", help="GBASIS option in GAMESS e.g. CCT",action="store_true")
     parser.add_argument("-ngauss","--ngauss", help="NGAUSS option in GAMESS e.g. N31",action="store_true")
     parser.add_argument("-npfunc","--npfunc", help="NPFUNC option for diffuse functions in GAMESS e.g. 2",action="store_true")

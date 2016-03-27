@@ -464,6 +464,31 @@ def protate(mol, Rr, D):
     mol.translate(Rt)
     return mol
 
+
+##############################################
+######## translates/rotates molecule #########
+########### about reference point ############
+##############################################
+def protateref(mol, Rr, Rref, D):
+    # INPUT
+    #   - mol: molecule to be manipulated
+    #   - Rr: reference point [x,y,z]
+    #   - Rref: reference point on molecule [x,y,z]
+    #   - D: [radial distance, polar theta, azimuthal phi]
+    # OUTPUT
+    #   - mol: translated molecule
+    # rotate/translate about reference point
+    # convert to rad
+    D[0] = float(D[0])
+    D[1] = (float(D[1])/180.0)*pi
+    D[2] = (float(D[2])/180.0)*pi
+    # rotate/translate about reference point
+    # get translation vector that corresponds to new coords
+    Rt = PointTranslateSph(Rr,Rref,D)
+    # translate molecule
+    mol.translate(Rt)
+    return mol
+
 ########################################
 ########## rotates molecule ############
 ######## about center of mass ##########
@@ -483,6 +508,29 @@ def cmrotate(mol, D):
     for atom in mol.atoms:
         # Get new point after rotation
         Rt = PointRotateSph(pmc,atom.coords(),D)
+        atom.setcoords(Rt)
+    return mol
+
+########################################
+########## rotates molecule ############
+######## about center of mass ##########
+########################################
+def rotateRef(mol, Ref, D):
+    # INPUT
+    #   - mol: molecule to be manipulated
+    #   - Ref: reference point on the molecule
+    #   - D: [theta-x, theta-y, theta-z]
+    # OUTPUT
+    #   - mol: translated molecule
+    # convert to rad
+    D[0] = (float(D[0])/180.0)*pi
+    D[1] = (float(D[1])/180.0)*pi
+    D[2] = (float(D[2])/180.0)*pi
+    # perform rotation
+    pmc = mol.centermass()
+    for atom in mol.atoms:
+        # Get new point after rotation
+        Rt = PointRotateSph(Ref,atom.coords(),D)
         atom.setcoords(Rt)
     return mol
     

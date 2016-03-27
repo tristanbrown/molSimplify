@@ -120,6 +120,9 @@ def loadcoord(installdir,coord):
 ### convert to molecule ###
 ###########################
 def core_load(installdir,usercore,mcores):
+    if '~' in usercore:
+        homedir = os.path.expanduser("~")
+        usercore = usercore.replace('~',homedir)
     emsg = False
     core = mol3D() # initialize core molecule
     ### check if core exists in dictionary
@@ -155,6 +158,7 @@ def core_load(installdir,usercore,mcores):
                 print emsg
                 return False,emsg
             core.ident = usercore.split('.')[0]
+            core.ident = core.ident.rsplit('/')[-1]
         else:
             emsg = 'Core file '+usercore+' does not exist. Exiting..\n'
             print emsg
@@ -183,6 +187,9 @@ def core_load(installdir,usercore,mcores):
 ### convert to molecule ###
 ###########################
 def lig_load(installdir,userligand,licores):
+    if '~' in userligand:
+        homedir = os.path.expanduser("~")
+        userligand = userligand.replace('~',homedir)
     emsg = False
     lig = mol3D() # initialize ligand molecule
     ### check if ligand exists in dictionary
@@ -218,6 +225,8 @@ def lig_load(installdir,userligand,licores):
             except IOError:
                 emsg = 'Failed converting file ' +userligand+' to molecule..Check your file.\n'
                 return False,emsg
+            lig.ident = userligand.rsplit('/')[-1]
+            lig.ident = lig.ident.split('.'+ftype)[0]
         else:
             emsg = 'Ligand file '+userligand+' does not exist. Exiting..\n'
             return False,emsg
@@ -246,6 +255,9 @@ def lig_load(installdir,userligand,licores):
 #####   convert to molecule    #####
 ####################################
 def bind_load(installdir,userbind,bindcores):
+    if '~' in userbind:
+        homedir = os.path.expanduser("~")
+        userbind = userbind.replace('~',homedir)
     emsg = False
     bind = mol3D() # initialize binding molecule
     bsmi = False # flag for smiles
@@ -277,6 +289,8 @@ def bind_load(installdir,userbind,bindcores):
             except IOError:
                 emsg = 'Failed converting file ' +userbind+' to molecule..Check your file.\n'
                 return False,emsg
+            bind.ident = userbind.rsplit('/')[-1]
+            bind.ident = bind.ident.split('.'+ftype)[0]
         else:
             emsg = 'Binding species file '+userbind+' does not exist. Exiting..\n'
             return False,emsg
@@ -290,6 +304,7 @@ def bind_load(installdir,userbind,bindcores):
             bind.OBmol.make3D('mmff94',0) # add hydrogens and coordinates
             bind.charge = bind.OBmol.charge
             bsmi = True
+            bind.ident = 'smi'
         except IOError:
             emsg = "We tried converting the string '%s' to a molecule but it wasn't a valid SMILES string.\n" % userbind
             emsg += "Furthermore, we couldn't find the binding species structure: '%s' in the binding species dictionary. Try again!\n" % userbind

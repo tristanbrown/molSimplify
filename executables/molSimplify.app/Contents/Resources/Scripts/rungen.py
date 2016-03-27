@@ -9,13 +9,10 @@
 
 from structgen import *
 from io import *
-#from tcgen import *
-from gamgen import *
-from sgejobgen import *
-from slurmjobgen import *
+from jobgen import *
+from qcgen import *
 import argparse, sys, os, shutil, itertools
 from collections import Counter
-from tcgen import *
 import pybel
 
 #######################################
@@ -160,7 +157,7 @@ def constrgen(installdir,rundir,args,globs):
             emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
         else:
             if args.gui:
-                from Classes.qBox import qBoxError
+                from Classes.mWidgets import qBoxError
                 qqb = qBoxError(args.gui.mainWindow,'Error','No suitable ligand sets were found for random generation. Exiting...')
             else:
                 emsg = 'No suitable ligand sets were found for random generation. Exiting...'
@@ -280,9 +277,9 @@ def checkmultilig(ligs):
 ##############################################
 def rungen(installdir,rundir,args,chspfname,globs):
     try:
-        from Classes.qBox import qBoxFolder
-        from Classes.qBox import qBoxInfo
-        from Classes.qBox import qBoxError
+        from Classes.mWidgets import qBoxFolder
+        from Classes.mWidgets import qBoxInfo
+        from Classes.mWidgets import qBoxError
     except ImportError:
         args.gui = False
     emsg = False
@@ -429,14 +426,17 @@ def rungen(installdir,rundir,args,chspfname,globs):
                     args.charge = args.charge[0]
                 if args.spin and (isinstance(args.spin, list)):
                     args.spin = args.spin[0]
-                if args.qccode in 'terachem tc Terachem TeraChem TERACHEM TC':
+                if args.qccode.lower() in 'terachem tc Terachem TeraChem TERACHEM TC':
                     jobdirs = multitcgen(args,strfiles)
                     print 'TeraChem input files generated!'
-                elif args.qccode in 'gamess gam Gamess GAMESS':
+                elif 'gam' in args.qccode.lower():
                     jobdirs = multigamgen(args,strfiles)
                     print 'GAMESS input files generated!'
+                elif 'qch' in args.qccode.lower():
+                    jobdirs = multiqgen(args,strfiles)
+                    print 'QChem input files generated!'
                 else:
-                    print 'Only TeraChem and GAMESS are supported right now.\n'
+                    print 'Only TeraChem, GAMESS and QChem are supported right now.\n'
             # generate jobscripts
             if args.jsched and not emsg:
                 if args.jsched in 'SBATCH SLURM slurm sbatch':

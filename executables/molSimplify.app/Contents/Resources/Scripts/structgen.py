@@ -252,7 +252,7 @@ def getbondlength(args,metal,m3D,lig3D,matom,atom0,ligand,MLbonds):
 ###############################
 ### FORCE FIELD OPTIMIZATION ##
 ###############################
-def ffopt(ff,mol,connected,constopt,frozenats):
+def ffopt(ff,mol,connected,constopt,frozenats,frozenangles):
     # INPUT
     #   - ff: force field to use, available MMFF94, UFF< Ghemical, GAFF
     #   - mol: mol3D to be ff optimized
@@ -293,7 +293,7 @@ def ffopt(ff,mol,connected,constopt,frozenats):
         ### add distance constraints
         for catom in connected:
             dma = mol.getAtom(midx[0]).distance(mol.getAtom(catom))
-            if constopt==1:
+            if constopt==1 or frozenangles:
                 constr.AddAtomConstraint(catom+1) # indexing babel
             else:
                 constr.AddDistanceConstraint(midx[0]+1,catom+1,dma) # indexing babel
@@ -491,7 +491,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         args.gui.app.processEvents()
     # import gui options
     if args.gui:
-        from Classes.qBox import qBoxWarning
+        from Classes.mWidgets import qBoxWarning
     ### initialize variables ###
     emsg, complex3D = False, []
     coordbasef=[['one'],['li'],['tpl'],['thd','sqp'],['tbp','spy'], # list of coordinations
@@ -509,6 +509,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     issmiles = []   # index of SMILES ligands
     connected = []  # indices in core3D of ligand atoms connected to metal
     frozenats = []  # atoms to be frozen in optimization
+    freezeangles = False # custom angles imposed
     ### load bond data ###
     MLbonds = loaddata(installdir+'/Data/ML.dat')
     ### calculate occurrences, denticities etc for all ligands ###
@@ -641,7 +642,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if len(lig.OBmol.atoms) > 3:
-                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats)
+                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,freezeangles)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -1006,11 +1007,11 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     core3D.charge += lig3D.charge
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffopt(args.ff,core3D,connected,1,frozenats)
+                    core3D = ffopt(args.ff,core3D,connected,1,frozenats,freezeangles)
             totlig += denticity
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffopt(args.ff,core3D,connected,2,frozenats)
+        core3D = ffopt(args.ff,core3D,connected,2,frozenats,freezeangles)
     ###############################
     return core3D,complex3D,emsg
 
@@ -1162,7 +1163,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         args.gui.app.processEvents()
     # import gui options
     if args.gui:
-        from Classes.qBox import qBoxWarning
+        from Classes.mWidgets import qBoxWarning
     ### initialize variables ###
     emsg, complex3D = False, []
     occs0 = []      # occurrences of each ligand
@@ -1237,6 +1238,19 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         if args.oxstate:
             romans={'0':'0','I':'1','II':'2','III':'3','IV':'4','V':'5','VI':'6'}
             core3D.charge = int(romans[args.oxstate])
+    # remove one hydrogen for each functionalization
+    Hs = []
+    if not args.replig:
+        for ccat in ccatoms:
+            Hs += core3D.getHsbyAtom(core3D.getAtom(ccat))
+    # remove hydrogens and shift ccatoms
+    if len(Hs) > 0:
+        for H in sorted(Hs,reverse=True):
+            core3D.deleteatom(H)
+            # fix indexing
+            for ii,cat in enumerate(ccatoms):
+                if cat > H:
+                    ccatoms[ii] -= 1
     ###############################
     #### loop over ligands and ####
     ### begin functionalization ###
@@ -1291,8 +1305,9 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     delatoms = core3D.findsubMol(ccatoms[totlig],atclose) # find old ligand
                     # find shifting if needed
                     if len(ccatoms) > totlig+1:
-                        lshift = len([a for a in delatoms if a < ccatoms[totlig+1]])
-                        ccatoms[totlig+1] -= lshift
+                        for cccat in range(totlig+1,len(ccatoms)):
+                            lshift = len([a for a in delatoms if a < ccatoms[cccat]])
+                            ccatoms[cccat] -= lshift
                     core3D.deleteatoms(delatoms)
                 # load ligand
                 lig,emsg = lig_load(installdir,ligand,licores) # load ligand
@@ -1305,7 +1320,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if len(lig.OBmol.atoms) > 3:
-                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats)
+                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,False)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -1463,7 +1478,7 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
     emsg = False
     # import gui options
     if args.gui:
-        from Classes.qBox import qBoxWarning
+        from Classes.mWidgets import qBoxWarning
     # get global variables class
     ############ LOAD DICTIONARIES ############
     mcores = readdict(installdir+'/Cores/cores.dict')
@@ -1496,23 +1511,27 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
     ############ END FUNCTIONALIZING ###########
     # generate multiple geometric arrangements
     Nogeom = int(args.bindnum) if args.bindnum and args.bind else 1 # number of different combinations
-    ligname = '' # name of folder
+    ligname = '' # name of file
     nosmiles = 0 
-    # generate name of the folder
+    # generate name of the file
     for l in ligands:
         if l not in licores.keys():
-            if args.sminame:
-                if globs.nosmiles > 1:
-                    ismidx = nosmiles
-                else:
-                    ismidx = 0 
-                if len(args.sminame) > ismidx:
-                    l = args.sminame[ismidx][0:2]
-                else:
-                    l = l = 'smi'+str(nosmiles)
+            if '.xyz' in l or '.mol' in l:
+                l = l.split('.')[-1]
+                l = l.rsplit('/')[-1]
             else:
-                l = 'smi'+str(nosmiles)
-            nosmiles += 1
+                if args.sminame:
+                    if globs.nosmiles > 1:
+                        ismidx = nosmiles
+                    else:
+                        ismidx = 0 
+                    if len(args.sminame) > ismidx:
+                        l = args.sminame[ismidx][0:2]
+                    else:
+                        l = l = 'smi'+str(nosmiles)
+                else:
+                    l = 'smi'+str(nosmiles)
+                nosmiles += 1
         ligname += ''.join("%s" % l[0:2])
     if args.bind:
         # load bind, add hydrogens and convert to mol3D
@@ -1522,8 +1541,7 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
         bind.convert2mol3D()
         an3D = bind # change name
         # get core size
-        mindist = core3D.size
-        #mindist = core3D.size
+        mindist = core3D.molsize()
         # assign reference point
         Rp = initcore3D.centermass()
         # Generate base case (separated structures)
@@ -1531,8 +1549,6 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
         an3Db.copymol3D(an3D)
         base3D = protate(an3Db,Rp,[20*mindist,0.0,0.0])
         mols = []
-        maxdist = mindist+float(args.maxd) # Angstrom, distance of non-interaction    
-        mindist = mindist+float(args.mind) # Angstrom, distance of non-interaction
         if args.bcharge:
             core3D.charge += int(args.bcharge)
         elif args.calccharge and 'y' in args.calccharge.lower():
@@ -1540,16 +1556,15 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
         ### check if smiles string in binding species
         if bsmi:
             if args.nambsmi: # if name specified use it in file
-                fname = rootdir+'/'+args.core[0:3]+ligname+args.nambsmi[0:2]
+                fname = rootdir+'/'+core.ident[0:3]+ligname+args.nambsmi[0:2]
             else: # else use default
-                fname = rootdir+'/'+args.core[0:3]+ligname+'bsm' 
+                fname = rootdir+'/'+core.ident[0:3]+ligname+'bsm' 
         else: # else use name from binding in dictionary
-            fname = rootdir+'/'+args.core[0:3]+ligname+args.bind[0:2]
+            fname = rootdir+'/'+core.ident[0:3]+ligname+bind.ident[0:2]
         for i in range(0,Nogeom+1):        
             # generate random sequence of parameters for rotate()
             totits = 0 
             while True:
-                R = random.uniform(mindist,maxdist) # get random distance, separated for i=0
                 phi = random.uniform(0.0,360.0)
                 theta = random.uniform(-180.0,180.0)
                 if args.bphi:
@@ -1572,14 +1587,28 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
                 # translate
                 an3Db = mol3D()
                 an3Db.copymol3D(an3D)
-                tr3D = protate(an3Db, Rp,[R,theta,phi])
+                # get mask of reference atoms
+                if args.bref:
+                    refbP = an3D.getMask(args.bref)
+                else:
+                    refbP = an3D.centermass()
+                # get maximum distance in the correct direction
+                Pp0 = PointTranslatetoPSph(core3D.centermass(),[0.5,0.5,0.5],[0.01,theta,phi])
+                cmcore = core3D.centermass()
+                uP = [100*Pp0[0]-99*cmcore[0],100*Pp0[1]-99*cmcore[1],100*Pp0[2]-99*cmcore[2]]
+                mindist = core3D.getfarAtomdir(uP)
+                maxdist = mindist+float(args.maxd) # Angstrom, distance of non-interaction    
+                mindist = mindist+float(args.mind) # Angstrom, distance of non-interaction
+                R = random.uniform(mindist,maxdist) # get random distance, separated for i=0
+                # rotate and place according to distance
+                tr3D = protateref(an3Db, Rp, refbP, [R,theta,phi])
                 # rotate center of mass
-                newmol = cmrotate(tr3D,[thetax,thetay,thetaz])
+                newmol = rotateRef(tr3D,refbP,[thetax,thetay,thetaz])
                 if ('theta1' in locals()):
                     an3Db = mol3D()
                     an3Db.copymol3D(an3D)
-                    tr3D2 = protate(an3Db, Rp,[R,theta1,phi])
-                    newmol2 = cmrotate(tr3D2,[thetax,thetay,thetaz])
+                    tr3D2 = protateref(an3Db, Rp,refbP,[R,theta1,phi])
+                    newmol2 = rotateRef(tr3D2,refbP,[thetax,thetay,thetaz])
                     d1 = tr3D.distance(core3D)
                     d2 = tr3D2.distance(core3D)
                     if (d2 > d1):
@@ -1592,8 +1621,12 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
                     break 
                 totits += 1
             if (i > 0):
-                # write new xyz file
-                newmol.writemxyz(core3D,fname+str(i))
+                # write separate xyz file
+                if args.bsep:
+                    core3D.writesepxyz(newmol,fname+str(i))
+                else:
+                    # write new xyz file
+                    newmol.writemxyz(core3D,fname+str(i))
                 # append filename
                 strfiles.append(fname+str(i))
             else:
@@ -1606,19 +1639,20 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
                 strfiles.append(fname+'B')
                 del an3Db
     else:
-        fname = rootdir+'/'+args.core[0:3]+ligname
+        fname = rootdir+'/'+core.ident[0:3]+ligname
         core3D.writexyz(fname)
         strfiles.append(fname)
     pfold = rootdir.split('/',1)[-1]
     if args.calccharge and 'y' in args.calccharge.lower():
         args.charge = core3D.charge
     # check for molecule sanity
-    sanity = core3D.sanitycheck(True)
+    sanity,d0 = core3D.sanitycheck(True)
     del core3D
     if sanity:
-        print 'WARNING: Generated complex is not good!\n'
+        print 'WARNING: Generated complex is not good! Minimum distance between atoms:'+"{0:.2f}".format(d0)+'A\n'
         if args.gui:
-            qqb = qBoxWarning(args.gui.mainWindow,'Warning','Generated complex in folder '+rootdir+' is no good!')
+            ssmsg = 'Generated complex in folder '+rootdir+' is no good! Minimum distance between atoms:'+"{0:.2f}".format(d0)+'A\n'
+            qqb = qBoxWarning(args.gui.mainWindow,'Warning',ssmsg)
     if args.gui:
         args.gui.iWtxt.setText('In folder '+pfold+' generated '+str(Nogeom)+' structures!\n'+args.gui.iWtxt.toPlainText())
         args.gui.app.processEvents()

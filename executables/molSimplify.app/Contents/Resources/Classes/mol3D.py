@@ -232,31 +232,39 @@ class mol3D:
         pmc = distance(cm0,cm1)
         return pmc
         
-    ################################
-    ### finds metals in molecule ###
-    ################################
-    def findMetal(self):
-        # OUTPUT
-        #   - mm: indices of all metals in the molecule
-        mm = []
-        for i,atom in enumerate(self.atoms):
-            if atom.ismetal():
-                mm.append(i)
-        return mm
-    
     #######################################
     ### finds closest metal in molecule ###
     #######################################
     def findcloseMetal(self,atom0):
         # OUTPUT
         #   - mm: indices of all metals in the molecule
-        mm = []
+        mm = False
         mindist = 1000
         for i,atom in enumerate(self.atoms):
             if atom.ismetal():
                 if distance(atom.coords(),atom0.coords()) < mindist:
                     mindist = distance(atom.coords(),atom0.coords())
-                    mm = i 
+                    mm = i
+        # if no metal, find heaviest atom
+        if not mm:
+            maxaw = 0
+            for i,atom in enumerate(self.atoms):
+                if atom.atno > maxaw:
+                    mm = i
+        return mm
+        
+    #########################################
+    ### finds atoms by symbol in molecule ###
+    #########################################
+    def findAtomsbySymbol(self,sym):
+        # INPUT
+        #  - sym: symbol of atom
+        # OUTPUT
+        #  - mm: indices of all atoms with symbol sym in the molecule
+        mm = []
+        for i,atom in enumerate(self.atoms):
+            if atom.sym==sym:
+                mm.append(i)
         return mm
         
     ##############################################
@@ -265,19 +273,19 @@ class mol3D:
     def findsubMol(self,atom0,atomN):
         # INPUT
         #   - atom0: index of start of submolecule
-        #   - atomN: index of atom to separate molecule
+        #   - atomN: index of atom used to separate molecule
         # OUTPUT
         #   - subm: indices of all atoms in submolecule
         subm = []
-        conatoms = self.getBondedAtoms(atom0)
-        conatoms.append(atom0)
+        conatoms = self.getBondedAtoms(atom0) # connected atoms to atom0
+        conatoms.append(atom0) 
         if atomN in conatoms:
-            conatoms.remove(atomN)
-        subm += conatoms
-        while len(conatoms) > 0:
-            for atidx in subm:
-                if atidx != atomN:
-                    newcon = self.getBondedAtoms(atidx)
+            conatoms.remove(atomN)  # check for atomN and remove
+        subm += conatoms # add to submolecule
+        while len(conatoms) > 0: # while list of atoms to check loop
+            for atidx in subm: # loop over initial connected atoms
+                if atidx != atomN: # check for separation atom
+                    newcon = self.getBondedAtoms(atidx) 
                     if atomN in newcon:
                         newcon.remove(atomN)
                     for newat in newcon:
@@ -285,7 +293,7 @@ class mol3D:
                             conatoms.append(newat)
                             subm.append(newat)
                 if atidx in conatoms:
-                    conatoms.remove(atidx)
+                    conatoms.remove(atidx) # remove from list to check
         subm.sort()
         return subm
         
@@ -340,10 +348,27 @@ class mol3D:
             if (d < 1.35*(atom.rad+ratom.rad) and i!=ind and atom.sym!='H'):
                 nats.append(i)
         return nats
+    
+    ###########################################################
+    ### returns distance of atom that's the furthest away #####
+    ########### from COM in a specific direction ##############
+    ###########################################################
+    def getfarAtomdir(self,uP):
+        # INPUT
+        #   - u: direction to search
+        # OUTPUT
+        #   - d: distance of atom
+        cm = self.centermass()
+        dd = 1000.0
+        for atom in self.atoms:
+            d0 = distance(atom.coords(),uP)
+            if d0 < dd:
+                dd = d0
+        return dd
         
-    #########################################
-    ### gets list hydrogens from molecule ###
-    #########################################
+    ####################################
+    ### gets hydrogens from molecule ###
+    ####################################
     def getHs(self):
         hlist = []
         for i in range(self.natoms):
@@ -351,9 +376,9 @@ class mol3D:
                 hlist.append(i)
         return hlist
     
-    ##########################################################
+    ###########################################################
     ### returns list of hydrogens bonded to a specific atom ###
-    ##########################################################
+    ###########################################################
     def getHsbyAtom(self,ratom):
         # INPUT
         #   - ratom: reference atom3D
@@ -367,9 +392,9 @@ class mol3D:
                     nHs.append(i)
         return nHs
         
-    ##########################################################
+    ###########################################################
     ### returns list of hydrogens bonded to a specific atom ###
-    ##########################################################
+    ###########################################################
     def getHsbyIndex(self,idx):
         # INPUT
         #   - idx: index of reference atom
@@ -400,6 +425,46 @@ class mol3D:
                 idx = iat
                 cdist = ds
         return idx
+        
+    ###########################################
+    ### gets point that corresponds to mask ###
+    ###########################################
+    def getMask(self,mask):
+        # INPUT
+        #   - mask: identifier for atoms
+        # OUTPUT
+        #   - P: 3D point corresponding to masked atoms
+        globs = globalvars()
+        elements = globs.elementsbynum()
+        # check center of mass
+        ats = []
+        # loop over entries in mask
+        for entry in mask:
+            # check for center of mass
+            if ('com' in entry.lower()) or ('cm' in entry.lower()):
+                return self.centermass()
+            # check for range
+            elif '-' in entry:
+                at0 = entry.split('-')[0]
+                at1 = entry.split('-')[-1]
+                for i in range(int(at0),int(at1)+1):
+                    ats.append(i-1) # python indexing
+            elif entry in elements:
+                ats += self.findAtomsbySymbol(entry)
+            else:
+                # try to convert to integer
+                try:
+                    t = int(entry)
+                    ats.append(t-1)
+                except:
+                    return self.centermass()
+        maux = mol3D()
+        for at in ats:
+            maux.addatom(self.getAtom(at))
+        if maux.natoms==0:
+            return self.centermass()
+        else:
+            return maux.centermass()
         
     #######################################################
     ### gets closest atom from molecule to another atom ###
@@ -587,8 +652,9 @@ class mol3D:
         f.close()
         for line in s[2:]:
             l = filter(None,line.split(None))
-            atom = atom3D(l[0],[float(l[1]),float(l[2]),float(l[3])])
-            self.addatom(atom)
+            if len(l) > 3:
+                atom = atom3D(l[0],[float(l[1]),float(l[2]),float(l[3])])
+                self.addatom(atom)
             
     ################################################
     ### calculate the RMSD between two molecules ###
@@ -622,16 +688,19 @@ class mol3D:
         # OUTPUT
         #   - overlap: flag for overlap (True if there is overlap)
         overlap = False
+        mind = 1000
         for ii,atom1 in enumerate(self.atoms):
             for jj,atom0 in enumerate(self.atoms):
                 if ii!=jj and (distance(atom1.coords(),atom0.coords()) < 0.6*(atom1.rad + atom0.rad)):
                     overlap = True
+                    if distance(atom1.coords(),atom0.coords()) < mind:
+                        mind = distance(atom1.coords(),atom0.coords())
                     if not (silence):
                         print "#############################################################"
                         print "!!!Molecules might be overlapping. Increase distance!!!"
                         print "#############################################################"
                     break
-        return overlap
+        return overlap,mind
         
     ##########################################
     ### translates molecule by vector dxyz ###
@@ -696,6 +765,29 @@ class mol3D:
         f=open(fname+'.xyz','w')
         f.write(ss)
         f.close()
+        
+    ################################################
+    ### write xyz file for 2 molecules separated ###
+    ################################################
+    def writesepxyz(self,mol,filename):
+        # INPUT
+        #   - mol: second molecule
+        #   - filename: name for xyz file
+        ''' writes xyz file for 2 molecules'''
+        ss = '' # initialize returning string
+        ss += str(self.natoms)+"\n"+time.strftime('%m/%d/%Y %H:%M')+", XYZ structure generated by mol3D Class, "+self.globs.PROGRAM+"\n"
+        for atom in self.atoms:
+            xyz = atom.coords()
+            ss += "%s \t%f\t%f\t%f\n" % (atom.sym,xyz[0],xyz[1],xyz[2])
+        ss += "--\n"+str(mol.natoms)+"\n\n"
+        for atom in mol.atoms:
+            xyz = atom.coords()
+            ss += "%s \t%f\t%f\t%f\n" % (atom.sym,xyz[0],xyz[1],xyz[2])
+        fname = filename.split('.xyz')[0]
+        f=open(fname+'.xyz','w')
+        f.write(ss)
+        f.close()
+        
         
     #####################################
     ### print methods for mol3D class ###

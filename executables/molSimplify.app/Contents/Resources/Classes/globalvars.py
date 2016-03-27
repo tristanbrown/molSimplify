@@ -63,6 +63,7 @@ class globalvars:
             Linux = True
         elif platform.system().lower() in 'darwin':
             OSX = True
+        self.osx = OSX
         ### get cwd
         cfile = inspect.getfile(inspect.currentframe()) # script filename (usually with path)
         cdir2 = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) # script directory
@@ -75,6 +76,8 @@ class globalvars:
             f = open(homedir+'/.'+self.PROGRAM,'w')
             f.write(txt)
             f.close()
+        self.chemdbdir = ''
+        self.multiwfn = ''
         ###### check for ~/.molSimplify ######
         if glob.glob(homedir+'/.'+self.PROGRAM):
             f = open(homedir+'/.'+self.PROGRAM,'r')
@@ -89,17 +92,12 @@ class globalvars:
                 self.installdir = cdir
             if 'CHEMDBDIR' in d.keys():
                 self.chemdbdir = d['CHEMDBDIR']
-            else:
-                self.chemdbdir = "'"+cdir+'/CHEMDB'+"'"
             if 'MULTIWFN' in d.keys():
                 self.multiwfn = "'"+d['MULTIWFN']+"'"
-            else:
-                self.multiwfn = "'"+cdir+'/Multiwfn'+"'"
         else:
             self.installdir = cdir
-            self.chemdbdir = cdir+'/CHEMDB'
-            self.multiwfn = "'"+cdir+'/Multiwfn'+"'"
         # global settings
+        self.homedir = homedir
         self.nosmiles = 0 # number of smiles ligands
         self.rundir = homedir+'/Runs/'# Jobs directory
         self.generated = 0 

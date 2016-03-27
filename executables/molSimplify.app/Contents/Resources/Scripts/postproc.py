@@ -29,8 +29,8 @@ def checkmultiwfn(mdir):
 def postproc(rundir,args,globs):
     globs = globalvars()
     if args.gui:
-        from Classes.qBox import qBoxInfo
-        from Classes.qBox import qBoxError
+        from Classes.mWidgets import qBoxInfo
+        from Classes.mWidgets import qBoxError
         from Classes.mWindow import mWgen
         from Classes.mText import mEdtext
         args.gui.pwind = mWgen(0.5,0.4,'Log') # information window
