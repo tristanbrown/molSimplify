@@ -336,7 +336,7 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles):
 ################################################
 ### FORCE FIELD OPTIMIZATION for custom cores ##
 ################################################
-def ffoptd(ff,mol,connected,ccatoms,frozenats):
+def ffoptd(ff,mol,connected,ccatoms,frozenats,nligats):
     # INPUT
     #   - ff: force field to use, available MMFF94, UFF< Ghemical, GAFF
     #   - mol: mol3D to be ff optimized
@@ -364,9 +364,9 @@ def ffoptd(ff,mol,connected,ccatoms,frozenats):
     for ict,catom in enumerate(connected):
         dma = mol.getAtom(ccatoms[ict]).distance(mol.getAtom(catom))
         constr.AddDistanceConstraint(ccatoms[ict]+1,catom+1,dma) # indexing babel
-    ### freeze metals
-    for indm in indmtls:
-        constr.AddAtomConstraint(indm+1) # indexing babel
+    ### freeze core
+    for ii in range(0,mol.natoms-nligats):
+        constr.AddAtomConstraint(ii+1) # indexing babel
     ### freeze small ligands
     for cat in frozenats:
         constr.AddAtomConstraint(cat+1) # indexing babel
@@ -1455,13 +1455,14 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     print emsg
                 if args.calccharge and 'y' in args.calccharge.lower():
                     core3D.charge += lig3D.charge
+                nligats = lig3D.natoms
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats)
+                    core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats,nligats)
             totlig += 1
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats)
+        core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats,nligats)
     return core3D,emsg
 
 ##########################################
