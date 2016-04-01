@@ -24,24 +24,12 @@ class mGUI():
     getgeoms()
     ### constructor of gui ###
     def __init__(self,app):
-        ### get screen size
-        refsize = [1920,1080] # monitor size, aspect ratio
-        macbook11=[1366,768] # macbook 11"
-        macbook13=[2560,1600] # macbook 13" (both pro&air)
-        macbook15=[2880,1800] # macbook 15"
-        csize = self.getscreensize()
-        self.app = app
-        # build for regular screen
-        if csize[0] < 1400:
-        # build for macbook 11"
-            small = True
-        else:
-            small = False
         # build gui
-        self.initGUIref(small)
+        self.app = app
+        self.initGUIref(app)
 
     ### builds the gui
-    def initGUIref(self,small):
+    def initGUIref(self,app):
         '''
         ######################
         ### build main GUI ###
@@ -50,6 +38,7 @@ class mGUI():
         ### check for configuration file ###
         homedir = os.path.expanduser("~")
         globs = globalvars() # global variables
+        overX = True if 'localhost' in os.environ['DISPLAY'].lower() else False # detect running over X
         configfile = False if not glob.glob(homedir+'/.molSimplify') else True
         if not configfile:
             self.wwindow = QMainWindow() 
@@ -60,291 +49,657 @@ class mGUI():
             if len(instdir) > 1: 
                 f.write("INSTALLDIR="+instdir+'\n')
         ### end set-up configuration file ###
-        if small:
-            self.mainWindow = mWindow(0.85,0.85) # main window
-        else:
-            ### create main window
-            self.mainWindow = mWindow(0.7,0.8) # main window
-        ### build menu bar
-        self.menubar0 = mMenubar(self.mainWindow,self)
-        ### place title top
-        clogo = mPic(self.mainWindow,globs.installdir+'/icons/logo.png',0.375,0.06,0.25)
-        ### place logo bottom and developers text
-        c = mPic(self.mainWindow,globs.installdir+'/icons/hjklogo.png',0.4,0.9,0.2)
-        self.txtdev = mRtext(self.mainWindow,0.175,0.91,0.3,0.05,'Developed by','',14,'r','c')
-        ###############################################
-        ### generate edit texts for job information ###
-        ###############################################
-        self.txtgpar = mRtext(self.mainWindow,0.4,0.175,0.2,0.05,'General parameters','',18,'r','c')
-        ctip = 'Top directory for job folders'
-        self.rtrdir = mRtext(self.mainWindow,0.335,0.245,0.1,0.05,'Jobs dir:',ctip,14,'r','r')
-        self.etrdir = mEtext(self.mainWindow,0.445,0.24,0.1,0.05,globs.rundir,ctip,14,'r','l')
-        ctip = 'Suffix for job directories'
-        self.rtsuff = mRtext(self.mainWindow,0.36,0.31,0.1,0.05,'Suffix for dir:',ctip,14,'r','r')
-        self.etsuff = mEtext(self.mainWindow,0.475,0.305,0.15,0.05,'',ctip,14,'r','l')
-        ctip = 'Number of structures to be randomly generated'
-        self.rtrgen = mRtext(self.mainWindow,0.36,0.375,0.1,0.05,'Random gen:',ctip,14,'r','r')
-        self.etrgen = mEtext(self.mainWindow,0.475,0.37,0.04,0.05,'',ctip,14,'r','l')
-        ctip = 'Number of ligands connected to the metal'
-        self.rcoord = mRtext(self.mainWindow,0.36,0.505,0.1,0.05,'Coordination:',ctip,14,'r','r')
-        ctip = 'Metal Oxidation state'
-        self.roxstate = mRtext(self.mainWindow,0.325,0.44,0.1,0.05,'Ox State:',ctip,14,'r','r')
-        ctip = 'System spin state'
-        self.rspstate = mRtext(self.mainWindow,0.40,0.44,0.1,0.05,'Spin:',ctip,14,'r','r')
-        ctip = 'Distortion'
-        self.distper = mRtext(self.mainWindow,0.4225,0.5675,0.125,0.05,'Distortion:0%','',14,'r','l')
-        ctip = 'For random generation: number of different ligand types'
-        self.rtlignum = mRtext(self.mainWindow,0.51,0.375,0.075,0.04,'Lig Num:',ctip,14,'r','r')
-        self.etlignum = mEtext(self.mainWindow,0.585,0.37,0.04,0.05,'',ctip,14,'r','l')
-        ####################################################
-        ### generate edit texts for structure generation ###
-        ####################################################
-        self.txtgpar = mRtext(self.mainWindow,0.075,0.175,0.225,0.05,'Structure specification','',18,'r','c')
+        ### main window widget
+        self.wmain = QWidget()
+        self.wmain.setWindowTitle("molSimplify")
+        self.wmain.setMinimumSize(1000,700)
+        # for some reason it forces the widgets to reset and the window to come up properly
+        #mQMessageBox('','','info',True)
+        # set background color
+        p = QPalette()
+        p.setColor(QPalette.Background,QtCore.Qt.white)
+        self.wmain.setPalette(p)
+        ### main grid layout ###
+        self.grid = QGridLayout()
+        ### stacked layouts ###
+        self.sgrid = QStackedLayout()
+        self.sgrid.setStackingMode(1)
+        self.sgrid.addWidget(self.wmain)
+        ### create menubar and callbacks ###
+        menubar = QMenuBar()
+        menu0 = menubar.addMenu('&File')
+        menu1 = menubar.addMenu('&Load')
+        menu2 = menubar.addMenu('&Help')
+        exitAction = QAction('&Exit',self.wmain) 
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(self.qexit)
+        menu0.addAction(exitAction)
+        saveAction = QAction('&Save As..',self.wmain)
+        saveAction.setShortcut('Ctrl+S')
+        saveAction.setStatusTip('Save current input settings')
+        saveAction.triggered.connect(self.qsaveinput)
+        menu0.addAction(saveAction)
+        loadAction = QAction('&Load',self.wmain)
+        loadAction.setShortcut('Ctrl+O')
+        loadAction.setStatusTip('Load input file')
+        loadAction.triggered.connect(self.qloadinput)
+        menu1.addAction(loadAction)
+        helpAction = QAction('&Help',self.wmain)
+        helpAction.setShortcut('Ctrl+H')
+        helpAction.setStatusTip('Show input options')
+        helpAction.triggered.connect(self.qshowhelp)
+        menu2.addAction(helpAction)
+        # set menubar
+        self.menubar = menubar
+        self.grid.setMenuBar(self.menubar)
+        ### place title top ###
+        self.grid.setRowMinimumHeight(0,15)
+        self.grid.setRowMinimumHeight(3,15)
+        self.grid.setRowMinimumHeight(4,50)
+        clogo = mQPixmap(globs.installdir+'/icons/logo.png')
+        self.grid.addWidget(clogo,1,10,2,18)
+        self.txtdev = mQLabel('Developed by Kulik group @ MIT','','c',16)
+        self.grid.addWidget(self.txtdev,19,10,2,18)
+        ###################################################
+        ###################################################
+        ########## STRUCTURE GENERATION INPUTS ############
+        ###################################################
+        ###################################################
+        ### title ###
+        self.txtgpar = mQLabel('Structure specification','','c',20)
+        self.grid.addWidget(self.txtgpar,4,0,2,14)
+        ### core structure specification ###
         ctip = 'Core of structure'
-        self.rtcore = mRtext(self.mainWindow,0.025,0.24,0.1,0.05,'Core:',ctip,14,'r','r')
-        self.etcore = mEtext(self.mainWindow,0.14,0.235,0.15,0.05,'',ctip,14,'r','l')
-        # Connection atoms for core
+        self.rtcore = mQLabel('Core:',ctip,'C',14)
+        f = QFont("Helvetica",14,75)
+        self.rtcore.setFont(f)
+        self.grid.addWidget(self.rtcore,7,2,1,1)
+        self.etcore = mQLineEdit('',ctip,'l',14)
+        self.grid.addWidget(self.etcore,7,3,1,3)
+        ### Connection atoms for core ###
         ctip = 'Specify connection atoms for core if using SMILES or custom cores (default: 1)'
-        self.rtccat0 = mRtext(self.mainWindow,0.0325,0.28,0.1,0.05,'Core',ctip,13,'c','c')
-        self.rtccat1 = mRtext(self.mainWindow,0.0325,0.30,0.1,0.05,'connections',ctip,13,'c','c')
-        self.rtccat2 = mRtext(self.mainWindow,0.025,0.30,0.1,0.05,':',ctip,14,'r','r')
-        self.etccat = mEtext(self.mainWindow,0.14,0.295,0.075,0.05,'',ctip,14,'r','l')
-        # replace option
+        self.rtccat = mQLabel('Core connections:',ctip,'C',11)
+        self.rtccat.setWordWrap(True)
+        self.grid.addWidget(self.rtccat,7,6,1,2)
+        self.etccat = mQLineEdit('',ctip,'l',14)
+        self.grid.addWidget(self.etccat,7,8,1,2)
+        ### replace option ###
         ctip = 'Replace ligand at specified connection point'
-        self.replig = mCheck(self.mainWindow,0.215,0.295,0.075,0.05,'replace',ctip,16)
-        # specify ligands
-        ctip = 'Ligand(s) to be used'
-        self.rtlig = mRtext(self.mainWindow,0.025,0.36,0.1,0.05,'Ligands:',ctip,14,'r','r')
-        self.etlig = mEtext(self.mainWindow,0.14,0.355,0.15,0.05,'',ctip,14,'r','l')
-        ctip = 'Occurrence of corresponding ligand(s)'
-        self.rtligocc = mRtext(self.mainWindow,0.025,0.42,0.1,0.05,'Lig Freq:',ctip,14,'r','r')
-        self.etligocc = mEtext(self.mainWindow,0.14,0.415,0.15,0.05,'',ctip,14,'r','l')
-        # force keep hydrogens
-        ctip = 'Do not remove hydrogens while connecting ligand to core. default no'
-        self.rtkeepHs = mRtext(self.mainWindow,0.025,0.48,0.1,0.05,'Keep Hs:',ctip,14,'r','r')
-        ctip = 'Enter yes/no or 1/0 for each corresponding ligand. e.g. yes,no,yes,yes'
-        self.etkeepHs = mEtext(self.mainWindow,0.14,0.475,0.15,0.05,'',ctip,14,'r','l')
-        # custom M-L bond lengths (A)
-        ctip = 'Custom bond length for M-L in Angstrom'
-        self.rtMLb = mRtext(self.mainWindow,0.025,0.54,0.1,0.05,'M-L bonds:',ctip,14,'r','r')
-        self.etMLb = mEtext(self.mainWindow,0.14,0.535,0.15,0.05,'',ctip,14,'r','l')
-        # custom angles for distortion
-        ctip = 'Custom angles for connection points (polar theta, azimuthal phi) in degrees separated with /. e.g 10/20 , 30/40'
-        self.rtLang = mRtext(self.mainWindow,0.025,0.60,0.1,0.05,'Custom angles:',ctip,14,'r','r')
-        self.etLang = mEtext(self.mainWindow,0.14,0.595,0.15,0.05,'',ctip,14,'r','l')
-        # SMILES ligands denticity
-        #ctip = 'Denticity of corresponding SMILES ligands (default: 1)'
-        self.rtsmident = mRtext(self.mainWindow,0.025,0.72,0.1,0.05,'SMI denticity:',ctip,14,'r','r')
-        self.etsmident = mEtext(self.mainWindow,0.14,0.715,0.15,0.05,'',ctip,14,'r','l')
-        self.rtsmident.hide()
-        self.etsmident.hide()
-        # SMILES ligands connection atoms
-        ctip = 'Connection atom(s) of corresponding SMILES ligands (default: 1)'
-        self.rtsmicat = mRtext(self.mainWindow,0.0075,0.64,0.125,0.05,'SMILES',ctip,13,'c','c')
-        self.rtsmicat = mRtext(self.mainWindow,0.0075,0.66,0.125,0.05,'connection atoms',ctip,13,'c','c')
-        self.rtsmicat = mRtext(self.mainWindow,0.0,0.66,0.125,0.05,':',ctip,14,'r','r')
-        self.etsmicat = mEtext(self.mainWindow,0.14,0.655,0.15,0.05,'',ctip,14,'r','l')
-        # SMILES names
-        ctip = 'Name of corresponding SMILES ligands (default: smi)'
-        self.rtsminame = mRtext(self.mainWindow,0.0,0.72,0.125,0.05,'SMILES names:',ctip,14,'r','r')
-        self.etsminame = mEtext(self.mainWindow,0.14,0.715,0.15,0.05,'',ctip,14,'r','l')
-        ### generate edit texts for additional molecule
-        self.txtamol = mRtext(self.mainWindow,0.725,0.175,0.2,0.05,'Additional molecule','',18,'r','c')
-        self.txtamol.setDisabled(True)
-        # name of binding species
-        ctip = 'Binding species'
-        self.rtbind = mRtext(self.mainWindow,0.675,0.25,0.1,0.05,'Molecule:',ctip,14,'r','r')
-        self.etbind = mEtext(self.mainWindow,0.785,0.25,0.15,0.05,'',ctip,14,'r','l')
-        self.rtbind.setDisabled(True)
-        self.etbind.setDisabled(True)
-        # name of binding molecule from SMILES
-        ctip = 'Name of binding molecule using SMILES'
-        self.rtbsmi = mRtext(self.mainWindow,0.675,0.325,0.1,0.05,'Name:',ctip,14,'r','r')
-        self.etbsmi = mEtext(self.mainWindow,0.785,0.325,0.075,0.05,'',ctip,14,'r','l')
-        self.rtbsmi.setDisabled(True)
-        self.etbsmi.setDisabled(True)
-        # number of binding conformations to generate
-        ctip = 'Number of different conformations to be generated'
-        self.rtnbind = mRtext(self.mainWindow,0.65,0.405,0.125,0.05,'Conformations:',ctip,14,'r','r')
-        self.etnbind = mEtext(self.mainWindow,0.785,0.4,0.05,0.05,'',ctip,14,'r','l')
-        self.rtnbind.setDisabled(True)
-        self.etnbind.setDisabled(True)
-        # charge of binding species
-        ctip = 'Charge of binding species'
-        self.rtchbind = mRtext(self.mainWindow,0.825,0.405,0.065,0.05,'Charge:',ctip,14,'r','r')
-        self.etchbind = mEtext(self.mainWindow,0.895,0.4,0.04,0.05,'',ctip,14,'r','l')
-        self.rtchbind.setDisabled(True)
-        self.etchbind.setDisabled(True)
-        # min/max distance
-        ctip = 'Specify placing minimum/maximum distance (in A) and/or axial/equatorial orientation'
-        self.rtplace = mRtext(self.mainWindow,0.65,0.48,0.125,0.05,'Distance:',ctip,14,'r','r')
-        ctip = 'Minimum distance between the two molecules. 0 corresponds the marginally non-overlapping configuration'
-        self.etplacemin = mEtext(self.mainWindow,0.785,0.475,0.025,0.05,'',ctip,14,'r','l')
-        ctip = 'Maximum distance between the two molecules. 0 corresponds the marginally non-overlapping configuration'
-        self.etplacemax = mEtext(self.mainWindow,0.81,0.475,0.025,0.05,'',ctip,14,'r','l')
-        self.rtplace.setDisabled(True)
-        self.etplacemin.setDisabled(True)
-        self.etplacemax.setDisabled(True)
-        # mask for atom/center of mass reference
-        ctip = 'Reference atoms in extra molecules to be used for placement(e.g. 1,2 or 1-6 or COM or Fe) Default COM (center mass)'
-        self.rtmaskbind = mRtext(self.mainWindow,0.82,0.485,0.075,0.05,'Reference:',ctip,12,'r','r')
-        self.etmaskbind = mEtext(self.mainWindow,0.90,0.475,0.035,0.05,'COM',ctip,12,'r','l')
-        self.rtmaskbind.setDisabled(True)
-        self.etmaskbind.setDisabled(True)
-        # angle/orientation
-        ctip = 'Specify placement type or angle. Angle overwrites placement.'
-        self.rtplacea = mRtext(self.mainWindow,0.65,0.545,0.125,0.05,'Angle:',ctip,14,'r','r')
-        ctip = 'Azimouthal angle phi from 0 to 180'
-        self.etplacephi = mEtext(self.mainWindow,0.785,0.54,0.04,0.05,'',ctip,14,'r','l')
-        ctip = 'Polar angle theta from 0 to 360'
-        self.etplacetheta = mEtext(self.mainWindow,0.825,0.54,0.04,0.05,'',ctip,14,'r','l')
-        self.rtplacea.setDisabled(True)
-        self.etplacephi.setDisabled(True)
-        self.etplacetheta.setDisabled(True)
-        ####################
-        ### push buttons ###
-        ####################
-        # structure generation
-        ctip = 'Generate structures'
-        self.butGen = mButton(self.mainWindow,0.35,0.775,0.15,0.085,'Generate',ctip,18)
-        self.butGen.clicked.connect(self.runGUI)
-        # post-processing setup
-        ctip = 'Setup post-processing'
-        self.butPost = mButton(self.mainWindow,0.525,0.775,0.15,0.085,'Post-process',ctip,18)
-        self.butPost.clicked.connect(self.setupp)
-        # view structure
-        #ctip = 'View generated structure'
-        #self.butView = mButton(self.mainWindow,0.70,0.775,0.15,0.085,'View',ctip,18)
-        #self.butView.clicked.connect(self.showmolBrowser)
-        # quit button
-        ctip = 'Quit program'
-        self.butQ = mButton(self.mainWindow,0.875,0.875,0.1,0.065,'Quit',ctip,14)
-        self.butQ.clicked.connect(self.mainWindow.qexitM)
-        # input for QC calculation
-        ctip = 'Enter input for Quantum Chemistry calculations'
-        self.butQc = mButton(self.mainWindow,0.7,0.655,0.125,0.05,'Enter QC input',ctip,14)
-        self.butQc.setDisabled(True)
-        self.butQc.clicked.connect(self.qcinput)
-        # input for jobscripts
-        ctip = 'Enter input for jobscript files'
-        self.butJob = mButton(self.mainWindow,0.83,0.655,0.125,0.05,'Enter job input',ctip,14)
-        self.butJob.setDisabled(True)
-        self.butJob.clicked.connect(self.jobenable)
-        # add to database
-        ctip = 'Add core/ligand/binding species to local database'
-        self.butADB = mButton(self.mainWindow,0.175,0.84,0.1,0.065,'Add to local DB',ctip,12)
-        self.butADB.clicked.connect(self.enableDB)
-        # add to database
-        ctip = 'Search for ligand/binding species in chemical databases'
-        self.searchDB = mButton(self.mainWindow,0.065,0.84,0.1,0.065,'Search DB',ctip,12)
-        self.searchDB.clicked.connect(self.searchDBW)
-        # button for browsing rundir
-        ctip = 'Browse running directory'
-        self.butpbrdir = mButton(self.mainWindow,0.55,0.2385,0.07,0.05,'Browse..',ctip,12)
-        self.butpbrdir.clicked.connect(self.dirload)
-        # view ligand
-        ctip = 'Generate 2D ligand representation'
-        self.butDrl = mButton(self.mainWindow,0.125,0.78,0.085,0.05,'Draw ligands',ctip,12)
-        self.butDrl.clicked.connect(self.drawligs)
-        ##############################
-        ### generate checked boxes ###
-        ##############################
-        # additional molecule
-        ctip = 'Place additional molecule'
-        self.chkM = mCheck(self.mainWindow,0.525,0.595,0.15,0.07,'Extra molecule',ctip,14)
-        self.chkM.stateChanged.connect(self.enableemol)
-        # force field optimization
-        ctip = 'Perform Force Field optimization'
-        self.chkFF = mCheck(self.mainWindow,0.375,0.575,0.125,0.1,'FF optimize',ctip,14)
-        self.chkFF.stateChanged.connect(self.enableffinput)
-        # input file generation
-        ctip = 'Generate input files'
-        self.chkI = mCheck(self.mainWindow,0.525,0.64,0.1,0.07,'Input files',ctip,14)
-        self.chkI.stateChanged.connect(self.enableqeinput)
-        # jobscript generation
-        ctip = 'Generate jobscripts'
-        self.chkJ = mCheck(self.mainWindow,0.525,0.685,0.1,0.07,'Jobscripts',ctip,14)
-        self.chkJ.stateChanged.connect(self.enablejinput)
-         # charge calculation
-        ctip = 'Calculate charge based on ox state and ligands'
-        self.chch = mCheck(self.mainWindow,0.55,0.425,0.1,0.07,'Calc charge',ctip,14)
-        self.chch.setDisabled(True)
-        # charge calculation
-        ctip = 'Separate molecules in xyz or input file with ------'
-        self.chsep = mCheck(self.mainWindow,0.87,0.315,0.1,0.07,'separate',ctip,14)
-        self.chsep.setDisabled(True)        
-        ########################
-        ### generate sliders ###
-        ########################
-        # create distortion slider
-        ctip = 'Percent distortion from optimal coordination'
-        self.sdist = mSlider(self.mainWindow,0.525,0.5625,0.075,0.05,ctip)
-        self.sdist.valueChanged.connect(self.sliderChanged)
-        ###############################
-        ### generate dropbdox boxes ###
-        ###############################
-        # ox state
-        ctip = 'Metal oxidation state'
-        qcav = ['0','I','II','III','IV','V','VI','VII','VIII']
-        self.doxs = mDbox(self.mainWindow,0.43,0.435,0.035,0.05,qcav,ctip,14)
-        self.doxs.setCurrentIndex(0)
-        # spin state
-        ctip = 'System spin multiplcity'
-        qcav = ['1','2','3','4','5','6','7','8','9','10']
-        self.dspin = mDbox(self.mainWindow,0.505,0.435,0.035,0.05,qcav,ctip,14)
-        self.dspin.setCurrentIndex(0)
+        self.replig = mQCheckBox('replace',ctip,16)
+        self.grid.addWidget(self.replig,7,10,1,4)
         # coordination
-        ctip = 'Number of ligands connected to the metal'
+        ctip = 'Number of ligands connected to the metal.'
+        self.rcoord = mQLabel('Coordination:',ctip,'Cr',12)
+        self.grid.addWidget(self.rcoord,8,2,1,2)
         qcav = ['1','2','3','4','5','6','7']
-        self.dcoord = mDbox(self.mainWindow,0.4875,0.5,0.05,0.05,qcav,ctip,14)
+        self.dcoord = mQComboBox(qcav,ctip,12)
         self.dcoord.setCurrentIndex(5)
         self.dcoord.currentIndexChanged.connect(self.matchgeomcoord)
+        self.grid.addWidget(self.dcoord,8,4,1,1)
         # geometry of coordination
-        self.dcoordg = mDbox(self.mainWindow,0.5625,0.5,0.05,0.05,'','',14)
+        self.dcoordg = mQComboBox('','',12)
         self.dcoordg.setCurrentIndex(0)
         self.matchgeomcoord()
+        self.grid.addWidget(self.dcoordg,8,5,1,2)
+        # add new coordination
+        ctip = 'Add geometry'
+        self.butaddg = mQPushButton('Add geometry',ctip,12)
+        self.butaddg.clicked.connect(self.addgeom)
+        self.grid.addWidget(self.butaddg,8,7,1,3)
+        #############################################
+        ################## LIGANDS ##################
+        ### ligands tables ###
+        ctip0 = 'Ligand(s) to be used' 
+        self.rtligh = mQLabel('Ligands',ctip0,'c',12) # ligand header
+        f = QFont("Helvetica",12,75)
+        self.rtligh.setFont(f)
+        ctip1 = 'Occurrence of corresponding ligand(s)'
+        self.rtligocch = mQLabel('Frequency',ctip1,'c',12) # occurrence header
+        ctip2 = 'Connection atom(s) of ligands (default: 1).'
+        self.rtsmicath = mQLabel('Connections',ctip2,'c',12) # connection atom header
+        ctip3 = 'Do not remove hydrogens while connecting ligand to core. default False' # keep Hs header
+        self.keepHh = mQLabel('keep\nHs',ctip3,'c',10) # occurrence header
+        ctip4 = 'Custom bond length for M-L in Angstrom' 
+        self.MLbondsh = mQLabel('M-L bond',ctip4,'c',11)# custom metal ligand bond length header
+        ctip5 = 'Custom angles for connection points (polar theta, azimuthal phi) in degrees separated with /. e.g 10/20'
+        self.canglesh = mQLabel('Angle',ctip5,'c',12) # custom angles for distortion header
+        ctip6 = 'Name of ligand'
+        self.nameligh = mQLabel('Name',ctip6,'c',12) # name of ligand header
+        ctip7 = 'Force ligand order and disable smart reordering'
+        self.ligforder = mQCheckBox('Force\norder',ctip7,11) 
+        # add to layout
+        self.grid.addWidget(self.rtligh,9,0,1,2)
+        self.grid.addWidget(self.rtligocch,9,2,1,2)
+        self.grid.addWidget(self.rtsmicath,9,4,1,2)
+        self.grid.addWidget(self.keepHh,9,6,1,1)
+        self.grid.addWidget(self.MLbondsh,9,7,1,2)
+        self.grid.addWidget(self.canglesh,9,9,1,2)
+        self.grid.addWidget(self.nameligh,9,11,1,2)
+        self.grid.addWidget(self.ligforder,9,13,1,1)
+        ## ligands ##
+        self.lig0 = mQLineEdit('',ctip0,'l',12)
+        self.lig1 = mQLineEdit('',ctip0,'l',12)
+        self.lig2 = mQLineEdit('',ctip0,'l',12)
+        self.lig3 = mQLineEdit('',ctip0,'l',12)
+        self.lig4 = mQLineEdit('',ctip0,'l',12)
+        self.lig5 = mQLineEdit('',ctip0,'l',12)
+        self.lig6 = mQLineEdit('',ctip0,'l',12)
+        self.lig7 = mQLineEdit('',ctip0,'l',12)
+        # disable
+        self.lig1.setDisabled(True)
+        self.lig2.setDisabled(True)
+        self.lig3.setDisabled(True)
+        self.lig4.setDisabled(True)
+        self.lig5.setDisabled(True)
+        self.lig6.setDisabled(True)
+        self.lig7.setDisabled(True)
+        # add to layout
+        self.grid.addWidget(self.lig0,10,0,1,2)
+        self.grid.addWidget(self.lig1,11,0,1,2)
+        self.grid.addWidget(self.lig2,12,0,1,2)
+        self.grid.addWidget(self.lig3,13,0,1,2)
+        self.grid.addWidget(self.lig4,14,0,1,2)
+        self.grid.addWidget(self.lig5,15,0,1,2)
+        self.grid.addWidget(self.lig6,16,0,1,2)
+        self.grid.addWidget(self.lig7,17,0,1,2)
+        ## occurrences ##
+        self.lig0occ = mQSpinBox(ctip1)
+        self.lig1occ = mQSpinBox(ctip1)
+        self.lig2occ = mQSpinBox(ctip1)
+        self.lig3occ = mQSpinBox(ctip1)
+        self.lig4occ = mQSpinBox(ctip1)
+        self.lig5occ = mQSpinBox(ctip1)
+        self.lig6occ = mQSpinBox(ctip1)
+        self.lig7occ = mQSpinBox(ctip1)
+        # disable
+        self.lig1occ.setDisabled(True)
+        self.lig2occ.setDisabled(True)
+        self.lig3occ.setDisabled(True)
+        self.lig4occ.setDisabled(True)
+        self.lig5occ.setDisabled(True)
+        self.lig6occ.setDisabled(True)
+        self.lig7occ.setDisabled(True)
+        # add to layout
+        self.grid.addWidget(self.lig0occ,10,2,1,2)
+        self.grid.addWidget(self.lig1occ,11,2,1,2)
+        self.grid.addWidget(self.lig2occ,12,2,1,2)
+        self.grid.addWidget(self.lig3occ,13,2,1,2)
+        self.grid.addWidget(self.lig4occ,14,2,1,2)
+        self.grid.addWidget(self.lig5occ,15,2,1,2)
+        self.grid.addWidget(self.lig6occ,16,2,1,2)
+        self.grid.addWidget(self.lig7occ,17,2,1,2)
+        ## connections ##
+        self.lig0conn = mQLineEdit('',ctip2,'l',12)
+        self.lig1conn = mQLineEdit('',ctip2,'l',12)
+        self.lig2conn = mQLineEdit('',ctip2,'l',12)
+        self.lig3conn = mQLineEdit('',ctip2,'l',12)
+        self.lig4conn = mQLineEdit('',ctip2,'l',12)
+        self.lig5conn = mQLineEdit('',ctip2,'l',12)
+        self.lig6conn = mQLineEdit('',ctip2,'l',12)
+        self.lig7conn = mQLineEdit('',ctip2,'l',12)
+        # disable
+        self.lig1conn.setDisabled(True)
+        self.lig2conn.setDisabled(True)
+        self.lig3conn.setDisabled(True)
+        self.lig4conn.setDisabled(True)
+        self.lig5conn.setDisabled(True)
+        self.lig6conn.setDisabled(True)
+        self.lig7conn.setDisabled(True)
+        # add to layout
+        self.grid.addWidget(self.lig0conn,10,4,1,2)
+        self.grid.addWidget(self.lig1conn,11,4,1,2)
+        self.grid.addWidget(self.lig2conn,12,4,1,2)
+        self.grid.addWidget(self.lig3conn,13,4,1,2)
+        self.grid.addWidget(self.lig4conn,14,4,1,2)
+        self.grid.addWidget(self.lig5conn,15,4,1,2)
+        self.grid.addWidget(self.lig6conn,16,4,1,2)
+        self.grid.addWidget(self.lig7conn,17,4,1,2)
+        ## keep Hydrogens #
+        self.lig0H = mQComboBox(['no','yes'],ctip3,12)
+        self.lig1H = mQComboBox(['no','yes'],ctip3,12)
+        self.lig2H = mQComboBox(['no','yes'],ctip3,12)
+        self.lig3H = mQComboBox(['no','yes'],ctip3,12)
+        self.lig4H = mQComboBox(['no','yes'],ctip3,12)
+        self.lig5H = mQComboBox(['no','yes'],ctip3,12)
+        self.lig6H = mQComboBox(['no','yes'],ctip3,12)
+        self.lig7H = mQComboBox(['no','yes'],ctip3,12)
+        # disable
+        self.lig1H.setDisabled(True)
+        self.lig2H.setDisabled(True)
+        self.lig3H.setDisabled(True)
+        self.lig4H.setDisabled(True)
+        self.lig5H.setDisabled(True)
+        self.lig6H.setDisabled(True)
+        self.lig7H.setDisabled(True)
+        # add to layout
+        self.grid.addWidget(self.lig0H,10,6,1,1)
+        self.grid.addWidget(self.lig1H,11,6,1,1)
+        self.grid.addWidget(self.lig2H,12,6,1,1)
+        self.grid.addWidget(self.lig3H,13,6,1,1)
+        self.grid.addWidget(self.lig4H,14,6,1,1)
+        self.grid.addWidget(self.lig5H,15,6,1,1)
+        self.grid.addWidget(self.lig6H,16,6,1,1)
+        self.grid.addWidget(self.lig7H,17,6,1,1)
+        ## ML bonds ##
+        self.lig0ML = mQLineEdit('',ctip4,'l',12)
+        self.lig1ML = mQLineEdit('',ctip4,'l',12)
+        self.lig2ML = mQLineEdit('',ctip4,'l',12)
+        self.lig3ML = mQLineEdit('',ctip4,'l',12)
+        self.lig4ML = mQLineEdit('',ctip4,'l',12)
+        self.lig5ML = mQLineEdit('',ctip4,'l',12)
+        self.lig6ML = mQLineEdit('',ctip4,'l',12)
+        self.lig7ML = mQLineEdit('',ctip4,'l',12)
+        # disable
+        self.lig1ML.setDisabled(True)
+        self.lig2ML.setDisabled(True)
+        self.lig3ML.setDisabled(True)
+        self.lig4ML.setDisabled(True)
+        self.lig5ML.setDisabled(True)
+        self.lig6ML.setDisabled(True)
+        self.lig7ML.setDisabled(True)
+        # add to layout
+        self.grid.addWidget(self.lig0ML,10,7,1,2)
+        self.grid.addWidget(self.lig1ML,11,7,1,2)
+        self.grid.addWidget(self.lig2ML,12,7,1,2)
+        self.grid.addWidget(self.lig3ML,13,7,1,2)
+        self.grid.addWidget(self.lig4ML,14,7,1,2)
+        self.grid.addWidget(self.lig5ML,15,7,1,2)
+        self.grid.addWidget(self.lig6ML,16,7,1,2)
+        self.grid.addWidget(self.lig7ML,17,7,1,2)
+        ## custom angles ##
+        self.lig0an = mQLineEdit('',ctip5,'l',12)
+        self.lig1an = mQLineEdit('',ctip5,'l',12)
+        self.lig2an = mQLineEdit('',ctip5,'l',12)
+        self.lig3an = mQLineEdit('',ctip5,'l',12)
+        self.lig4an = mQLineEdit('',ctip5,'l',12)
+        self.lig5an = mQLineEdit('',ctip5,'l',12)
+        self.lig6an = mQLineEdit('',ctip5,'l',12)
+        self.lig7an = mQLineEdit('',ctip5,'l',12)
+        # disable
+        self.lig1an.setDisabled(True)
+        self.lig2an.setDisabled(True)
+        self.lig3an.setDisabled(True)
+        self.lig4an.setDisabled(True)
+        self.lig5an.setDisabled(True)
+        self.lig6an.setDisabled(True)
+        self.lig7an.setDisabled(True)
+        # add to layout
+        self.grid.addWidget(self.lig0an,10,9,1,2)
+        self.grid.addWidget(self.lig1an,11,9,1,2)
+        self.grid.addWidget(self.lig2an,12,9,1,2)
+        self.grid.addWidget(self.lig3an,13,9,1,2)
+        self.grid.addWidget(self.lig4an,14,9,1,2)
+        self.grid.addWidget(self.lig5an,15,9,1,2)
+        self.grid.addWidget(self.lig6an,16,9,1,2)
+        self.grid.addWidget(self.lig7an,17,9,1,2)
+        ## ligand names ##
+        self.lig0nam = mQLineEdit('',ctip6,'l',12)
+        self.lig1nam = mQLineEdit('',ctip6,'l',12)
+        self.lig2nam = mQLineEdit('',ctip6,'l',12)
+        self.lig3nam = mQLineEdit('',ctip6,'l',12)
+        self.lig4nam = mQLineEdit('',ctip6,'l',12)
+        self.lig5nam = mQLineEdit('',ctip6,'l',12)
+        self.lig6nam = mQLineEdit('',ctip6,'l',12)
+        self.lig7nam = mQLineEdit('',ctip6,'l',12)
+        # disable
+        self.lig1nam.setDisabled(True)
+        self.lig2nam.setDisabled(True)
+        self.lig3nam.setDisabled(True)
+        self.lig4nam.setDisabled(True)
+        self.lig5nam.setDisabled(True)
+        self.lig6nam.setDisabled(True)
+        self.lig7nam.setDisabled(True)
+        # add to layout
+        self.grid.addWidget(self.lig0nam,10,11,1,1)
+        self.grid.addWidget(self.lig1nam,11,11,1,1)
+        self.grid.addWidget(self.lig2nam,12,11,1,1)
+        self.grid.addWidget(self.lig3nam,13,11,1,1)
+        self.grid.addWidget(self.lig4nam,14,11,1,1)
+        self.grid.addWidget(self.lig5nam,15,11,1,1)
+        self.grid.addWidget(self.lig6nam,16,11,1,1)
+        self.grid.addWidget(self.lig7nam,17,11,1,1)
+        ## add buttons ##
+        ctip = 'Add new ligand.'
+        self.lig0add = mQPushButton('+',ctip,12)
+        self.lig1add = mQPushButton('+',ctip,12)
+        self.lig2add = mQPushButton('+',ctip,12)
+        self.lig3add = mQPushButton('+',ctip,12)
+        self.lig4add = mQPushButton('+',ctip,12)
+        self.lig5add = mQPushButton('+',ctip,12)
+        self.lig6add = mQPushButton('+',ctip,12)
+        # add callbacks
+        self.lig0add.clicked.connect(self.addlig0)
+        self.lig1add.clicked.connect(self.addlig1)
+        self.lig2add.clicked.connect(self.addlig2)
+        self.lig3add.clicked.connect(self.addlig3)
+        self.lig4add.clicked.connect(self.addlig4)
+        self.lig5add.clicked.connect(self.addlig5)
+        self.lig6add.clicked.connect(self.addlig6)
+        # hide and disable
+        self.lig1add.hide()
+        self.lig1add.setDisabled(True)
+        self.lig2add.hide()
+        self.lig2add.setDisabled(True)
+        self.lig3add.hide()
+        self.lig3add.setDisabled(True)
+        self.lig4add.hide()
+        self.lig4add.setDisabled(True)
+        self.lig5add.hide()
+        self.lig5add.setDisabled(True)
+        self.lig6add.hide()
+        self.lig6add.setDisabled(True)
+        # add to layout
+        self.grid.addWidget(self.lig0add,10,13,1,1)
+        self.grid.addWidget(self.lig1add,11,13,1,1)
+        self.grid.addWidget(self.lig2add,12,13,1,1)
+        self.grid.addWidget(self.lig3add,13,13,1,1)
+        self.grid.addWidget(self.lig4add,14,13,1,1)
+        self.grid.addWidget(self.lig5add,15,13,1,1)
+        self.grid.addWidget(self.lig6add,16,13,1,1)
+        #############################################
+        ## Draw ligand button ##
+        ctip = 'Generate 2D ligand representation.'
+        self.butDrl = mQPushButton('Draw ligands',ctip,12)
+        self.butDrl.clicked.connect(self.drawligs)
+        self.grid.addWidget(self.butDrl,18,2,1,2)
+        ## Search DB button ##
+        ctip = 'Search for ligands in chemical databases.'
+        self.searchDB = mQPushButton('Search DB',ctip,12)
+        self.searchDB.clicked.connect(self.searchDBW)
+        self.grid.addWidget(self.searchDB,18,4,1,3)
+        ## Local database button ##
+        ctip = 'Add core/ligand/binding species to local database.'
+        self.butADB = mQPushButton('Add to local DB',ctip,11)
+        self.butADB.clicked.connect(self.enableDB)
+        self.grid.addWidget(self.butADB,18,7,1,3)
+        ##################################################
+        ##################################################
+        ########### GENERAL PARAMETERS INPUTS ############
+        ##################################################
+        ##################################################
+        self.txtgp = mQLabel('General parameters','','c',20)
+        self.grid.addWidget(self.txtgp,4,21,2,9)
+        ### jobs dir ###
+        ctip = 'Top directory for job folders.'
+        self.rtrdir = mQLabel('Jobs dir:',ctip,'Cr',12)
+        self.grid.addWidget(self.rtrdir,7,23,1,1)
+        self.etrdir = mQLineEdit(globs.rundir,ctip,'l',12)
+        self.grid.addWidget(self.etrdir,7,24,1,2)
+        # button for browsing rundir
+        ctip = 'Browse running directory.'
+        self.butpbrdir = mQPushButton('Browse..',ctip,12)
+        self.butpbrdir.clicked.connect(self.dirload)
+        self.grid.addWidget(self.butpbrdir,7,26,1,2)
+        # suffix
+        ctip = 'Suffix for job directories.'
+        self.rtsuff = mQLabel('Suffix:',ctip,'Cr',12)
+        self.etsuff = mQLineEdit('',ctip,'l',14)
+        self.grid.addWidget(self.rtsuff,8,23,1,1)
+        self.grid.addWidget(self.etsuff,8,24,1,2)
+        # random generation
+        ctip = 'Enable random generation.'
+        self.randomchk = mQCheckBox('Random generation',ctip,12)
+        self.randomchk.stateChanged.connect(self.enablerandom)
+        self.grid.addWidget(self.randomchk,9,23,1,2)
+        # charge calculation
+        ctip = 'Calculate charge based on ox state and ligands'
+        self.chch = mQCheckBox('Calculate charge',ctip,12)
+        self.chch.setDisabled(True)
+        self.grid.addWidget(self.chch,9,25,1,2)
+        # number of random generated structures
+        ctip = 'Number of structures to be randomly generated.'
+        self.rtrgen = mQLabel('Structures:',ctip,'Cr',12)
+        self.etrgen = mQLineEdit('',ctip,'l',12)
+        self.grid.addWidget(self.rtrgen,10,23,1,1)
+        self.grid.addWidget(self.etrgen,10,24,1,1)
+        self.rtrgen.setDisabled(True)
+        self.etrgen.setDisabled(True)
+        # number of different ligands to use
+        ctip = 'For random generation: number of different ligand types.'
+        self.rtlignum = mQLabel('Different ligands:',ctip,'Cr',12)
+        self.etlignum = mQLineEdit('',ctip,'l',12)
+        self.grid.addWidget(self.rtlignum,10,25,1,2)
+        self.grid.addWidget(self.etlignum,10,27,1,1)
+        self.rtlignum.setDisabled(True)
+        self.etlignum.setDisabled(True)
+        # oxidation state
+        ctip = 'Metal Oxidation state'
+        self.roxstate = mQLabel('Ox State:',ctip,'Cr',12)
+        qcav = ['0','I','II','III','IV','V','VI','VII','VIII']
+        self.doxs = mQComboBox(qcav,ctip,12)
+        self.doxs.setCurrentIndex(0)
+        self.grid.addWidget(self.roxstate,11,23,1,1)
+        self.grid.addWidget(self.doxs,11,24,1,1)
+        # spin state
+        ctip = 'System spin multiplicity'
+        self.rspstate = mQLabel('Spin:',ctip,'Cr',12)
+        qcav = ['1','2','3','4','5','6','7','8','9','10']
+        self.dspin = mQComboBox(qcav,ctip,12)
+        self.dspin.setCurrentIndex(0)
+        self.grid.addWidget(self.rspstate,11,26,1,1)
+        self.grid.addWidget(self.dspin,11,27,1,1)
+        # create distortion slider
+        ctip = 'Percent random distortion from default coordination geometry.'
+        self.distper = mQLabel('Distort:0%',ctip,'Cr',12)
+        self.sdist = mQSlider(ctip)
+        self.sdist.valueChanged.connect(self.sliderChanged)
+        self.grid.addWidget(self.distper,12,23,1,2)
+        self.grid.addWidget(self.sdist,12,25,1,2)
+        # force field optimization
+        ctip = 'Perform Force Field optimization'
+        self.chkFF = mQCheckBox('FF optimize',ctip,12)
+        self.chkFF.stateChanged.connect(self.enableffinput)
+        self.grid.addWidget(self.chkFF,13,23,1,2)
+        # generate all
+        ctip = 'Generate structure with and without optimization.'
+        self.chkgenall = mQCheckBox('Generate all',ctip,14)
+        self.chkgenall.stateChanged.connect(self.disableffinput)
+        self.grid.addWidget(self.chkgenall,14,23,1,2)
         # perform optimization
         ctip = 'Select Force Field'
         qcav = ['MMFF94','UFF','gchemical','GAFF']
-        self.dff = mDbox(self.mainWindow,0.375,0.65,0.125,0.05,qcav,ctip,14)
+        self.dff = mQComboBox(qcav,ctip,12)
         self.dff.setCurrentIndex(0)
         self.dff.setDisabled(True)
+        self.grid.addWidget(self.dff,13,25,1,3)
         # optimize before or after
         ctip = 'Optimize before or after building the structure'
         qcav = ['Before','After','Before & After']
-        self.dffba = mDbox(self.mainWindow,0.375,0.7,0.125,0.05,qcav,ctip,14)
+        self.dffba = mQComboBox(qcav,ctip,12)
         self.dffba.setDisabled(True)
         self.dffba.setCurrentIndex(2)
-        # select qc code
-        ctip = 'Select QC code'
-        qcav = ['TeraChem','GAMESS','QChem']
-        self.qcode = mDbox(self.mainWindow,0.7,0.705,0.125,0.05,qcav,ctip,14)
-        self.qcode.setDisabled(True)
-        # select scheduler
-        ctip = 'Select job scheduler'
-        qcav = ['SGE','SLURM']
-        self.scheduler = mDbox(self.mainWindow,0.83,0.705,0.125,0.05,qcav,ctip,14)
-        self.scheduler.setDisabled(True)
+        self.grid.addWidget(self.dffba,14,25,1,3)
+        # structure generation
+        ctip = 'Generate structures'
+        self.butGen = mQPushButton('Generate',ctip,18)
+        self.butGen.clicked.connect(self.runGUI)
+        self.grid.addWidget(self.butGen,16,23,2,2)
+        # post-processing setup
+        ctip = 'Setup post-processing'
+        self.butPost = mQPushButton('Post-process',ctip,16)
+        self.butPost.clicked.connect(self.setupp)
+        self.grid.addWidget(self.butPost,16,26,2,2)
+        ###################################################
+        ###################################################
+        ########### ADDITIONAL MOLECULE INPUTS ############
+        ###################################################
+        ###################################################
+        ### generate edit texts for additional molecule
+        self.txtamol = mQLabel('Additional molecule','','c',20)
+        self.txtamol.setDisabled(True)
+        self.grid.addWidget(self.txtamol,4,34,2,5)
+        # additional molecule
+        ctip = 'Place additional molecule'
+        self.chkM = mQCheckBox('Extra molecule',ctip,16)
+        self.chkM.stateChanged.connect(self.enableemol)
+        self.grid.addWidget(self.chkM,7,35,1,3)
+        # name of binding species
+        ctip = 'Binding species'
+        self.rtbind = mQLabel('Molecule:',ctip,'Cr',12)
+        self.etbind = mQLineEdit('',ctip,'l',12)
+        self.rtbind.setDisabled(True)
+        self.etbind.setDisabled(True)
+        self.grid.addWidget(self.rtbind,8,34,1,1)
+        self.grid.addWidget(self.etbind,8,35,1,2)
+        # name of binding molecule from SMILES
+        ctip = 'Name of binding molecule using SMILES'
+        self.rtbsmi = mQLabel('Name:',ctip,'Cr',12)
+        self.etbsmi = mQLineEdit('',ctip,'l',12)
+        self.rtbsmi.setDisabled(True)
+        self.etbsmi.setDisabled(True)
+        self.grid.addWidget(self.rtbsmi,9,34,1,1)
+        self.grid.addWidget(self.etbsmi,9,35,1,1)
+        # separate in xyz file
+        ctip = 'Separate molecules in xyz or input file with ------'
+        self.chsep = mQCheckBox('separate',ctip,14)
+        self.chsep.setDisabled(True)    
+        self.grid.addWidget(self.chsep,9,36,1,2)
+        # number of binding conformations to generate
+        ctip = 'Number of different conformations to be generated'
+        self.rtnbind = mQLabel('Conformations:',ctip,'Cr',12)
+        self.etnbind = mQLineEdit('',ctip,'l',12)
+        self.rtnbind.setDisabled(True)
+        self.etnbind.setDisabled(True)
+        self.grid.addWidget(self.rtnbind,10,34,1,1)
+        self.grid.addWidget(self.etnbind,10,35,1,1)
+        # charge of binding species
+        ctip = 'Charge of binding species'
+        self.rtchbind = mQLabel('Charge:',ctip,'Cr',12)
+        self.etchbind = mQLineEdit('',ctip,'l',12)
+        self.rtchbind.setDisabled(True)
+        self.etchbind.setDisabled(True)
+        self.grid.addWidget(self.rtchbind,10,36,1,1)
+        self.grid.addWidget(self.etchbind,10,37,1,1)
+        # min/max distance
+        ctip = 'Specify placing minimum/maximum distance (in A) and/or axial/equatorial orientation'
+        self.rtplace = mQLabel('Distance:',ctip,'Cr',12)
+        ctip = 'Minimum distance between the two molecules. 0 corresponds the marginally non-overlapping configuration'
+        self.etplacemin = mQLineEdit('',ctip,'l',12)
+        ctip = 'Maximum distance between the two molecules. 0 corresponds the marginally non-overlapping configuration'
+        self.etplacemax = mQLineEdit('',ctip,'l',12)
+        self.rtplace.setDisabled(True)
+        self.etplacemin.setDisabled(True)
+        self.etplacemax.setDisabled(True)
+        self.grid.addWidget(self.rtplace,11,34,1,1)
+        self.grid.addWidget(self.etplacemin,11,35,1,1)
+        self.grid.addWidget(self.etplacemax,11,36,1,1)
+        # mask for atom/center of mass reference
+        ctip = 'Reference atoms in extra molecules to be used for placement(e.g. 1,2 or 1-6 or COM or Fe) Default COM (center mass)'
+        #self.rtmaskbind = mQLabel('Reference:',ctip,'r',14)
+        self.etmaskbind = mQLineEdit('COM',ctip,'l',12)
+        #self.rtmaskbind.setDisabled(True)
+        self.etmaskbind.setDisabled(True)
+        #self.grid.addWidget(self.rtmaskbind,11,37,1,1)
+        self.grid.addWidget(self.etmaskbind,11,37,1,1)
+        # angle/orientation
+        ctip = 'Specify placement type or angle. Angle overwrites placement.'
+        self.rtplacea = mQLabel('Angle:',ctip,'Cr',12)
+        ctip = 'Azimouthal angle phi from 0 to 180'
+        self.etplacephi = mQLineEdit('',ctip,'l',12)
+        ctip = 'Polar angle theta from 0 to 360'
+        self.etplacetheta = mQLineEdit('',ctip,'l',12)
+        self.rtplacea.setDisabled(True)
+        self.etplacephi.setDisabled(True)
+        self.etplacetheta.setDisabled(True)
+        self.grid.addWidget(self.rtplacea,12,34,1,1)
+        self.grid.addWidget(self.etplacephi,12,35,1,1)
+        self.grid.addWidget(self.etplacetheta,12,36,1,1)
         # placement of extr molecule
         ctip = 'Orientation for placing additional molecule'
         qcav = ['','axial','equatorial']
-        self.dmolp = mDbox(self.mainWindow,0.8675,0.54,0.07,0.05,qcav,ctip,14)
+        self.dmolp = mQComboBox(qcav,ctip,14)
         self.dmolp.setDisabled(True)
-        ########################
-        ### show main window ###
-        self.mainWindow.show()
-        ########################
-        '''
-        #############################
-        ### create editor windows ###
-        #############################
-        '''
-        self.EdWindow = mWgen(0.4,0.5,'Editor') # editor window
-        '''
-        #############################
-        ### create pop-up windows ###
-        #############################
-        '''
+        self.grid.addWidget(self.dmolp,12,37,1,1)
+        # input file generation
+        ctip = 'Generate input files'
+        self.chkI = mQCheckBox('Input files',ctip,14)
+        self.chkI.stateChanged.connect(self.enableqeinput)
+        self.grid.addWidget(self.chkI,13,34,1,2)
+        # jobscript generation
+        ctip = 'Generate jobscripts'
+        self.chkJ = mQCheckBox('Jobscripts',ctip,14)
+        self.chkJ.stateChanged.connect(self.enablejinput)
+        self.grid.addWidget(self.chkJ,13,36,1,2)
+        # input for QC calculation
+        ctip = 'Enter input for Quantum Chemistry calculations'
+        self.butQc = mQPushButton('Enter QC input',ctip,12)
+        self.butQc.setDisabled(True)
+        self.butQc.clicked.connect(self.qcinput)
+        ctip = 'Select QC code'
+        qcav = ['TeraChem','GAMESS','QChem']
+        self.qcode = mQComboBox(qcav,ctip,12)
+        self.qcode.setDisabled(True)
+        self.grid.addWidget(self.butQc,14,34,1,2)
+        self.grid.addWidget(self.qcode,15,34,1,2)
+        # input for jobscripts
+        ctip = 'Enter input for jobscript files'
+        self.butJob = mQPushButton('Enter job input',ctip,12)
+        self.butJob.setDisabled(True)
+        self.butJob.clicked.connect(self.jobenable)
+        ctip = 'Select job scheduler'
+        qcav = ['SGE','SLURM']
+        self.scheduler = mQComboBox(qcav,ctip,12)
+        self.scheduler.setDisabled(True)
+        self.grid.addWidget(self.butJob,14,36,1,2)
+        self.grid.addWidget(self.scheduler,15,36,1,2)
+        # quit button
+        ctip = 'Quit program'
+        self.butQ = mQPushButton('Quit',ctip,14)
+        self.butQ.clicked.connect(self.qexit)
+        self.grid.addWidget(self.butQ,17,37,1,1)
+        ################################################
+        ################################################
+        ################################################
+        ##########################
+        ### information window ###
+        ##########################
+        self.iWind = QWidget()
+        self.iWind.setWindowTitle('Running')
+        self.iWtxt = mQTextEdit('Program started..','l',14)
+        self.iWtxt.setParent(self.iWind)
+        self.sgrid.addWidget(self.iWind)
+        
+        ####################
+        ### Run main GUI ###
+        ####################
+        self.wmain.setLayout(self.grid)
+        self.wmain.showMaximized()
+        center(self.wmain)
+        # resize other windows
+        relresize(self.iWind,self.wmain,0.7)
+        relresize(self.iWtxt,self.iWind,1.0)
+        app.processEvents()
+        app.exec_()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         ##########################################
         ### create local DB interaction window ###
         ##########################################
@@ -788,20 +1143,127 @@ class mGUI():
         ctip = 'Return to main menu'
         self.butpret = mButton(self.pWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
         self.butpret.clicked.connect(self.pWindow.qexitM)
-        ############################
-        ### create editor window ###
-        ############################
-        ### editor window
-        self.editor = mEdtext(self.EdWindow,0.05,0.05,0.75,0.9,'',12,'r','l')
-        self.Ed = mButton(self.EdWindow,0.5,0.5,0.125,0.05,'Enter QC input',ctip,14)
-        ### information window
-        self.iWind = mWgen(0.5,0.4,'Log') # information window
-        self.iWtxt = mEdtext(self.iWind,0.1,0.1,0.8,0.8,'Program started..',14,'n','l')
     '''
     #############################
     ### Callbacks for buttons ###
     #############################
     '''
+    ###################################
+    ###### Add new ligands input ######
+    ###################################
+    def addlig0(self):
+        txt0 = self.lig0.text().replace(' ','')
+        if len(txt0)==0:
+            mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
+        else:
+            self.lig0add.setDisabled(True)
+            self.lig0add.hide()
+            self.lig1add.setDisabled(False)
+            self.lig1add.show()
+            self.lig1.setDisabled(False)
+            self.lig1occ.setDisabled(False)
+            self.lig1conn.setDisabled(False)
+            self.lig1H.setDisabled(False)
+            self.lig1ML.setDisabled(False)
+            self.lig1an.setDisabled(False)
+            self.lig1nam.setDisabled(False)
+    def addlig1(self):
+        txt0 = self.lig1.text().replace(' ','')
+        if len(txt0)==0:
+            mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
+        else:
+            self.lig1add.setDisabled(True)
+            self.lig1add.hide()
+            self.lig2add.setDisabled(False)
+            self.lig2add.show()
+            self.lig2.setDisabled(False)
+            self.lig2occ.setDisabled(False)
+            self.lig2conn.setDisabled(False)
+            self.lig2H.setDisabled(False)
+            self.lig2ML.setDisabled(False)
+            self.lig2an.setDisabled(False)
+            self.lig2nam.setDisabled(False)
+    def addlig2(self):
+        txt0 = self.lig2.text().replace(' ','')
+        if len(txt0)==0:
+            mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
+        else:
+            self.lig2add.setDisabled(True)
+            self.lig2add.hide()
+            self.lig3add.setDisabled(False)
+            self.lig3add.show()
+            self.lig3.setDisabled(False)
+            self.lig3occ.setDisabled(False)
+            self.lig3conn.setDisabled(False)
+            self.lig3H.setDisabled(False)
+            self.lig3ML.setDisabled(False)
+            self.lig3an.setDisabled(False)
+            self.lig3nam.setDisabled(False)
+    def addlig3(self):
+        txt0 = self.lig3.text().replace(' ','')
+        if len(txt0)==0:
+            mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
+        else:
+            self.lig3add.setDisabled(True)
+            self.lig3add.hide()
+            self.lig4add.setDisabled(False)
+            self.lig4add.show()
+            self.lig4.setDisabled(False)
+            self.lig4occ.setDisabled(False)
+            self.lig4conn.setDisabled(False)
+            self.lig4H.setDisabled(False)
+            self.lig4ML.setDisabled(False)
+            self.lig4an.setDisabled(False)
+            self.lig4nam.setDisabled(False)
+    def addlig4(self):
+        txt0 = self.lig4.text().replace(' ','')
+        if len(txt0)==0:
+            mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
+        else:
+            self.lig4add.setDisabled(True)
+            self.lig4add.hide()
+            self.lig5add.setDisabled(False)
+            self.lig5add.show()
+            self.lig5.setDisabled(False)
+            self.lig5occ.setDisabled(False)
+            self.lig5conn.setDisabled(False)
+            self.lig5H.setDisabled(False)
+            self.lig5ML.setDisabled(False)
+            self.lig5an.setDisabled(False)
+            self.lig5nam.setDisabled(False)
+    def addlig5(self):
+        txt0 = self.lig0.text().replace(' ','')
+        if len(txt0)==0:
+            mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
+        else:
+            self.lig5add.setDisabled(True)
+            self.lig5add.hide()
+            self.lig6add.setDisabled(False)
+            self.lig6add.show()
+            self.lig6.setDisabled(False)
+            self.lig6occ.setDisabled(False)
+            self.lig6conn.setDisabled(False)
+            self.lig6H.setDisabled(False)
+            self.lig6ML.setDisabled(False)
+            self.lig6an.setDisabled(False)
+            self.lig6nam.setDisabled(False)
+    def addlig6(self):
+        txt0 = self.lig0.text().replace(' ','')
+        if len(txt0)==0:
+            mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
+        else:
+            self.lig6add.setDisabled(True)
+            self.lig6add.hide()
+            self.lig7.setDisabled(False)
+            self.lig7occ.setDisabled(False)
+            self.lig7conn.setDisabled(False)
+            self.lig7H.setDisabled(False)
+            self.lig7ML.setDisabled(False)
+            self.lig7an.setDisabled(False)
+            self.lig7nam.setDisabled(False)
+    ### enable add new geometry
+    def addgeom(self):
+        a=1
     ##############################
     ### Local Database window ####
     ##############################
@@ -874,6 +1336,7 @@ class mGUI():
         defaultparams = ['main.py','-i',rdir+'/postproc.inp']
         grabguivarsP(self)
         self.pWindow.close()
+        self.sgrid.setCurrentWidget(self.iWind)
         emsg = startgen(defaultparams,True,self)
         if not emsg:
             choice = QMessageBox.information(self.pWindow,'DONE','Your results are ready..')
@@ -949,9 +1412,6 @@ class mGUI():
             self.DBdent.setDisabled(True)
             self.rtDBsmicat.setDisabled(True)
             self.etDBsmicat.setDisabled(True)
-    ### close window
-    def cwclose(self):
-        self.lwindow.hide()
     ####################
     ### Main window ####
     ####################
@@ -967,23 +1427,20 @@ class mGUI():
         # get parameters
         args = grabguivars(self)
         defaultparams = ['main.py','-i',rdir+'/geninput.inp']
-        self.iWind.setWindowModality(2)
-        self.iWind.show()
+        self.sgrid.setCurrentWidget(self.iWind)
         msgBox = QMessageBox()
         if len(args['-rgen']) > 0:
             msgBox.setText("Random generation initiated. This process might take some time.")
-        #else:
-            #msgBox.setText("Structure generation initiated. This process might take some time.")
-        msgBox.setIcon(1)
-        msgBox.setInformativeText('Please be patient. OK?')
-        msgBox.setWindowTitle('Running..')
-        msgBox.exec_()
+            msgBox.setIcon(1)
+            msgBox.setInformativeText('Please be patient. OK?')
+            msgBox.setWindowTitle('Running..')
+            msgBox.exec_()
         # do the generation
         emsg = startgen(defaultparams,True,self)
         if not emsg:
-            QMessageBox.information(self.mainWindow,'Done','Structure generation terminated successfully!')
+            QMessageBox.information(self.wmain,'Done','Structure generation terminated successfully!')
         else:
-            QMessageBox.warning(self.mainWindow,'Problem',emsg)
+            QMessageBox.warning(self.wmain,'Problem',emsg)
     ### draw ligands
     def drawligs(self):
         ### collects all the info and passes it to molSimplify ###
@@ -995,7 +1452,8 @@ class mGUI():
             os.mkdir(rdir)
         args = grabguivars(self)
         if len(args['-lig']) < 1:
-            QMessageBox.warning(self.mainWindow,'Warning','No ligands are specified.')
+            qm = QMessageBox.warning('Warning','No ligands are specified.')
+            qm.setParent(self.wmain)
             return False
         else:
             args['-lig']=args['-lig'].replace(' ','')
@@ -1066,7 +1524,7 @@ class mGUI():
                 # button for closing window
                 ctip = 'Close current window'
                 self.lwclose = mButton(self.lwindow,0.40,0.85,0.2,0.1,'Close',ctip,14)
-                self.lwclose.clicked.connect(self.cwclose)
+                self.lwclose.clicked.connect(self.qexit)
     ### draw results from db search
     def drawres(self):
         ### collects all the info and passes it to molSimplify ###
@@ -1151,8 +1609,32 @@ class mGUI():
                 # button for closing window
                 ctip = 'Close current window'
                 self.lwclose = mButton(self.lwindow,0.40,0.85,0.2,0.1,'Close',ctip,14)
-                self.lwclose.clicked.connect(self.cwclose)
-    ### def enable FF input
+                self.lwclose.clicked.connect(self.qexit)
+    ### enable random input
+    def enablerandom(self):
+        if self.randomchk.isChecked():
+            self.rtrgen.setDisabled(False)
+            self.etrgen.setDisabled(False)
+            self.rtlignum.setDisabled(False)
+            self.etlignum.setDisabled(False)
+        else:
+            self.rtrgen.setDisabled(True)
+            self.etrgen.setDisabled(True)
+            self.rtlignum.setDisabled(True)
+            self.etlignum.setDisabled(True)
+    ### generate all enable FF input
+    def disableffinput(self):
+        if self.chkgenall.isChecked():
+            self.dff.setDisabled(True)
+            self.dffba.setDisabled(True)
+            self.chkFF.state = True
+            self.chkFF.setDisabled(True)
+        else:
+            self.dff.setDisabled(False)
+            self.dffba.setDisabled(False)
+            self.chkFF.setDisabled(False)
+            self.enableffinput()
+    ### enable FF input
     def enableffinput(self):
         if self.chkFF.isChecked():
             self.chkFF.state = False
@@ -1163,23 +1645,23 @@ class mGUI():
             self.dffba.setDisabled(True)
             self.chkFF.state = True
     ### load file for editing
-    def qloadM(self):
-        name = QFileDialog.getOpenFileName(self.EdWindow,'Open File')[0]
+    def qloadinput(self):
+        name = QFileDialog.getOpenFileName(self.wmain,'Open File')[0]
         if name != '':
             loadfrominputfile(self,name)
     ### load directory
     def dirload(self):
-        name = QFileDialog.getExistingDirectory(self.mainWindow,'Select Directory')
+        name = QFileDialog.getExistingDirectory(self.wmain,'Select Directory')
         if len(name) >0 and name[0] != '':
             self.etrdir.setText(name)
     ### save as input file
-    def qdumpS(self,gui):
-        name = QFileDialog.getSaveFileName(self.mainWindow,'Save as..','.',"Input files * (*)")[0]
+    def qsaveinput(self,gui):
+        name = QFileDialog.getSaveFileName(self.wmain,'Save as..','.',"Input files * (*)")[0]
         if name != '':
             varsg = grabguivars(self)
             writeinputc(varsg,name)
     ### show help menu
-    def qhelpM(self):
+    def qshowhelp(self):
         a = 1
     def getscreensize(self):
         screenShape = QDesktopWidget().screenGeometry()
@@ -1188,7 +1670,7 @@ class mGUI():
         return [width,height]
     ### slider changed value
     def sliderChanged(self,val):
-        self.distper.setText('Distortion: '+str(val)+'%')
+        self.distper.setText('Distort:'+str(val)+'%')
     ### match index with coordination
     def matchgeomcoord(self):
         # get current index
@@ -1244,7 +1726,7 @@ class mGUI():
             self.rtplacea.setDisabled(False)
             self.etplacephi.setDisabled(False)
             self.etplacetheta.setDisabled(False)
-            self.rtmaskbind.setDisabled(False)
+            #self.rtmaskbind.setDisabled(False)
             self.etmaskbind.setDisabled(False)
             self.chsep.setDisabled(False)
         else:
@@ -1265,7 +1747,7 @@ class mGUI():
             self.rtplacea.setDisabled(True)
             self.etplacephi.setDisabled(True)
             self.etplacetheta.setDisabled(True)
-            self.rtmaskbind.setDisabled(True)
+            #self.rtmaskbind.setDisabled(True)
             self.etmaskbind.setDisabled(True)
             self.chsep.setDisabled(True)
     #####################
@@ -1387,4 +1869,17 @@ class mGUI():
         name = QFileDialog.getExistingDirectory(self.pWindow,'Select Directory')
         if len(name) >0 and name[0] != '':
             self.etpdir.setText(name)
-
+    ###############################
+    ###### general callbacks ######
+    ###############################
+    ### exit application ###
+    def qexit(self):
+        choice = QMessageBox.question(self.wmain,'Exit','Are you sure you want to quit?',
+                QMessageBox.Yes, QMessageBox.No)
+        if choice == QMessageBox.Yes:
+            sys.exit()
+        else:
+            pass
+    ### hide current widget ###
+    def qhide(self):
+        self.hide()
