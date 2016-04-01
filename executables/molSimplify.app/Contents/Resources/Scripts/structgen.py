@@ -292,13 +292,14 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles):
                 atom.OBAtom.SetAtomicNum(6)
         ### add distance constraints
         for catom in connected:
-            dma = mol.getAtom(midx[0]).distance(mol.getAtom(catom))
             if constopt==1 or frozenangles:
                 constr.AddAtomConstraint(catom+1) # indexing babel
             else:
-                constr.AddDistanceConstraint(midx[0]+1,catom+1,dma) # indexing babel
-        ### freeze metal
-        constr.AddAtomConstraint(midx[0]+1) # indexing babel
+                dma = mol.getAtom(midx).distance(mol.getAtom(catom))
+                constr.AddDistanceConstraint(midx+1,catom+1,dma) # indexing babel
+        if midx:
+            ### freeze metal
+            constr.AddAtomConstraint(midx+1) # indexing babel
         ### freeze small ligands
         for cat in frozenats:
             constr.AddAtomConstraint(cat+1) # indexing babel
@@ -336,7 +337,7 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles):
 ################################################
 ### FORCE FIELD OPTIMIZATION for custom cores ##
 ################################################
-def ffoptd(ff,mol,connected,ccatoms,frozenats):
+def ffoptd(ff,mol,connected,ccatoms,frozenats,nligats):
     # INPUT
     #   - ff: force field to use, available MMFF94, UFF< Ghemical, GAFF
     #   - mol: mol3D to be ff optimized
@@ -364,9 +365,9 @@ def ffoptd(ff,mol,connected,ccatoms,frozenats):
     for ict,catom in enumerate(connected):
         dma = mol.getAtom(ccatoms[ict]).distance(mol.getAtom(catom))
         constr.AddDistanceConstraint(ccatoms[ict]+1,catom+1,dma) # indexing babel
-    ### freeze metals
-    for indm in indmtls:
-        constr.AddAtomConstraint(indm+1) # indexing babel
+    ### freeze core
+    for ii in range(0,mol.natoms-nligats):
+        constr.AddAtomConstraint(ii+1) # indexing babel
     ### freeze small ligands
     for cat in frozenats:
         constr.AddAtomConstraint(cat+1) # indexing babel
@@ -494,9 +495,10 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         from Classes.mWidgets import qBoxWarning
     ### initialize variables ###
     emsg, complex3D = False, []
-    coordbasef=[['one'],['li'],['tpl'],['thd','sqp'],['tbp','spy'], # list of coordinations
-                ['oct','tpr'],['pbp']] 
-    cclist=['one','li','tpl','thd','sqp','tbp','spy','oct','tpr','pbp'] # list of coordinations
+    # get available geometries
+    coords,geomnames,geomshorts,geomgroups = getgeoms()
+    coordbasef = geomgroups
+    cclist = geomshorts # list of coordinations
     # get list of possible combinations for connectino atoms
     bbcombsdict = getbackbcombs()
     metal = core.getAtom(0).sym # metal symbol
@@ -562,7 +564,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
             langles.append(False)
         langles = [args.langles[i] for i in indcs] # sort custom langles list
     ### geometry information ###
-    coord = min(toccs,7) # complex coordination
+    coord = toccs # complex coordination
     coord = 6 if octa else coord # check if forced octahedral
     # check for coordination
     if args.coord and int(args.coord)!=coord:
@@ -584,16 +586,18 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         getgeoms()
         print "Defaulting to "+coordbasef[coord-1][0]
     else:
-        geom = coordbasef[coord-1][0]
-    if toccs > 7:
-        if args.gui:
-            qqb = qBoxWarning(args.gui.mainWindow,'Warning',"Requested coordination greater than 7, 6-coordinate complex will be generated")
-        print "WARNING: requested coordination greater than 7, 6-coordinate complex will be generated"
+        if len(coordbasef) < coord-1:
+            geom = coordbasef[5][0] # force octahedrals
+        else:
+            geom = coordbasef[coord-1][0]
     ### load backbone and combinations ###
     # load backbone for coordination
     corexyz = loadcoord(installdir,geom)
     # get combinations possible for specified geometry
-    backbatoms = bbcombsdict[geom] 
+    if geom in bbcombsdict.keys():
+        backbatoms = bbcombsdict[geom]
+    else:
+        backbatoms = range(1,len(corexyz))
     # distort if requested
     if args.pangles:
         corexyz = modifybackbonep(corexyz,args.pangles) # point distortion
@@ -1292,17 +1296,28 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 else:
                     cpoint = core3D.getAtom(ccatoms[totlig]).coords()
                     conatoms = core3D.getBondedAtoms(ccatoms[totlig])
-                    # find real connection atom
-                    metclose = core3D.findcloseMetal(core3D.getAtom(ccatoms[totlig]))
-                    mindist = 1000
+                    # find smaller ligand to remove
+                    minmol = 10000
+                    mindelats = []
+                    atclose = 0
                     for cat in conatoms:
-                        if core3D.getAtom(cat).distance(core3D.getAtom(metclose)) < mindist:
+                        delatoms = core3D.findsubMol(ccatoms[totlig],cat) # find old ligand
+                        if len(delatoms) < minmol:
+                            mindelats = delatoms
+                            minmol = len(delatoms)
                             atclose = cat
-                            mindist = core3D.getAtom(cat).distance(core3D.getAtom(ccatoms[totlig]))
+                        elif len(delatoms)==minmol:
+                            # find real connection atom (if same atoms in ligand get shortest distance)
+                            d0 = core3D.getAtom(ccatoms[totlig]).distance(core3D.getAtom(cat))
+                            d1 = core3D.getAtom(ccatoms[totlig]).distance(core3D.getAtom(mindelats[0]))
+                            if d0 < d1:
+                                mindelats = delatoms
+                                atclose = cat
+                    print mindelats
                     mcoords = core3D.getAtom(atclose).coords() # connection coordinates in backbone
                     # connection atom save
                     conatom3D = atom3D(core3D.getAtom(atclose).sym,core3D.getAtom(atclose).coords())
-                    delatoms = core3D.findsubMol(ccatoms[totlig],atclose) # find old ligand
+                    delatoms = mindelats
                     # find shifting if needed
                     if len(ccatoms) > totlig+1:
                         for cccat in range(totlig+1,len(ccatoms)):
@@ -1452,13 +1467,14 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     print emsg
                 if args.calccharge and 'y' in args.calccharge.lower():
                     core3D.charge += lig3D.charge
+                nligats = lig3D.natoms
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats)
+                    core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats,nligats)
             totlig += 1
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats)
+        core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats,nligats)
     return core3D,emsg
 
 ##########################################

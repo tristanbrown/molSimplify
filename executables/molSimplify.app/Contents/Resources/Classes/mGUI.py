@@ -21,6 +21,7 @@ import pybel
 
 
 class mGUI():
+    getgeoms()
     ### constructor of gui ###
     def __init__(self,app):
         ### get screen size
@@ -299,10 +300,9 @@ class mGUI():
         self.dcoord.setCurrentIndex(5)
         self.dcoord.currentIndexChanged.connect(self.matchgeomcoord)
         # geometry of coordination
-        ctip = 'Octahedral, Trigonal Prismatic'
-        qcav = ['Oct','TPr']
-        self.dcoordg = mDbox(self.mainWindow,0.5625,0.5,0.05,0.05,qcav,ctip,14)
+        self.dcoordg = mDbox(self.mainWindow,0.5625,0.5,0.05,0.05,'','',14)
         self.dcoordg.setCurrentIndex(0)
+        self.matchgeomcoord()
         # perform optimization
         ctip = 'Select Force Field'
         qcav = ['MMFF94','UFF','gchemical','GAFF']
@@ -1193,24 +1193,24 @@ class mGUI():
     def matchgeomcoord(self):
         # get current index
         dc=self.dcoord.currentIndex()
-        qcav = [['-'],['TPl'],['Thd','Sqp'],['TBP','SPy'],['Oct','TPr'],['PBP']]
-        ctip = ['','Trigonal Planar, Pyramidal','Tetrahedral, Square Planar',
-                'Square Pyramidal','Trigonal Bipyramidal','Octahedral',
-                'Trigonal Prismatic', 'Pentagonal Bipyramidal']
+        coords,geomnames,geomshorts,geomgroups = getgeoms()
+        qcav = geomgroups
+        ctip = geomnames
         # empty the box
         for i in range(0,self.dcoordg.count()):
             self.dcoordg.removeItem(0)
-        if dc < 2 or dc > 6:
-            qc = ['-']
-            ct = ''
-        else:
-            qc = qcav[dc-1]
-            ct = ctip[dc-1]
+        qc = qcav[dc]
         # add to box
         for i,t in enumerate(qc):
             self.dcoordg.insertItem(i,t)
         # set default geometry
         self.dcoordg.setCurrentIndex(0)
+        # get global index
+        elem = [i for i,s in enumerate(geomshorts) if s in self.dcoordg.currentText()]
+        ct = ''
+        for ii in range(elem[0],elem[0]+len(geomgroups[dc])):
+            ct += ctip[ii]+', '
+        ct = ct[:-2]
         # set correct tooltip
         self.dcoordg.setToolTip(ct)
     ### start window in browser to visualize molecule

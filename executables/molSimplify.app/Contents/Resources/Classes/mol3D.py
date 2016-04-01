@@ -252,6 +252,22 @@ class mol3D:
                 if atom.atno > maxaw:
                     mm = i
         return mm
+    
+    ###############################
+    ### finds metal in molecule ###
+    ###############################
+    def findMetal(self):
+        # OUTPUT
+        #   - mm: indices of all metals in the molecule
+        mm = False
+        mindist = 1000
+        cm = self.centermass()
+        for i,atom in enumerate(self.atoms):
+            if atom.ismetal():
+                if distance(atom.coords(),cm) < mindist:
+                    mindist = distance(atom.coords(),cm)
+                    mm = i
+        return mm
         
     #########################################
     ### finds atoms by symbol in molecule ###
@@ -277,8 +293,8 @@ class mol3D:
         # OUTPUT
         #   - subm: indices of all atoms in submolecule
         subm = []
-        conatoms = self.getBondedAtoms(atom0) # connected atoms to atom0
-        conatoms.append(atom0) 
+        conatoms = [atom0]
+        conatoms += self.getBondedAtoms(atom0) # connected atoms to atom0
         if atomN in conatoms:
             conatoms.remove(atomN)  # check for atomN and remove
         subm += conatoms # add to submolecule

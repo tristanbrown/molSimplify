@@ -392,8 +392,8 @@ def rotate_around_axis(mol,Rp,u,theta):
 def setPdistance(mol, Rr, Rp, bond):
     # INPUT
     #   - mol: molecule to be manipulated
-    #   - Rr: coordinates of atom 
-    #   - Rp: reference point [x,y,z]
+    #   - Rr: coordinates of atom in molecule
+    #   - Rp: reference point [x,y,z] not in molecule
     #   - bond: final bond length between Rr, Rp
     # OUTPUT
     #   - mol: translated molecule

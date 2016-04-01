@@ -218,14 +218,16 @@ def dbsearch(rundir,args,globs):
     else:
         obab = 'obabel'
     if args.gui:
-        from Classes.mWidgets import qBoxInfo
-        from Classes.mWidgets import qBoxError
+        from Classes.mWidgets import mQDialogErr
+        from Classes.mWidgets import mQDialogWarn
+        from Classes.mWidgets import mQDialogInf
     ### in any case do similarity search over indexed db ###
     outf = args.dboutputf if args.dboutputf else 'simres.smi' # output file
     ### convert to SMILES/SMARTS if file
     if not args.dbbase:
         if args.gui:
-            qqb = qBoxError(args.gui.DBWindow,'Warning',"No database file found within "+globs.chemdbdir+'. Search not possible.')
+            qqb = mQDialogWarn('Warning',"No database file found within "+globs.chemdbdir+'. Search not possible.')
+            qqb.setParent(args.gui.DBWindow)
         print "No database file found within "+globs.chemdbdir+'. Search not possible.'
         return True
     if args.dbsim:
@@ -293,10 +295,12 @@ def dbsearch(rundir,args,globs):
     nmols = '10000' if not args.dbresults else str(50*int(args.dbresults))
     outputf,flag = getsimilar(smistr,nmols,args.dbbase,finger)
     if int(nmols) > 3000 and args.gui:
-        qqb = qBoxInfo(args.gui.DBWindow,'Warning',"Database search is going to take a few minutes. Please wait..OK?")
+        qqb = mQDialogInf('Warning',"Database search is going to take a few minutes. Please wait..OK?")
+        qqb.setParent(args.gui.DBWindow)
     if flag:
         if args.gui:
-            qqb = qBoxWarning(args.gui.DBWindow,'Warning',"No matches found in search..")
+            qqb = mQDialogWarn('Warning',"No matches found in search..")
+            qqb.setParent(args.gui.DBWindow)
         print "No matches found in search.."
         return True
     if squery:

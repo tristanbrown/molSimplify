@@ -157,8 +157,9 @@ def constrgen(installdir,rundir,args,globs):
             emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
         else:
             if args.gui:
-                from Classes.mWidgets import qBoxError
-                qqb = qBoxError(args.gui.mainWindow,'Error','No suitable ligand sets were found for random generation. Exiting...')
+                from Classes.mWidgets import mQDialogErr
+                qqb = mQDialogErr('Error','No suitable ligand sets were found for random generation. Exiting...')
+                qqb.setParent(args.gui.wmain)
             else:
                 emsg = 'No suitable ligand sets were found for random generation. Exiting...'
                 print 'No suitable ligand sets were found for random generation. Exiting...\n\n'
@@ -278,8 +279,8 @@ def checkmultilig(ligs):
 def rungen(installdir,rundir,args,chspfname,globs):
     try:
         from Classes.mWidgets import qBoxFolder
-        from Classes.mWidgets import qBoxInfo
-        from Classes.mWidgets import qBoxError
+        from Classes.mWidgets import mQDialogInf
+        from Classes.mWidgets import mQDialogErr
     except ImportError:
         args.gui = False
     emsg = False
@@ -363,7 +364,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
                 else:
                     flagdir = 'replace'
             else:
-                qqb = qBoxFolder(args.gui.mainWindow,'Folder exists','Directory '+rootcheck+' already exists. What do you want to do?')
+                qqb = qBoxFolder(args.gui.wmain,'Folder exists','Directory '+rootcheck+' already exists. What do you want to do?')
                 flagdir = qqb.getaction()
             # replace existing directory
             if (flagdir=='replace'):
@@ -395,7 +396,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
                 else:
                     flagdir = 'replace'
             else:
-                qqb = qBoxFolder(args.gui.mainWindow,'Folder exists','Directory '+rootdir+' already exists. What do you want to do?')
+                qqb = qBoxFolder(args.gui.wmain,'Folder exists','Directory '+rootdir+' already exists. What do you want to do?')
                 flagdir = qqb.getaction()
             # replace existing directory
             if (flagdir=='replace'):
@@ -418,8 +419,39 @@ def rungen(installdir,rundir,args,chspfname,globs):
         ############ GENERATION ############
         ####################################
         if not skip:
-            # generate xyz files
-            strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+            # check for generate all
+            if args.genall:
+                tstrfiles = []
+                # generate xyz with FF and trained ML
+                args.ff = 'MMFF94'
+                args.ffoption = 'ba'
+                args.MLbonds = False
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+                for strf in strfiles:
+                    tstrfiles.append(strf+'FFML')
+                    os.rename(strf+'.xyz',strf+'FFML.xyz')
+                # generate xyz with FF and covalent
+                args.MLbonds = ['c' for i in range(0,10)]
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+                for strf in strfiles:
+                    tstrfiles.append(strf+'FFc')
+                    os.rename(strf+'.xyz',strf+'FFc.xyz')
+                args.ff = False
+                args.MLbonds = False
+                # generate xyz without FF and trained ML
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+                for strf in strfiles:
+                    tstrfiles.append(strf+'ML')
+                    os.rename(strf+'.xyz',strf+'ML.xyz')
+                args.MLbonds = ['c' for i in range(0,10)]
+                # generate xyz without FF and covalent ML
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+                for strf in strfiles:
+                    tstrfiles.append(strf+'c')
+                    os.rename(strf+'.xyz',strf+'c.xyz')
+            else:
+                # generate xyz files
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
             # generate QC input files
             if args.qccode and not emsg:
                 if args.charge and (isinstance(args.charge, list)):
@@ -447,7 +479,8 @@ def rungen(installdir,rundir,args,chspfname,globs):
                     print 'SGE jobscripts generated!'
         elif not emsg:
             if args.gui:
-                qq = qBoxInfo(args.gui.mainWindow,'Folder skipped','Folder '+rootdir+' was skipped.')
+                qq = mQDialogInf('Folder skipped','Folder '+rootdir+' was skipped.')
+                qq.setParent(args.gui.wmain)
             else:
                 print 'Folder '+rootdir+' was skipped..\n'
     return emsg    

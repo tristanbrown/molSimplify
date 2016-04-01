@@ -233,7 +233,7 @@ def nbopost(resfiles,folder,gui,flog):
         print 'Processing ',resf
         flog.write('Processing '+resf+'\n')
         if gui:
-            gui.mEd.setText('Processing '+resf+'\n'+gui.mEd.toPlainText())
+            gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
         with open(resf) as f:
             s = f.read()
@@ -275,7 +275,7 @@ def terapost(resfiles,folder,gui,flog):
         print 'Processing ',resf
         flog.write('Processing '+resf+'\n')
         if gui:
-            gui.mEd.setText('Processing '+resf+'\n'+gui.mEd.toPlainText())
+            gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
         with open(resf) as f:
             s = f.read()
             f.close()
@@ -358,7 +358,7 @@ def gampost(resfiles,folder,gui,flog):
         resd = resf.rsplit('/',1)[0]
         resfold = resd.split('/',2)
         if gui:
-            gui.mEd.setText('Processing '+resf+'\n'+gui.mEd.toPlainText())
+            gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
         print 'Processing '+resf
         flog.write('Processing '+resf+'\n')

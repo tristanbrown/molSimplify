@@ -24,11 +24,22 @@ def checkinput(args):
     # check if ligands are specified
     if not args.lig and not args.rgen:
         if args.gui:
-            from Classes.mWidgets import qBoxWarning
-            qqb = qBoxWarning(args.gui.mainWindow,'Warning','You specified no ligands. Please use the -lig flag. Core only generation..')
+            from Classes.mWidgets import mQDialogWarn
+            qqb = mQDialogWarn('Warning','You specified no ligands. Please use the -lig flag. Core only generation..')
+            qqb.setParent(args.gui.wmain)
         else:
             print 'WARNING: You specified no ligands. Please use the -lig flag. Forced generation..\n'
     return emsg
+
+###########################################
+########## check true or false  ###########
+###########################################
+def checkTrue(arg):
+    if 'y' in arg.lower() or '1' in arg.lower() or 't' in arg.lower():
+        return True
+    else:
+        return False
+                
             
 ###########################################
 ########## consolidate lists  #############
@@ -61,26 +72,6 @@ def cleaninput(args):
             else:
                 ls.append(s)
         args.sminame = ls
-    # check smicat, fix indexing (should be 0 based)
-    if args.smicat:
-        ls = []
-        for i,s in enumerate(args.smicat):
-            if isinstance(s,list):
-                for ss in s:
-                    ls.append(int(ss)-1)
-            else:
-                ls.append(int(s)-1)
-        args.smicat = ls
-    # check smident
-    if args.smident:
-        ls = []
-        for i,s in enumerate(args.smident):
-            if isinstance(s,list):
-                for ss in s:
-                    ls.append(ss)
-            else:
-                ls.append(s)
-        args.smident = ls
     # check qoption
     if args.qoption:
         ls = []
@@ -144,10 +135,7 @@ def cleaninput(args):
     # convert keepHs to boolean
     if args.keepHs:
         for i,s in enumerate(args.keepHs):
-            if s in 'Y y 1 yes Yes YES True true TRUE':
-                args.keepHs[i]=True
-            else:
-                args.keepHs[i]=False
+            args.keepHs[i]=checkTrue(s)
     # convert ff option to abe code
     if args.ff and args.ffoption:
         b = False
@@ -174,9 +162,8 @@ def parseinput(args):
             line = line.split('#')[0] # remove comments
         li = line.strip()
         if not li.startswith("#") and len(li)>0: # remove comments/empty lines
-            l = line.split('#')[0] # remove comments
-            l = l.split('\n')[0] # remove newlines
-            l = filter(None,re.split(' |,|\t',l))
+            l = li.split('\n')[0] # remove newlines
+            l = filter(None,re.split(' |,|\t|&',l))
             # parse general arguments
             if (l[0]=='-core'):
                 args.core = [ll for ll in l[1:]]
@@ -239,8 +226,12 @@ def parseinput(args):
                 args.lignum = l[1]
             if (l[0]=='-ligocc'):
                 args.ligocc = l[1:]
+            if (l[0]=='-ligorder'):
+                args.ligorder = checkTrue(l[1])
             if (l[0]=='-replig'):
-                args.replig = True
+                args.replig = checkTrue(l[1])
+            if (l[0]=='-genall'):
+                args.genall = checkTrue(l[1])
             if (l[0]=='-MLbonds'):
                 args.MLbonds = l[1:]
             if (l[0]=='-distort'):
@@ -259,21 +250,20 @@ def parseinput(args):
                 args.ffoption = l[1:]
             if (l[0]=='-place'):
                 args.place = l[1]
-            if (l[0]=='-smident'):
-                if args.smident:
-                    args.smident.append(l[1:])
-                else:
-                    args.smident = l[1:]
             if (l[0]=='-sminame'):
                 if args.sminame:
                     args.sminame.append(l[1:])
                 else:
                     args.sminame = l[1:]
-            if (l[0]=='-smicat'):
-                if args.smicat:
-                    args.smicat.append(int(l[1:])-1)
-                else:
-                    args.smicat = l[1:]
+            if 'smicat' in line:
+                args.smicat = []
+                l = filter(None,re.split('/|\t|&',l))
+                for ll in l:
+                    lloc = []
+                    ll = filter(None,re.split('| |,',ll))
+                    for lll in ll:
+                        lloc.append(int(lll)-1)
+                    args.smicat.append(lloc)
             # parse qc arguments
             if (l[0]=='-qccode'):
                 args.qccode = l[1]
@@ -303,8 +293,7 @@ def parseinput(args):
             if (l[0]=='-correlation'):
                 args.correlation = l[1]
             if (l[0]=='-unrestricted'):
-                if '1' in l[1].lower() or 't' in l[1].lower():
-                    args.unrestricted = True
+                args.unrestricted = checkTrue(l[1])
             if (l[0]=='-remoption'):
                 if args.remoption:
                     args.remoption.append(l[1:])
@@ -446,9 +435,11 @@ def parsecommandline(parser):
     parser.add_argument("-bsep","--bsep", help="flag for separating extra molecule in input or xyz file",action="store_true")
     parser.add_argument("-btheta","--btheta", help="polar angle theta for binding species, default random between 0 and 360",action="store_true") 
     parser.add_argument("-geometry","--geometry", help="geometry such as TBP (trigonal bipyramidal)",action="store_true") # geometry
+    parser.add_argument("-genall","--genall", help="Generate complex both with and without FF opt.",action="store_true") # geometry
     parser.add_argument("-lig","--lig", help="ligand structure name or SMILES with currently available: "+getligs(installdir),action="store_true") #e.g. acetate (in smilesdict)
     parser.add_argument("-ligocc","--ligocc", help="number of corresponding ligands e.g. 2,2,1",action="store_true") # e.g. 1,2,1
     parser.add_argument("-lignum","--lignum", help="number of ligand types e.g. 2",action="store_true") 
+    parser.add_argument("-ligorder","--ligorder", help="force order of ligands in the structure generation yes/True/1 or no/False/0",action="store_true") 
     parser.add_argument("-MLbonds","--MLbonds", help="custom M-L bond length for corresponding ligand in A e.g. 1.4",action="store_true") 
     parser.add_argument("-distort","--distort", help="randomly distort backbone. Ranges from 0 (no distortion) to 100. e.g. 20",action="store_true") 
     parser.add_argument("-langles","--langles", help="custom angles (polar theta, azimuthal phi) for corresponding ligand in degrees separated by '/' e.g. 20/30,10/20",action="store_true") 
@@ -459,8 +450,7 @@ def parsecommandline(parser):
     parser.add_argument("-ff","--ff",help="select force field for FF optimization. Available: MMFF94, UFF, GAFF, Ghemical",action="store_true")
     parser.add_argument("-ffoption","--ffoption",help="select when to perform FF optimization. Options: B(Before),A(After),E(End),BA,BE,AE,ABE",action="store_true")
     parser.add_argument("-keepHs","--keepHs", help="force keep hydrogens. By default ligands are stripped one hydrogen in order to connect to the core",action="store_true") 
-    parser.add_argument("-smicat","--smicat", help="connecting atoms corresponding to smiles. Indexing starts at 1 which is the default value as well",action="store_true") 
-    parser.add_argument("-smident","--smident", help="denticity of smiles ligands. 1-6 supported",action="store_true") 
+    parser.add_argument("-smicat","--smicat", help="connecting atoms corresponding to smiles. Indexing starts at 1 which is the default value as well",action="store_true")
     parser.add_argument("-sminame","--sminame", help="name for smiles species used in the folder naming. e.g. amm",action="store_true") 
     parser.add_argument("-nambsmi","--nambsmi", help="name of SMILES string for binding species e.g. carbonmonoxide",action="store_true")
     parser.add_argument("-maxd","--maxd", help="maximum distance above cluster size for molecules placement maxdist=size1+size2+maxd", action="store_true")

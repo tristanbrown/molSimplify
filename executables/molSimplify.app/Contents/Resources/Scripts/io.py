@@ -8,19 +8,55 @@
 # import std modules
 import pybel, glob, os, re, argparse, sys
 from Classes.mol3D import *
+from Classes.globalvars import *
 
 ##############################################
 ### function to print available geometries ###
 ##############################################
-def getgeoms():
-    geomnames = ['none','linear','trigonal planar','tetrahedral','square planar',
-                'trigonal bipyramidal','square pyramidal','octahedral', 
-                'trigonal prismatic','pentagonal bipyramidal']
-    geomshorts = ['one','li','tpl','thd','sqp','tbp','spy','oct','tpr','pbp']
-    coords = [1,2,3,3,4,4,5,5,6,6,7]
+def printgeoms():
+    globs = globalvars()
+    f = open(globs.installdir+'/Data/coordinations.dict','r')
+    s = f.read().splitlines()
+    s = filter(None,s)
+    f.close()
+    geomnames = []
+    geomshorts = []
+    coords = []
+    for line in s:
+        if (line[0]!='#'):
+            vals = filter(None,re.split(',| |:',line))
+            coords.append(vals[0])
+            geomnames.append(vals[1])
+            geomshorts.append(vals[2])
+    geomgroups = list([] for a in set(coords))
+    for i,g in enumerate(coords):
+        geomgroups[int(g)-1].append(geomshorts[i])
     for i,g in enumerate(geomnames):
-        print "Coordination: %d, geometry: %s,\t short name: %s " %(coords[i],g,geomshorts[i])
+        print "Coordination: %s, geometry: %s,\t short name: %s " %(coords[i],g,geomshorts[i])
     print ''
+    
+##############################################
+### function to get available geometries ###
+##############################################
+def getgeoms():
+    globs = globalvars()
+    f = open(globs.installdir+'/Data/coordinations.dict','r')
+    s = f.read().splitlines()
+    s = filter(None,s)
+    f.close()
+    geomnames = []
+    geomshorts = []
+    coords = []
+    for line in s:
+        if (line[0]!='#'):
+            vals = filter(None,re.split(',| |:',line))
+            coords.append(vals[0])
+            geomnames.append(vals[1])
+            geomshorts.append(vals[2])
+    geomgroups = list([] for a in set(coords))
+    for i,g in enumerate(coords):
+        geomgroups[int(g)-1].append(geomshorts[i])
+    return coords,geomnames,geomshorts,geomgroups
 
 ###################################
 ### function to read dictionary ###

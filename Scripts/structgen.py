@@ -115,28 +115,8 @@ def getsmilescat(args,indsmi):
     # OUTPUT
     #   - tt: list of connection atoms
     tt= []  # initialize list of connection atoms
-    if args.smicat and args.smident: # get connection atom(s)
-        if len(args.smident) > indsmi: # check if smident entry exists
-            # get starting index in smicat
-            tsmiidx = 0
-            for iloop in range(0,indsmi):
-                tsmiidx += int(args.smident[iloop])
-            # if smicat entry exists for smiles grab the numbers
-            if len(args.smicat) >= tsmiidx+int(args.smident[indsmi]): 
-                for iloop in range(0,int(args.smident[indsmi])):
-                    tt.append(int(args.smicat[tsmiidx+iloop]))
-            else:
-            # lse just get sequential numbers 0,1,2.. until smident
-                for iloop in range(0,int(args.smident[indsmi])): # default 0,1,2..
-                    tt.append(iloop)
-        else:
-            tt = [0] # default value
-    elif args.smident and len(args.smident) > indsmi: # if no smicat exists
-        for iloop in range(0,int(args.smident[indsmi])): # default 0,1,2..
-            tt.append(iloop)
-    elif args.smicat: # in order of smicat if only 1 SMILES
-        for t in args.smicat:
-            tt.append(int(t))
+    if args.smicat and len(args.smicat)>indsmi: # get connection atom(s)
+        tt = args.smicat[indsmi] # default value
     else:
         tt = [0] # default value 0 connection atom
     return tt
@@ -153,10 +133,8 @@ def getsmident(args,indsmi):
     #   - SMILES ligand denticity (int)
     ### check for denticity specification in input ###
     # if denticity is specified return this
-    if args.smident and len(args.smident) > indsmi:
-        return int(args.smident[indsmi])
-    elif args.smicat:
-        return int(len(args.smicat))
+    if args.smicat and len(args.smicat) > indsmi:
+        return int(len(args.smicat[indsmi]))
     # otherwise return default
     else:
         return 1
@@ -206,7 +184,42 @@ def distortbackbone(backb, distort):
             phi = random.uniform(0.0,0.01*int(distort)*0.5) # *0.5
             backb[i] = PointTranslateSph(backb[0],backb[i],[distance(backb[0],backb[i]),theta,phi])
     return backb
-
+    
+#######################
+### reorder ligands ###
+#######################
+def smartreorderligs(args,ligs,dentl,licores):
+    globs = globalvars()
+    # INPUT
+    #   - args: placeholder for input arguments
+    #   - ligs: list of ligands
+    #   - dents: ligand denticities
+    # OUTPUT
+    #   - indcs: reordering indices
+    # check for forced order
+    if args.ligorder:
+        indcs = range(0,len(ligs))
+        return indcs
+    lsizes = []
+    for ligand in ligs:
+        lig,emsg = lig_load(globs.installdir+'/',ligand,licores) # load ligand
+        lsizes.append(len(lig.OBmol.atoms))
+    # group by denticities
+    dents = list(set(dentl))
+    ligdentsidcs = [[] for a in dents]
+    for i,dent in enumerate(dentl):
+        ligdentsidcs[dents.index(dent)].append(i)
+    # sort by highest denticity first
+    ligdentsidcs = list(reversed(ligdentsidcs))
+    indcs = []
+    # within each group sort by size (smaller first)
+    for ii,dd in enumerate(ligdentsidcs):
+        locs = [lsizes[i] for i in dd]
+        locind = [i[0] for i in sorted(enumerate(locs), key=lambda x:x[1])]
+        for l in locind:
+            indcs.append(ligdentsidcs[ii][l])
+    return indcs
+    
 ###########################################
 ### loads M-L bond length from database ###
 ###########################################
@@ -252,7 +265,7 @@ def getbondlength(args,metal,m3D,lig3D,matom,atom0,ligand,MLbonds):
 ###############################
 ### FORCE FIELD OPTIMIZATION ##
 ###############################
-def ffopt(ff,mol,connected,constopt,frozenats,frozenangles):
+def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
     # INPUT
     #   - ff: force field to use, available MMFF94, UFF< Ghemical, GAFF
     #   - mol: mol3D to be ff optimized
@@ -291,14 +304,14 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles):
                 mtlsnums.append(atom.atomicnum)
                 atom.OBAtom.SetAtomicNum(6)
         ### add distance constraints
-        for catom in connected:
-            dma = mol.getAtom(midx[0]).distance(mol.getAtom(catom))
+        for ii,catom in enumerate(connected):
             if constopt==1 or frozenangles:
                 constr.AddAtomConstraint(catom+1) # indexing babel
             else:
-                constr.AddDistanceConstraint(midx[0]+1,catom+1,dma) # indexing babel
-        ### freeze metal
-        constr.AddAtomConstraint(midx[0]+1) # indexing babel
+                constr.AddDistanceConstraint(midx+1,catom+1,mlbonds[ii]) # indexing babel
+        for midxm in indmtls:
+            ### freeze metal
+            constr.AddAtomConstraint(midxm+1) # indexing babel
         ### freeze small ligands
         for cat in frozenats:
             constr.AddAtomConstraint(cat+1) # indexing babel
@@ -491,7 +504,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         args.gui.app.processEvents()
     # import gui options
     if args.gui:
-        from Classes.mWidgets import qBoxWarning
+        from Classes.mWidgets import mQDialogWarn
     ### initialize variables ###
     emsg, complex3D = False, []
     # get available geometries
@@ -511,6 +524,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     connected = []  # indices in core3D of ligand atoms connected to metal
     frozenats = []  # atoms to be frozen in optimization
     freezeangles = False # custom angles imposed
+    MLoptbds = []   # list of bond lengths
     ### load bond data ###
     MLbonds = loaddata(installdir+'/Data/ML.dat')
     ### calculate occurrences, denticities etc for all ligands ###
@@ -530,13 +544,12 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         dentl.append(dent_i)    # append denticity to list
         # loop over occurrence of ligand i to check for max coordination
         for j in range(0,oc_i):
-            if (toccs+dent_i <= 7):
-                occs0[i] += 1
+            occs0[i] += 1
             toccs += dent_i
-            if dent_i == 4: # if we have 4-coordinate ligand force octahedral
+            if dent_i == 4 or dent_i==5: # if we have 4/5-coordinate ligand force octahedral
                 octa = True
     ### sort by descending denticity (needed for adjacent connection atoms) ###
-    indcs = [i[0] for i in sorted(enumerate(dentl), key=lambda x:x[1],reverse=True)]    
+    indcs = smartreorderligs(args,ligs,dentl,licores)
     ligands = [ligs[i] for i in indcs]  # sort ligands list
     occs = [occs0[i] for i in indcs]    # sort occurrences list
     dents = [dentl[i] for i in indcs]   # sort denticities list
@@ -569,7 +582,9 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     if args.coord and int(args.coord)!=coord:
         print "WARNING: Number of ligands doesn't agree with coordination/geometry. Will use geometry indicated by ligands."
         if args.gui:
-            qqb = qBoxWarning(args.gui.mainWindow,'Warning',"Number of ligands doesn't agree with coordination/geometry. Will use geometry indicated by ligand frequency.")
+            emsg = "Number of ligands doesn't agree with coordination/geometry. Will use geometry indicated by ligand frequency."
+            qqb = mQDialogWarn('Warning',emsg)
+            qqb.setParent(args.gui.wmain)
         geom = coordbasef[coord-1][0]
     elif args.coord:
         geom = coordbasef[int(args.coord)-1][0] # geometry specified by user coordination
@@ -580,7 +595,9 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         geom = args.geometry
     elif args.geometry:
         if args.gui:
-            qqb = qBoxWarning(args.gui.mainWindow,'Warning',"Requested geometry not available."+"Defaulting to "+coordbasef[coord-1][0])
+            emsg = "Requested geometry not available."+"Defaulting to "+coordbasef[coord-1][0]
+            qqb = mQDialogWarn('Warning',emsg)
+            qqb.setParent(args.gui.wmain)
         print "WARNING: requested geometry not available. Select one from: "
         getgeoms()
         print "Defaulting to "+coordbasef[coord-1][0]
@@ -636,6 +653,10 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
             if not(ligand=='x' or ligand =='X') and (totlig-1+denticity < coord):
                 # load ligand
                 lig,emsg = lig_load(installdir,ligand,licores) # load ligand
+                # check for smiles, force not removal of hydrogen
+                allremH = True
+                if ('+' in ligand or '-' in ligand):
+                    allremH = False
                 if emsg:
                     return False,emsg
                 # if SMILES string
@@ -645,7 +666,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if len(lig.OBmol.atoms) > 3:
-                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,freezeangles)
+                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,freezeangles,MLoptbds)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -653,7 +674,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 if not keepHs or (len(keepHs) <= i or not keepHs[i]):
                     # remove one hydrogen
                     Hs = lig3D.getHsbyIndex(lig.cat[0])
-                    if len(Hs) > 0:
+                    if len(Hs) > 0 and allremH:
                         lig3D.deleteatom(Hs[0])
                 ### add atoms to connected atoms list
                 catoms = lig.cat # connection atoms
@@ -672,7 +693,8 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     if len(batoms) < 1 :
                         emsg = 'Connecting all ligands is not possible. Check your input!'
                         if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                         break
                     # connection atom in lig3D
                     atom0 = catoms[0]
@@ -684,7 +706,8 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                         emsg = 'Center of mass calculation for ligand failed. Check input.'
                         print emsg
                         if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                         break
                     rrot = r1
                     theta,u = rotation_params(r0,r1,r2)
@@ -768,6 +791,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                             bondl = float(MLb[i]) # check for custom
                     else:
                         bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
+                    MLoptbds.append(bondl)
                     # get correct distance for center of mass
                     cmdist = bondl - distance(r1,mcoords)+distance(lig3D.centermass(),mcoords)
                     lig3D=setcmdistance(lig3D, mcoords, cmdist)
@@ -776,8 +800,9 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     batoms,backbatoms = getnupdateb(backbatoms,denticity)
                     if len(batoms) < 1 :
                         if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
-                        emsg = 'Connecting all ligands is not possible. Check your input!'
+                            emsg = 'Connecting all ligands is not possible. Check your input!'
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                         break
                     # connection atom
                     atom0 = catoms[0]
@@ -820,6 +845,8 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                             bondl = float(MLb[i]) # check for custom
                     else:
                         bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
+                    MLoptbds.append(bondl)
+                    MLoptbds.append(bondl)
                     dbtotranslate = bondl*costhb + distance(rm,lig3D.centermass())
                     lig3D=setcmdistance(lig3D, mcoords, dbtotranslate)
                 elif (denticity == 3):
@@ -827,28 +854,26 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     batoms,backbatoms = getnupdateb(backbatoms,denticity)
                     if len(batoms) < 1 :
                         if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
-                        emsg = 'Connecting all ligands is not possible. Check your input!'
+                            emsg = 'Connecting all ligands is not possible. Check your input!'
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                         break
                     # connection atom
                     atom0 = catoms[1]
-                    # align molecule according to connection atom and shadow atom
+                    ### align molecule according to connection atom and shadow atom ###
                     lig3D.alignmol(lig3D.getAtom(atom0),m3D.getAtom(batoms[1]))
                     # align with correct plane
                     rl0,rl1,rl2 = lig3D.getAtom(catoms[0]).coords(),lig3D.getAtom(catoms[1]).coords(),lig3D.getAtom(catoms[2]).coords()
                     rc0,rc1,rc2 = m3D.getAtom(batoms[0]).coords(),m3D.getAtom(batoms[1]).coords(),m3D.getAtom(batoms[2]).coords()
-                    theta,ul = rotation_params(rl0,rl1,rl2)
-                    theta,uc = rotation_params(rc0,rc1,rc2)
+                    theta0,ul = rotation_params(rl0,rl1,rl2)
+                    theta1,uc = rotation_params(rc0,rc1,rc2)
                     urot = vecdiff(rl1,mcoords)
                     theta = vecangle(ul,uc)
-                    # rotate around primary axis
-                    r1 = lig3D.getAtom(atom0).coords() # connection atomn
-                    r2 = lig3D.centermass() # center of mass
-                    rrot = rl1
+                    ### rotate around primary axis ###
                     lig3Db = mol3D()
                     lig3Db.copymol3D(lig3D)
-                    lig3D = rotate_around_axis(lig3D,rrot,urot,theta)
-                    lig3Db = rotate_around_axis(lig3Db,rrot,urot,180-theta)
+                    lig3D = rotate_around_axis(lig3D,rl1,urot,theta)
+                    lig3Db = rotate_around_axis(lig3Db,rl1,urot,180-theta)
                     rl0,rl1,rl2 = lig3D.getAtom(catoms[0]).coords(),lig3D.getAtom(catoms[1]).coords(),lig3D.getAtom(catoms[2]).coords()
                     rl0b,rl1b,rl2b = lig3Db.getAtom(catoms[0]).coords(),lig3Db.getAtom(catoms[1]).coords(),lig3Db.getAtom(catoms[2]).coords()
                     rc0,rc1,rc2 = m3D.getAtom(batoms[0]).coords(),m3D.getAtom(batoms[1]).coords(),m3D.getAtom(batoms[2]).coords()
@@ -858,18 +883,28 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     d1 = norm(cross(ul,uc))
                     d2 = norm(cross(ulb,uc))
                     lig3D = lig3D if (d1 < d2)  else lig3Db # pick best one
-                    # rotate around secondary axis
-                    urot = uc
-                    rdl = vecdiff(lig3D.getAtom(catoms[0]).coords(),rc1)
-                    rdc = vecdiff(m3D.getAtom(batoms[0]).coords(),rc1)
-                    theta = vecangle(rdc,rdl)
+                    ### rotate around secondary axis ###
+                    auxm = mol3D()
+                    auxm.addatom(lig3D.getAtom(catoms[0]))
+                    auxm.addatom(lig3D.getAtom(catoms[2]))
+                    theta,urot0 = rotation_params(core3D.getAtom(0).coords(),lig3D.getAtom(atom0).coords(),auxm.centermass())
+                    theta0,urot = rotation_params(lig3D.getAtom(catoms[0]).coords(),lig3D.getAtom(catoms[1]).coords(),lig3D.getAtom(catoms[2]).coords())
+                    # change angle if > 90
+                    if theta > 90:
+                        theta -= 180
                     lig3Db = mol3D()
                     lig3Db.copymol3D(lig3D)
-                    lig3D = rotate_around_axis(lig3D,rc1,urot,theta)
-                    lig3Db = rotate_around_axis(lig3Db,rc1,urot,-theta)
+                    lig3D = rotate_around_axis(lig3D,lig3D.getAtom(atom0).coords(),urot,theta)
+                    lig3Db = rotate_around_axis(lig3Db,lig3D.getAtom(atom0).coords(),urot,180-theta)
                     d1 = distance(lig3D.getAtom(catoms[0]).coords(),m3D.getAtom(batoms[0]).coords())
                     d2 = distance(lig3Db.getAtom(catoms[0]).coords(),m3D.getAtom(batoms[0]).coords())
-                    lig3D = lig3D if (d1 < d2)  else lig3Db # pick best one                    
+                    lig3D = lig3D if (d1 < d2) else lig3Db
+                    # correct if not symmetric
+                    theta0,urotaux = rotation_params(lig3D.getAtom(catoms[0]).coords(),lig3D.getAtom(catoms[1]).coords(),core3D.getAtom(0).coords())
+                    theta1,urotaux = rotation_params(lig3D.getAtom(catoms[2]).coords(),lig3D.getAtom(catoms[1]).coords(),core3D.getAtom(0).coords())
+                    dtheta = 0.5*(theta1-theta0)
+                    if abs(dtheta) > 0.5:
+                        lig3D = rotate_around_axis(lig3D,lig3D.getAtom(atom0).coords(),urot,dtheta)
                     # flip to align 3rd atom if wrong
                     urot = vecdiff(lig3D.getAtom(catoms[0]).coords(),lig3D.getAtom(catoms[1]).coords())
                     lig3Db = mol3D()
@@ -879,23 +914,35 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     d2 = distance(lig3Db.getAtom(catoms[2]).coords(),m3D.getAtom(batoms[2]).coords())
                     lig3D = lig3D if (d1 < d2)  else lig3Db # pick best one
                     # if overlap flip
-                    overlap = lig3D.overlapcheck(core3D,True)
-                    if overlap:
-                        lig3D = rotate_around_axis(lig3D,rc1,uc,180)
-                    # translate to right distance
-                    auxm = mol3D()
-                    for ic,cat in enumerate(catoms):
-                        auxm.addatom(lig3D.getAtom(cat))
-                    cml = auxm.centermass()
-                    cmc = [(rc0[ij]+rc1[ij]+rc2[ij])/3 for ij in range(0,3)]
-                    lig3D.translate(vecdiff(cmc,cml))
+                    dm0 = distance(lig3D.getAtom(catoms[0]).coords(),m3D.getAtom(0).coords())
+                    dm1 = distance(lig3D.getAtom(catoms[1]).coords(),m3D.getAtom(0).coords())
+                    dm2 = distance(lig3D.getAtom(catoms[2]).coords(),m3D.getAtom(0).coords())
+                    mind = min([dm0,dm1,dm2])
+                    for iiat,atom in enumerate(lig3D.atoms):
+                        if iiat not in catoms and distance(atom.coords(),m3D.getAtom(0).coords()) < min([dm0,dm1,dm2]):
+                            lig3D = rotate_around_axis(lig3D,rc1,uc,180)
+                            break
+                    # get distance from bonds table or vdw radii
+                    if MLb and MLb[i]:
+                        if 'c' in MLb[i].lower():
+                            bondl = m3D.getAtom(0).rad + lig3D.getAtom(atom0).rad
+                        else:
+                            bondl = float(MLb[i]) # check for custom
+                    else:
+                        bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
+                    MLoptbds.append(bondl)
+                    MLoptbds.append(bondl)
+                    MLoptbds.append(bondl)
+                    # set correct distance
+                    setPdistance(lig3D, lig3D.getAtom(atom0).coords(), m3D.getAtom(0).coords(), bondl)
                 elif (denticity == 4):
                     # connection atom in backbone
                     batoms,backbatoms = getnupdateb(backbatoms,denticity)
                     if len(batoms) < 1 :
                         if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
-                        emsg = 'Connecting all ligands is not possible. Check your input!'
+                            emsg = 'Connecting all ligands is not possible. Check your input!'
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                         break
                     # connection atom
                     atom0 = catoms[0]
@@ -939,12 +986,25 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     # translate to center of mass
                     dcm = vecdiff(mcoords,lig3D.centermass())
                     lig3D.translate(dcm)
+                    # get distance from bonds table or vdw radii
+                    if MLb and MLb[i]:
+                        if 'c' in MLb[i].lower():
+                            bondl = m3D.getAtom(0).rad + lig3D.getAtom(atom0).rad
+                        else:
+                            bondl = float(MLb[i]) # check for custom
+                    else:
+                        bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
+                    MLoptbds.append(bondl)
+                    MLoptbds.append(bondl)
+                    MLoptbds.append(bondl)
+                    MLoptbds.append(bondl)
                 elif (denticity == 5):
                     # connection atom in backbone
                     batoms,backbatoms = getnupdateb(backbatoms,denticity)
                     if len(batoms) < 1 :
                         if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                         emsg = 'Connecting all ligands is not possible. Check your input!'
                         break
                     # get center of mass 
@@ -989,7 +1049,8 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     batoms,backbatoms = getnupdateb(backbatoms,denticity)
                     if len(batoms) < 1 :
                         if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                         emsg = 'Connecting all ligands is not possible. Check your input!'
                         break
                     # get center of mass 
@@ -1010,11 +1071,11 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     core3D.charge += lig3D.charge
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffopt(args.ff,core3D,connected,1,frozenats,freezeangles)
+                    core3D = ffopt(args.ff,core3D,connected,1,frozenats,freezeangles,MLoptbds)
             totlig += denticity
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffopt(args.ff,core3D,connected,2,frozenats,freezeangles)
+        core3D = ffopt(args.ff,core3D,connected,2,frozenats,freezeangles,MLoptbds)
     ###############################
     return core3D,complex3D,emsg
 
@@ -1166,7 +1227,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         args.gui.app.processEvents()
     # import gui options
     if args.gui:
-        from Classes.mWidgets import qBoxWarning
+        from Classes.mWidgets import mQDialogWarn
     ### initialize variables ###
     emsg, complex3D = False, []
     occs0 = []      # occurrences of each ligand
@@ -1210,7 +1271,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         del occs[ii]
         del issmi[ii]
     ### sort by descending denticity (needed for adjacent connection atoms) ###
-    indcs = [i[0] for i in sorted(enumerate(dentl), key=lambda x:x[1],reverse=True)]
+    indcs = smartreorderligs(args,ligs,dentl,licores)
     ligands = [ligs[i] for i in indcs]  # sort ligands list
     occs = [occs0[i] for i in indcs]    # sort occurrences list
     issmi = [issmiles[i] for i in indcs]# sort issmiles list
@@ -1232,7 +1293,8 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         emsg = 'Connection atoms for custom core not specified. Defaulting to 1!\n'
         print emsg
         if args.gui:
-            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
+            qqb = mQDialogWarn('Warning',emsg)
+            qqb.setParent(args.gui.wmain)
     ccatoms = args.ccatoms if args.ccatoms else [0]
     core3D = mol3D()
     core3D.copymol3D(core)
@@ -1274,7 +1336,8 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                     emsg = 'Number of ligands greater than connection points. Please specify enough connection atoms in custom core.\n'
                     print emsg
                     if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                     return False,emsg
                 core = mol3D()
                 core.copymol3D(core3D)
@@ -1295,23 +1358,39 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 else:
                     cpoint = core3D.getAtom(ccatoms[totlig]).coords()
                     conatoms = core3D.getBondedAtoms(ccatoms[totlig])
-                    # find real connection atom
-                    metclose = core3D.findcloseMetal(core3D.getAtom(ccatoms[totlig]))
-                    mindist = 1000
+                    # find smaller ligand to remove
+                    minmol = 10000
+                    mindelats = []
+                    atclose = 0
+                    # loop over different connected atoms
                     for cat in conatoms:
-                        if core3D.getAtom(cat).distance(core3D.getAtom(metclose)) < mindist:
-                            atclose = cat
-                            mindist = core3D.getAtom(cat).distance(core3D.getAtom(ccatoms[totlig]))
+                        # find submolecule
+                        delatoms = core3D.findsubMol(ccatoms[totlig],cat) 
+                        if len(delatoms) < minmol: # check for smallest
+                            mindelats = delatoms
+                            minmol = len(delatoms) # size
+                            atclose = cat # connection atom
+                        # if same atoms in ligand get shortest distance
+                        elif len(delatoms)==minmol:
+                            d0 = core3D.getAtom(ccatoms[totlig]).distance(core3D.getAtom(cat))
+                            d1 = core3D.getAtom(ccatoms[totlig]).distance(core3D.getAtom(mindelats[0]))
+                            if d0 < d1:
+                                mindelats = delatoms
+                                atclose = cat
                     mcoords = core3D.getAtom(atclose).coords() # connection coordinates in backbone
                     # connection atom save
                     conatom3D = atom3D(core3D.getAtom(atclose).sym,core3D.getAtom(atclose).coords())
-                    delatoms = core3D.findsubMol(ccatoms[totlig],atclose) # find old ligand
+                    delatoms = mindelats
                     # find shifting if needed
                     if len(ccatoms) > totlig+1:
                         for cccat in range(totlig+1,len(ccatoms)):
                             lshift = len([a for a in delatoms if a < ccatoms[cccat]])
                             ccatoms[cccat] -= lshift
                     core3D.deleteatoms(delatoms)
+                # check for smiles, force not removal of hydrogen
+                allremH = True
+                if ('+' in ligand or '-' in ligand):
+                    allremH = False
                 # load ligand
                 lig,emsg = lig_load(installdir,ligand,licores) # load ligand
                 if emsg:
@@ -1323,7 +1402,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if len(lig.OBmol.atoms) > 3:
-                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,False)
+                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,False,False)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -1331,7 +1410,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 if not keepHs or (len(keepHs) <= i or not keepHs[i]):
                     # remove one hydrogen
                     Hs = lig3D.getHsbyIndex(lig.cat[0])
-                    if len(Hs) > 0:
+                    if len(Hs) > 0 and allremH:
                         lig3D.deleteatom(Hs[0])
                 ### add atoms to connected atoms list
                 catoms = lig.cat # connection atoms
@@ -1354,7 +1433,8 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                         emsg = 'Center of mass calculation for ligand failed. Check input.'
                         print emsg
                         if args.gui:
-                            qqb = qBoxWarning(args.gui.mainWindow,'Warning',emsg)
+                            qqb = mQDialogWarn('Warning',emsg)
+                            qqb.setParent(args.gui.wmain)
                         break
                     rrot = r1
                     theta,u = rotation_params(r0,r1,r2)
@@ -1482,7 +1562,7 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
     emsg = False
     # import gui options
     if args.gui:
-        from Classes.mWidgets import qBoxWarning
+        from Classes.mWidgets import mQDialogWarn
     # get global variables class
     ############ LOAD DICTIONARIES ############
     mcores = readdict(installdir+'/Cores/cores.dict')
@@ -1580,7 +1660,7 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
                     if ('ax' in args.place):
                         theta = 90.0
                         theta1 = -90.0
-                    elif ('s' in args.place):
+                    elif ('eq' in args.place):
                         theta = 0.0
                         theta1 = 180.0
                     else:
@@ -1656,7 +1736,8 @@ def structgen(installdir,args,rootdir,ligands,ligoc,globs):
         print 'WARNING: Generated complex is not good! Minimum distance between atoms:'+"{0:.2f}".format(d0)+'A\n'
         if args.gui:
             ssmsg = 'Generated complex in folder '+rootdir+' is no good! Minimum distance between atoms:'+"{0:.2f}".format(d0)+'A\n'
-            qqb = qBoxWarning(args.gui.mainWindow,'Warning',ssmsg)
+            qqb = mQDialogWarn('Warning',ssmsg)
+            qqb.setParent(args.gui.wmain)
     if args.gui:
         args.gui.iWtxt.setText('In folder '+pfold+' generated '+str(Nogeom)+' structures!\n'+args.gui.iWtxt.toPlainText())
         args.gui.app.processEvents()

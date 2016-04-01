@@ -6,9 +6,269 @@
 ##############################################################
 
 # import std modules
-import glob, os, re, argparse, sys
+import glob, os, re, argparse, sys, time
 from io import *
 
+###########################################
+########## check true or false  ###########
+###########################################
+def checkTrue(arg):
+    if 'n' in arg.lower() or '0' in arg.lower() or 'f' in arg.lower():
+        return False
+    else:
+        return True
+        
+#########################################
+########## collect ligands  #############
+#########################################
+def getligands(gui):
+    ligs,ligoccs,lcats,kHs,MLb,lang,lname = '','','','','','',''
+    if len(gui.lig0.text().replace(' ','')) > 0:
+        ligs += gui.lig0.text().replace(' ','')
+        ligoccs += str(gui.lig0occ.value())
+        kHs += gui.lig0H.currentText()
+        if len(gui.lig0conn.text().replace(' ','')) > 0:
+            lcats += gui.lig0conn.text().replace(' ','')
+        if len(gui.lig0ML.text().replace(' ','')) > 0:
+            MLb += gui.lig0ML.text().replace(' ','')
+        if len(gui.lig0an.text().replace(' ','')) > 0:
+            lcats += gui.lig0an.text().replace(' ','')
+        if len(gui.lig0nam.text().replace(' ','')) > 0:
+            lcats += gui.lig0nam.text().replace(' ','')
+    if len(gui.lig1.text().replace(' ','')) > 0:
+        ligs += ','+gui.lig1.text().replace(' ','')
+        ligoccs += ','+str(gui.lig1occ.value())
+        kHs += ','+gui.lig1H.currentText()
+        if len(gui.lig1conn.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig1conn.text().replace(' ','')
+        if len(gui.lig1ML.text().replace(' ','')) > 0:
+            MLb += ','+gui.lig1ML.text().replace(' ','')
+        if len(gui.lig1an.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig1an.text().replace(' ','')
+        if len(gui.lig1nam.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig1nam.text().replace(' ','')
+    if len(gui.lig2.text().replace(' ','')) > 0:
+        ligs += ','+gui.lig2.text().replace(' ','')
+        ligoccs += ','+str(gui.lig2occ.value())
+        kHs += ','+gui.lig2H.currentText()
+        if len(gui.lig2conn.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig2conn.text().replace(' ','')
+        if len(gui.lig2ML.text().replace(' ','')) > 0:
+            MLb += ','+gui.lig2ML.text().replace(' ','')
+        if len(gui.lig2an.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig2an.text().replace(' ','')
+        if len(gui.lig2nam.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig2nam.text().replace(' ','')
+    if len(gui.lig3.text().replace(' ','')) > 0:
+        ligs += ','+gui.lig3.text().replace(' ','')
+        ligoccs += ','+str(gui.lig3occ.value())
+        kHs += ','+gui.lig3H.currentText()
+        if len(gui.lig3conn.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig3conn.text().replace(' ','')
+        if len(gui.lig3ML.text().replace(' ','')) > 0:
+            MLb += ','+gui.lig3ML.text().replace(' ','')
+        if len(gui.lig3an.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig3an.text().replace(' ','')
+        if len(gui.lig3nam.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig3nam.text().replace(' ','')
+    if len(gui.lig4.text().replace(' ','')) > 0:
+        ligs += ','+gui.lig4.text().replace(' ','')
+        ligoccs += ','+str(gui.lig4occ.value())
+        kHs += ','+gui.lig4H.currentText()
+        if len(gui.lig4conn.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig4conn.text().replace(' ','')
+        if len(gui.lig4ML.text().replace(' ','')) > 0:
+            MLb += ','+gui.lig4ML.text().replace(' ','')
+        if len(gui.lig4an.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig4an.text().replace(' ','')
+        if len(gui.lig4nam.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig4nam.text().replace(' ','')
+    if len(gui.lig5.text().replace(' ','')) > 0:
+        ligs += ','+gui.lig5.text().replace(' ','')
+        ligoccs += ','+str(gui.lig5occ.value())
+        kHs += ','+gui.lig5H.currentText()
+        if len(gui.lig5conn.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig5conn.text().replace(' ','')
+        if len(gui.lig5ML.text().replace(' ','')) > 0:
+            MLb += ','+gui.lig5ML.text().replace(' ','')
+        if len(gui.lig5an.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig5an.text().replace(' ','')
+        if len(gui.lig5nam.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig5nam.text().replace(' ','')
+    if len(gui.lig6.text().replace(' ','')) > 0:
+        ligs += ','+gui.lig6.text().replace(' ','')
+        ligoccs += ','+str(gui.lig6occ.value())
+        kHs += ','+gui.lig6H.currentText()
+        if len(gui.lig6conn.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig6conn.text().replace(' ','')
+        if len(gui.lig6ML.text().replace(' ','')) > 0:
+            MLb += ','+gui.lig6ML.text().replace(' ','')
+        if len(gui.lig6an.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig6an.text().replace(' ','')
+        if len(gui.lig6nam.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig6nam.text().replace(' ','')
+    if len(gui.lig7.text().replace(' ','')) > 0:
+        ligs += ','+gui.lig7.text().replace(' ','')
+        ligoccs += ','+str(gui.lig7occ.value())
+        kHs += ','+gui.lig7H.currentText()
+        if len(gui.lig7conn.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig7conn.text().replace(' ','')
+        if len(gui.lig7ML.text().replace(' ','')) > 0:
+            MLb += ','+gui.lig7ML.text().replace(' ','')
+        if len(gui.lig7an.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig7an.text().replace(' ','')
+        if len(gui.lig7nam.text().replace(' ','')) > 0:
+            lcats += ','+gui.lig7nam.text().replace(' ','')
+    return ligs,ligoccs,lcats,kHs,MLb,lang,lname
+
+
+#########################################
+########## set ligands  #############
+#########################################
+def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
+    ligs = filter(None,re.split(' |,|\t|&',ligs))
+    ligoccs = filter(None,re.split(' |,|\t|&',ligoccs))
+    lcats = filter(None,re.split('/|\t|&',lcats))
+    kHs = filter(None,re.split(' |,|\t|&',kHs))
+    MLb = filter(None,re.split(' |,|\t|&',MLb))
+    lang = filter(None,re.split(' |,|\t|&',lang))
+    lname = filter(None,re.split(' |,|\t|&',lname))
+    if len(ligs) > 0:
+        gui.lig0.setText(ligs[0])
+        if len(ligoccs) > 0:
+            gui.lig0occ.setValue(int(ligoccs[0]))
+        if len(lcats) > 0:
+            gui.lig0conn.setText(lcats[0])
+        if len(kHs) > 0:
+            if checkTrue(kHs[0]):
+                gui.lig0H.setCurrentText('yes')
+            else:
+                gui.lig0H.setCurrentText('no')
+        if len(MLb) > 0:
+            gui.lig0ML.setText(MLb[0])
+        if len(lang) > 0:
+            gui.lig0an.setText(lang[0])
+        if len(lname) > 0:
+            gui.lig0nam.setText(lname[0])
+    if len(ligs) > 1:
+        gui.lig1.setText(ligs[1])
+        if len(ligoccs) > 1:
+            gui.lig1occ.setValue(int(ligoccs[1]))
+        if len(lcats) > 1:
+            gui.lig1conn.setText(lcats[1])
+        if len(kHs) > 1:
+            if checkTrue(kHs[1]):
+                gui.lig1H.setCurrentText('yes')
+            else:
+                gui.lig1H.setCurrentText('no')
+        if len(MLb) > 1:
+            gui.lig1ML.setText(MLb[1])
+        if len(lang) > 1:
+            gui.lig1an.setText(lang[1])
+        if len(lname) > 1:
+            gui.lig1nam.setText(lname[1])
+    if len(ligs) > 2:
+        gui.lig2.setText(ligs[2])
+        if len(ligoccs) > 2:
+            gui.lig2occ.setValue(int(ligoccs[2]))
+        if len(lcats) > 2:
+            gui.lig2conn.setText(lcats[2])
+        if len(kHs) > 2:
+            if checkTrue(kHs[2]):
+                gui.lig2H.setCurrentText('yes')
+            else:
+                gui.lig2H.setCurrentText('no')
+        if len(MLb) > 2:
+            gui.lig2ML.setText(MLb[2])
+        if len(lang) > 2:
+            gui.lig2an.setText(lang[2])
+        if len(lname) > 2:
+            gui.lig2nam.setText(lname[2])
+    if len(ligs) > 3:
+        gui.lig3.setText(ligs[3])
+        if len(ligoccs) > 3:
+            gui.lig3occ.setValue(int(ligoccs[3]))
+        if len(lcats) > 3:
+            gui.lig3conn.setText(lcats[3])
+        if len(kHs) > 3:
+            if checkTrue(kHs[3]):
+                gui.lig3H.setCurrentText('yes')
+            else:
+                gui.lig3H.setCurrentText('no')
+        if len(MLb) > 3:
+            gui.lig3ML.setText(MLb[3])
+        if len(lang) > 3:
+            gui.lig3an.setText(lang[3])
+        if len(lname) > 3:
+            gui.lig3nam.setText(lname[3])
+    if len(ligs) > 4:
+        gui.lig4.setText(ligs[4])
+        if len(ligoccs) > 4:
+            gui.lig4occ.setValue(int(ligoccs[4]))
+        if len(lcats) > 4:
+            gui.lig4conn.setText(lcats[4])
+        if len(kHs) > 4:
+            if checkTrue(kHs[4]):
+                gui.lig4H.setCurrentText('yes')
+            else:
+                gui.lig4H.setCurrentText('no')
+        if len(MLb) > 4:
+            gui.lig4ML.setText(MLb[4])
+        if len(lang) > 4:
+            gui.lig4an.setText(lang[4])
+        if len(lname) > 2:
+            gui.lig4nam.setText(lname[4])
+    if len(ligs) > 5:
+        gui.lig5.setText(ligs[5])
+        if len(ligoccs) > 5:
+            gui.lig5occ.setValue(int(ligoccs[5]))
+        if len(lcats) > 5:
+            gui.lig5conn.setText(lcats[5])
+        if len(kHs) > 5:
+            if checkTrue(kHs[5]):
+                gui.lig5H.setCurrentText('yes')
+            else:
+                gui.lig5H.setCurrentText('no')
+        if len(MLb) > 5:
+            gui.lig5ML.setText(MLb[5])
+        if len(lang) > 5:
+            gui.lig5an.setText(lang[5])
+        if len(lname) > 5:
+            gui.lig5nam.setText(lname[5])
+    if len(ligs) > 6:
+        gui.lig6.setText(ligs[6])
+        if len(ligoccs) > 6:
+            gui.lig6occ.setValue(int(ligoccs[6]))
+        if len(lcats) > 6:
+            gui.lig6conn.setText(lcats[6])
+        if len(kHs) > 6:
+            if checkTrue(kHs[6]):
+                gui.lig6H.setCurrentText('yes')
+            else:
+                gui.lig6H.setCurrentText('no')
+        if len(MLb) > 6:
+            gui.lig6ML.setText(MLb[6])
+        if len(lang) > 6:
+            gui.lig6an.setText(lang[6])
+        if len(lname) > 6:
+            gui.lig6nam.setText(lname[6])
+    if len(ligs) > 7:
+        gui.lig7.setText(ligs[7])
+        if len(ligoccs) > 7:
+            gui.lig7occ.setValue(int(ligoccs[2]))
+        if len(lcats) > 7:
+            gui.lig7conn.setText(lcats[7])
+        if len(kHs) > 7:
+            if checkTrue(kHs[7]):
+                gui.lig7H.setCurrentText('yes')
+            else:
+                gui.lig7H.setCurrentText('no')
+        if len(MLb) > 7:
+            gui.lig7ML.setText(MLb[7])
+        if len(lang) > 7:
+            gui.lig7an.setText(lang[7])
+        if len(lname) > 7:
+            gui.lig7nam.setText(lname[7])
 
 #####################################################
 ########## write options to input file  #############
@@ -39,13 +299,18 @@ def writeinputp(args,fname):
 def writeinputf(args):
     f = open(args['-rundir']+'/geninput.inp','w')
     f.write("# Input file generated from GUI options\n")
+    ff = open(args['-rundir']+'/molSimp.log','a')
+    dd = "# Input file generated from GUI options at "+ time.strftime('%m/%d/%Y %H:%M')+'\n'
+    ff.write(dd)
     for key, val in args.iteritems():
         if len(val) > 0:
             vals = val.splitlines()
             for v in vals:
                 f.write(key+' '+v+'\n')
+                ff.write(key+' '+v+'\n')
     f.close()
-
+    ff.close()
+    
 #########################################################
 ########## grabs GUI options to input file  #############
 #########################################################
@@ -54,22 +319,26 @@ def grabguivars(gui):
     args = dict()
     ### general structure generation options ###
     args['-core'] = gui.etcore.text()
-    args['-lig'] = gui.etlig.text()
-    args['-ligocc'] = gui.etligocc.text()
     args['-ccatoms'] = gui.etccat.text()
+    ligs,ligoccs,lcats,kHs,MLb,lang,lname=getligands(gui)
+    args['-lig'] = ligs
+    args['-ligocc'] = ligoccs
+    args['-MLbonds'] = MLb
+    args['-pangles'] = lang
+    args['-keepHs'] = kHs
+    args['-smicat'] = lcats
+    args['-sminame'] = lname
     if gui.replig.getState():
         args['-replig'] = '1'
+    if gui.ligforder.getState():
+        args['ligorder'] = '1'
+    if gui.chkgenall.getState():
+        args['-genall'] = '1'
     args['-coord'] = gui.dcoord.currentText()
     args['-geometry'] = gui.dcoordg.currentText()
     args['-lignum'] = gui.etlignum.text()
-    args['-MLbonds'] = gui.etMLb.text()
-    args['-pangles'] = gui.etLang.text()
     args['-distort'] = str(gui.sdist.value())
     args['-rgen'] = gui.etrgen.text()
-    args['-keepHs'] = gui.etkeepHs.text()
-    args['-smicat'] = gui.etsmicat.text()
-    args['-smident'] = gui.etsmident.text()
-    args['-sminame'] = gui.etsminame.text()
     args['-oxstate'] = gui.doxs.currentText()
     args['-spin'] = gui.dspin.currentText()
     args['-rundir'] = gui.etrdir.text()
@@ -445,17 +714,24 @@ def loadfrominputfile(gui,fname):
         if '-core'==st[0]:
             gui.etcore.setText(st[-1])
         if '-lig'==st[0]:
-            gui.etlig.setText(st[-1])
+            ligs = st[-1]
         if '-ligocc'==st[0]:
-            gui.etligocc.setText(st[-1])
+            ligoccs= st[-1]
         if '-replig'==st[0]:
-            gui.replig.setChecked(True)
+            if checkTrue(st[-1]):
+                gui.replig.setChecked(True)
+        if '-ligorder'==st[0]:
+            if checkTrue(st[-1]):
+                gui.ligforder.setChecked(True)
+        if '-genall'==st[0]:
+            if checkTrue(st[-1]):
+                gui.chkgenall.setChecked(True)
         if '-MLbonds'==st[0]:
-            gui.etMLb.setText(st[-1])
+            Mlb = st[-1]
         if '-distort'==st[0]:
             gui.sdist.setValue(int(st[-1]))
         if '-pangles'==st[0]:
-            gui.etLang.setText(st[-1])
+            lang = st[-1]
         if '-ccatoms'==st[0]:
             gui.etccat.setText(st[-1])
         if '-coord'==st[0]:
@@ -463,17 +739,15 @@ def loadfrominputfile(gui,fname):
         if '-geometry'==st[0]:
             gui.dcoordg.setCurrentText(st[-1])
         if '-lignum'==st[0]:
-                gui.etlignum.setText(st[-1])
+            gui.etlignum.setText(st[-1])
         if '-rgen'==st[0]:
             gui.etrgen.setText(st[-1])
         if '-keepHs'==st[0]:
-            gui.etkeepHs.setText(st[-1])
+            kHs = st[-1]
         if '-smicat'==st[0]:
-            gui.etsmicat.setText(st[-1])
-        if '-smident'==st[0]:
-            gui.etsmident.setText(st[-1])
+            lcats = st[-1]
         if '-sminame'==st[0]:
-            gui.etsminame.setText(st[-1])
+            lname = st[-1]
         if '-oxstate'==st[0]:
             gui.doxs.setCurrentText(st[-1])
         if '-rundir'==st[0]:
@@ -646,5 +920,6 @@ def loadfrominputfile(gui,fname):
             ssp = st[-1].split('<')
             gui.etcDBmw0.setText(ssp[0])
             gui.etcDBmw1.setText(ssp[-1])
+    setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname)
     if db:
         gui.searchDBW()
