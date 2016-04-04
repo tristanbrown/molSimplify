@@ -26,6 +26,7 @@ methanal:methanal.mol,metha,0
 methyl:methyl.mol,meth,0
 nitro:nitro.mol,nit,1
 nitroso:nitroso.mol,nits,0
+oxalate:oxalate.smi,oxate,1 5
 oxygen:oxygen.mol,oxd,0
 pph3:PPh3.mol,pph,2
 pyr:pyridine.mol,pyrd,3

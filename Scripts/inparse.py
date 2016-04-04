@@ -152,6 +152,21 @@ def cleaninput(args):
     elif args.ff:
         args.ffoption = 'ba'
 
+###################################################
+##########  parse command line input  #############
+###################################################
+### parses inputfile ###
+def parseCLI(args):
+    cliargs = ' '.join(args)
+    s = filter(None,cliargs.split('-'))
+    fname = 'CLIinput.inp'
+    f = open(fname,'w')
+    f.write('# molSimplify input file generated from CLI input\n')
+    for line in s:
+       f.write('-'+line+'\n')
+    f.close()
+    return fname
+    
 ###########################################
 ##########  parse input file  #############
 ###########################################

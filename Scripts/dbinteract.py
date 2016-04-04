@@ -280,8 +280,8 @@ def dbsearch(rundir,args,globs):
             cmd = "/usr/local/bin/obabel "+dbsdf+" -f0 -l100 -o"+outf[-3:]+" -O "+outf
         else:
             cmd = obab+" "+dbsdf+" -f0 -l100 -o"+outf[-3:]+" -O "+outf
-        print cmd
         t = mybash(cmd)
+        os.rename(outf,args.rundir+'/'+outf)
         print t
         return False
     ### now run filtering if needed

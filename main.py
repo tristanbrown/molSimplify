@@ -51,7 +51,7 @@ if __name__ == '__main__':
         parser.print_help()
         exit()
     ### run with gui ###
-    elif gui and '-i' not in args:
+    elif gui and len(args)==0:
         ### create main application
         app = QApplication(sys.argv) # main application
         gui = mGUI(app) # main GUI class
@@ -64,9 +64,10 @@ if __name__ == '__main__':
         emsg = startgen(sys.argv,False,gui)
     ### grab from commandline arguments ###
     else:
-        parser = argparse.ArgumentParser()
-        args = parsecommandline(parser)
-        
+        gui = False
+        infile = parseCLI(filter(None,args))
+        args = ['main.py','-i',infile]
+        emsg = startgen(args,False,gui)
         
         
         

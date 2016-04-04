@@ -26,10 +26,10 @@ class mGUI():
     def __init__(self,app):
         # build gui
         self.app = app
-        self.initGUIref(app)
+        self.initGUI(app)
 
     ### builds the gui
-    def initGUIref(self,app):
+    def initGUI(self,app):
         '''
         ######################
         ### build main GUI ###
@@ -41,7 +41,7 @@ class mGUI():
         overX = True if 'localhost' in os.environ['DISPLAY'].lower() else False # detect running over X
         configfile = False if not glob.glob(homedir+'/.molSimplify') else True
         if not configfile:
-            self.wwindow = QMainWindow() 
+            self.wwindow = Qwmain() 
             self.wwindow.resize(0.5,0.5)
             QMessageBox.information(self.wwindow,'Setup',"It looks like the configuration file '~/.molSimplify' does not exist!Please follow the next steps to configure the file.")
             QMessageBox.information(self.wwindow,'Installation directory',"Please select the top installation directory for the program.")
@@ -90,11 +90,12 @@ class mGUI():
         helpAction.setStatusTip('Show input options')
         helpAction.triggered.connect(self.qshowhelp)
         menu2.addAction(helpAction)
-        # set menubar
-        self.menubar = menubar
-        self.grid.setMenuBar(self.menubar)
+        menubar.setNativeMenuBar(True)
+        menubar.setStyleSheet("border:white;color:white;background-color: white")
+        self.grid.addWidget(menubar,0,0,1,1)
         ### place title top ###
         self.grid.setRowMinimumHeight(0,15)
+        self.grid.setRowMinimumHeight(2,120)
         self.grid.setRowMinimumHeight(3,15)
         self.grid.setRowMinimumHeight(4,50)
         clogo = mQPixmap(globs.installdir+'/icons/logo.png')
@@ -111,22 +112,22 @@ class mGUI():
         self.grid.addWidget(self.txtgpar,4,0,2,14)
         ### core structure specification ###
         ctip = 'Core of structure'
-        self.rtcore = mQLabel('Core:',ctip,'C',14)
+        self.rtcore = mQLabel('Core:',ctip,'C',12)
         f = QFont("Helvetica",14,75)
         self.rtcore.setFont(f)
         self.grid.addWidget(self.rtcore,7,2,1,1)
-        self.etcore = mQLineEdit('',ctip,'l',14)
+        self.etcore = mQLineEdit('',ctip,'l',12)
         self.grid.addWidget(self.etcore,7,3,1,3)
         ### Connection atoms for core ###
         ctip = 'Specify connection atoms for core if using SMILES or custom cores (default: 1)'
-        self.rtccat = mQLabel('Core connections:',ctip,'C',11)
+        self.rtccat = mQLabel('Core connections:',ctip,'C',12)
         self.rtccat.setWordWrap(True)
         self.grid.addWidget(self.rtccat,7,6,1,2)
-        self.etccat = mQLineEdit('',ctip,'l',14)
+        self.etccat = mQLineEdit('',ctip,'l',12)
         self.grid.addWidget(self.etccat,7,8,1,2)
         ### replace option ###
         ctip = 'Replace ligand at specified connection point'
-        self.replig = mQCheckBox('replace',ctip,16)
+        self.replig = mQCheckBox('replace',ctip,12)
         self.grid.addWidget(self.replig,7,10,1,4)
         # coordination
         ctip = 'Number of ligands connected to the metal.'
@@ -159,15 +160,15 @@ class mGUI():
         ctip2 = 'Connection atom(s) of ligands (default: 1).'
         self.rtsmicath = mQLabel('Connections',ctip2,'c',12) # connection atom header
         ctip3 = 'Do not remove hydrogens while connecting ligand to core. default False' # keep Hs header
-        self.keepHh = mQLabel('keep\nHs',ctip3,'c',10) # occurrence header
+        self.keepHh = mQLabel('keep\nHs',ctip3,'c',12) # occurrence header
         ctip4 = 'Custom bond length for M-L in Angstrom' 
-        self.MLbondsh = mQLabel('M-L bond',ctip4,'c',11)# custom metal ligand bond length header
+        self.MLbondsh = mQLabel('M-L bond',ctip4,'c',12)# custom metal ligand bond length header
         ctip5 = 'Custom angles for connection points (polar theta, azimuthal phi) in degrees separated with /. e.g 10/20'
         self.canglesh = mQLabel('Angle',ctip5,'c',12) # custom angles for distortion header
         ctip6 = 'Name of ligand'
         self.nameligh = mQLabel('Name',ctip6,'c',12) # name of ligand header
         ctip7 = 'Force ligand order and disable smart reordering'
-        self.ligforder = mQCheckBox('Force\norder',ctip7,11) 
+        self.ligforder = mQCheckBox('Force\norder',ctip7,12) 
         # add to layout
         self.grid.addWidget(self.rtligh,9,0,1,2)
         self.grid.addWidget(self.rtligocch,9,2,1,2)
@@ -410,7 +411,7 @@ class mGUI():
         self.grid.addWidget(self.searchDB,18,4,1,3)
         ## Local database button ##
         ctip = 'Add core/ligand/binding species to local database.'
-        self.butADB = mQPushButton('Add to local DB',ctip,11)
+        self.butADB = mQPushButton('Add to local DB',ctip,12)
         self.butADB.clicked.connect(self.enableDB)
         self.grid.addWidget(self.butADB,18,7,1,3)
         ##################################################
@@ -420,47 +421,30 @@ class mGUI():
         ##################################################
         self.txtgp = mQLabel('General parameters','','c',20)
         self.grid.addWidget(self.txtgp,4,21,2,9)
-        ### jobs dir ###
-        ctip = 'Top directory for job folders.'
-        self.rtrdir = mQLabel('Jobs dir:',ctip,'Cr',12)
-        self.grid.addWidget(self.rtrdir,7,23,1,1)
-        self.etrdir = mQLineEdit(globs.rundir,ctip,'l',12)
-        self.grid.addWidget(self.etrdir,7,24,1,2)
-        # button for browsing rundir
-        ctip = 'Browse running directory.'
-        self.butpbrdir = mQPushButton('Browse..',ctip,12)
-        self.butpbrdir.clicked.connect(self.dirload)
-        self.grid.addWidget(self.butpbrdir,7,26,1,2)
-        # suffix
-        ctip = 'Suffix for job directories.'
-        self.rtsuff = mQLabel('Suffix:',ctip,'Cr',12)
-        self.etsuff = mQLineEdit('',ctip,'l',14)
-        self.grid.addWidget(self.rtsuff,8,23,1,1)
-        self.grid.addWidget(self.etsuff,8,24,1,2)
         # random generation
         ctip = 'Enable random generation.'
         self.randomchk = mQCheckBox('Random generation',ctip,12)
         self.randomchk.stateChanged.connect(self.enablerandom)
-        self.grid.addWidget(self.randomchk,9,23,1,2)
+        self.grid.addWidget(self.randomchk,7,23,1,2)
         # charge calculation
         ctip = 'Calculate charge based on ox state and ligands'
         self.chch = mQCheckBox('Calculate charge',ctip,12)
         self.chch.setDisabled(True)
-        self.grid.addWidget(self.chch,9,25,1,2)
+        self.grid.addWidget(self.chch,7,25,1,2)
         # number of random generated structures
         ctip = 'Number of structures to be randomly generated.'
         self.rtrgen = mQLabel('Structures:',ctip,'Cr',12)
         self.etrgen = mQLineEdit('',ctip,'l',12)
-        self.grid.addWidget(self.rtrgen,10,23,1,1)
-        self.grid.addWidget(self.etrgen,10,24,1,1)
+        self.grid.addWidget(self.rtrgen,8,23,1,1)
+        self.grid.addWidget(self.etrgen,8,24,1,1)
         self.rtrgen.setDisabled(True)
         self.etrgen.setDisabled(True)
         # number of different ligands to use
         ctip = 'For random generation: number of different ligand types.'
         self.rtlignum = mQLabel('Different ligands:',ctip,'Cr',12)
         self.etlignum = mQLineEdit('',ctip,'l',12)
-        self.grid.addWidget(self.rtlignum,10,25,1,2)
-        self.grid.addWidget(self.etlignum,10,27,1,1)
+        self.grid.addWidget(self.rtlignum,8,25,1,2)
+        self.grid.addWidget(self.etlignum,8,27,1,1)
         self.rtlignum.setDisabled(True)
         self.etlignum.setDisabled(True)
         # oxidation state
@@ -469,47 +453,64 @@ class mGUI():
         qcav = ['0','I','II','III','IV','V','VI','VII','VIII']
         self.doxs = mQComboBox(qcav,ctip,12)
         self.doxs.setCurrentIndex(0)
-        self.grid.addWidget(self.roxstate,11,23,1,1)
-        self.grid.addWidget(self.doxs,11,24,1,1)
+        self.grid.addWidget(self.roxstate,9,23,1,1)
+        self.grid.addWidget(self.doxs,9,24,1,1)
         # spin state
         ctip = 'System spin multiplicity'
         self.rspstate = mQLabel('Spin:',ctip,'Cr',12)
         qcav = ['1','2','3','4','5','6','7','8','9','10']
         self.dspin = mQComboBox(qcav,ctip,12)
         self.dspin.setCurrentIndex(0)
-        self.grid.addWidget(self.rspstate,11,26,1,1)
-        self.grid.addWidget(self.dspin,11,27,1,1)
+        self.grid.addWidget(self.rspstate,9,26,1,1)
+        self.grid.addWidget(self.dspin,9,27,1,1)
         # create distortion slider
         ctip = 'Percent random distortion from default coordination geometry.'
         self.distper = mQLabel('Distort:0%',ctip,'Cr',12)
         self.sdist = mQSlider(ctip)
         self.sdist.valueChanged.connect(self.sliderChanged)
-        self.grid.addWidget(self.distper,12,23,1,2)
-        self.grid.addWidget(self.sdist,12,25,1,2)
+        self.grid.addWidget(self.distper,10,23,1,2)
+        self.grid.addWidget(self.sdist,10,25,1,2)
         # force field optimization
         ctip = 'Perform Force Field optimization'
         self.chkFF = mQCheckBox('FF optimize',ctip,12)
         self.chkFF.stateChanged.connect(self.enableffinput)
-        self.grid.addWidget(self.chkFF,13,23,1,2)
+        self.grid.addWidget(self.chkFF,11,23,1,2)
         # generate all
         ctip = 'Generate structure with and without optimization.'
-        self.chkgenall = mQCheckBox('Generate all',ctip,14)
+        self.chkgenall = mQCheckBox('Generate all',ctip,12)
         self.chkgenall.stateChanged.connect(self.disableffinput)
-        self.grid.addWidget(self.chkgenall,14,23,1,2)
+        self.grid.addWidget(self.chkgenall,12,23,1,2)
         # perform optimization
         ctip = 'Select Force Field'
         qcav = ['MMFF94','UFF','gchemical','GAFF']
         self.dff = mQComboBox(qcav,ctip,12)
         self.dff.setCurrentIndex(0)
         self.dff.setDisabled(True)
-        self.grid.addWidget(self.dff,13,25,1,3)
+        self.grid.addWidget(self.dff,11,25,1,3)
         # optimize before or after
         ctip = 'Optimize before or after building the structure'
         qcav = ['Before','After','Before & After']
         self.dffba = mQComboBox(qcav,ctip,12)
         self.dffba.setDisabled(True)
         self.dffba.setCurrentIndex(2)
-        self.grid.addWidget(self.dffba,14,25,1,3)
+        self.grid.addWidget(self.dffba,12,25,1,3)
+        ### jobs dir ###
+        ctip = 'Top directory for job folders.'
+        self.rtrdir = mQLabel('Jobs dir:',ctip,'Cr',12)
+        self.grid.addWidget(self.rtrdir,13,23,1,1)
+        self.etrdir = mQLineEdit(globs.rundir,ctip,'l',12)
+        self.grid.addWidget(self.etrdir,13,24,1,2)
+        # button for browsing rundir
+        ctip = 'Browse running directory.'
+        self.butpbrdir = mQPushButton('Browse..',ctip,12)
+        self.butpbrdir.clicked.connect(self.dirload)
+        self.grid.addWidget(self.butpbrdir,13,26,1,2)
+        # suffix
+        ctip = 'Suffix for job directories.'
+        self.rtsuff = mQLabel('Suffix:',ctip,'Cr',12)
+        self.etsuff = mQLineEdit('',ctip,'l',12)
+        self.grid.addWidget(self.rtsuff,14,23,1,1)
+        self.grid.addWidget(self.etsuff,14,24,1,2)
         # structure generation
         ctip = 'Generate structures'
         self.butGen = mQPushButton('Generate',ctip,18)
@@ -531,7 +532,7 @@ class mGUI():
         self.grid.addWidget(self.txtamol,4,34,2,5)
         # additional molecule
         ctip = 'Place additional molecule'
-        self.chkM = mQCheckBox('Extra molecule',ctip,16)
+        self.chkM = mQCheckBox('Extra molecule',ctip,12)
         self.chkM.stateChanged.connect(self.enableemol)
         self.grid.addWidget(self.chkM,7,35,1,3)
         # name of binding species
@@ -552,7 +553,7 @@ class mGUI():
         self.grid.addWidget(self.etbsmi,9,35,1,1)
         # separate in xyz file
         ctip = 'Separate molecules in xyz or input file with ------'
-        self.chsep = mQCheckBox('separate',ctip,14)
+        self.chsep = mQCheckBox('separate',ctip,12)
         self.chsep.setDisabled(True)    
         self.grid.addWidget(self.chsep,9,36,1,2)
         # number of binding conformations to generate
@@ -608,17 +609,17 @@ class mGUI():
         # placement of extr molecule
         ctip = 'Orientation for placing additional molecule'
         qcav = ['','axial','equatorial']
-        self.dmolp = mQComboBox(qcav,ctip,14)
+        self.dmolp = mQComboBox(qcav,ctip,12)
         self.dmolp.setDisabled(True)
         self.grid.addWidget(self.dmolp,12,37,1,1)
         # input file generation
         ctip = 'Generate input files'
-        self.chkI = mQCheckBox('Input files',ctip,14)
+        self.chkI = mQCheckBox('Input files',ctip,12)
         self.chkI.stateChanged.connect(self.enableqeinput)
         self.grid.addWidget(self.chkI,13,34,1,2)
         # jobscript generation
         ctip = 'Generate jobscripts'
-        self.chkJ = mQCheckBox('Jobscripts',ctip,14)
+        self.chkJ = mQCheckBox('Jobscripts',ctip,12)
         self.chkJ.stateChanged.connect(self.enablejinput)
         self.grid.addWidget(self.chkJ,13,36,1,2)
         # input for QC calculation
@@ -659,6 +660,646 @@ class mGUI():
         self.iWtxt = mQTextEdit('Program started..','l',14)
         self.iWtxt.setParent(self.iWind)
         self.sgrid.addWidget(self.iWind)
+        #######################################
+        ### create terachem-qc input window ###
+        #######################################
+        self.qctWindow = QWidget() # TC QC window
+        self.qctgrid = QGridLayout()
+        self.qctWindow.setWindowTitle('Terachem Input')
+        self.sgrid.addWidget(self.qctWindow) # add to stacked grid
+        self.qctWindow.setPalette(p) # set background color
+        self.qctWindow.setLayout(self.qctgrid) # set layout
+        c0 = mQPixmap(globs.installdir+'/icons/petachem.png')
+        self.qctgrid.addWidget(c0,0,2,1,1)
+        # top text
+        self.txtqc = mQLabel('   TeraChem Input','','C',18)
+        self.qctgrid.addWidget(self.txtqc,0,3,1,2)
+        # text for specifying charge
+        ctip = 'Charge of the system, default: 0'
+        self.rtqctch = mQLabel('Charge:',ctip,'r',14)
+        self.etqctch = mQLineEdit('0',ctip,'l',14)
+        self.qctgrid.addWidget(self.rtqctch,1,1,1,1)
+        self.qctgrid.addWidget(self.etqctch,1,2,1,1)
+        # text for specifying spin state
+        ctip = 'Spin multiplicity of the system, default: 1'
+        self.rtqctspin = mQLabel('Spin:',ctip,'r',14)
+        self.etqctspin = mQLineEdit('1',ctip,'l',14)
+        self.qctgrid.addWidget(self.rtqctspin,1,3,1,1)
+        self.qctgrid.addWidget(self.etqctspin,1,4,1,1)
+        # drop menu for selecting type of calculation
+        qcav = ['energy','minimize','ts']
+        ctip = 'Specify calculation type, default: minimize'
+        self.rtqctcalc = mQLabel('Calculation:',ctip,'r',14)
+        self.qctcalc = mQComboBox(qcav,ctip,14)
+        self.qctgrid.addWidget(self.rtqctcalc,2,1,1,1)
+        self.qctgrid.addWidget(self.qctcalc,2,2,1,1)
+        # text for specifying electronic structure method
+        ctip = 'Select electronic structure method, default: ub3lyp'
+        self.rtqctmethod = mQLabel('Method:',ctip,'r',14)
+        self.etqctmethod = mQLineEdit('ub3lyp',ctip,'l',14)
+        self.qctgrid.addWidget(self.rtqctmethod,2,3,1,1)
+        self.qctgrid.addWidget(self.etqctmethod,2,4,1,1)
+        # text for specifying basis set
+        ctip = 'Select basis set, default: lacvp_s'
+        self.rtqctbasis = mQLabel('Basis:',ctip,'r',14)
+        self.etqctbasis = mQLineEdit('lacvps_ecp',ctip,'l',14)
+        self.qctgrid.addWidget(self.rtqctbasis,3,1,1,1)
+        self.qctgrid.addWidget(self.etqctbasis,3,2,1,1)
+        # drop menu for selecting dispersion
+        qcav = ['yes','no','d2','d3']
+        ctip = 'Select dispersion correction'
+        self.qctsel = mQComboBox(qcav,ctip,14)
+        self.qctgrid.addWidget(self.qctsel,3,3,1,1)
+        self.qctgrid.addWidget(self.qctsel,3,4,1,1)
+        self.qctsel.setCurrentIndex(1)
+        # editor for additional input
+        ctip='Specify additional input here'
+        self.rtqctadd = mQLabel('Additional input:',ctip,'Cr',14)
+        self.qceditor = mQTextEdit('','l',14)
+        self.qctgrid.addWidget(self.rtqctadd,4,2,1,1)
+        self.qctgrid.addWidget(self.qceditor,4,3,1,2)
+        # button for addition
+        ctip = 'make default'
+        self.butqctlf = mQPushButton('Make default',ctip,14)
+        self.butqctlf.clicked.connect(self.qctdef)
+        self.qctgrid.addWidget(self.butqctlf,5,1,2,1)
+        # button for addition
+        ctip = 'Submit input for Quantum Chemistry'
+        self.butqctSub = mQPushButton('Submit',ctip,14)
+        self.butqctSub.clicked.connect(self.qretmain)
+        self.qctgrid.addWidget(self.butqctSub,5,2,2,1)
+        # button for return
+        ctip = 'Return to main menu'
+        self.butqctRet = mQPushButton('Return',ctip,14)
+        self.butqctRet.clicked.connect(self.qretmain)
+        self.qctgrid.addWidget(self.butqctRet,5,4,2,1)
+        # load defaults if existing
+        if glob.glob(globs.homedir+'/.tcdefinput.inp'):
+                loadfrominputtc(self,globs.homedir+'/.tcdefinput.inp')
+        #####################################
+        ### create gamess-qc input window ###
+        #######################################
+        self.qcgWindow = QWidget() # TC QC window
+        self.qcggrid = QGridLayout()
+        self.qcgWindow.setWindowTitle('GAMESS Input')
+        self.sgrid.addWidget(self.qcgWindow) # add to stacked grid
+        self.qcgWindow.setPalette(p) # set background color
+        self.qcgWindow.setLayout(self.qcggrid) # set layout
+        # top text
+        self.txtqcg = mQLabel('GAMESS Input','','c',18)
+        self.qcggrid.addWidget(self.txtqcg,0,0,1,4)
+        # text for specifying charge
+        ctip = 'Charge of the system, default: 0'
+        self.rtqcgch = mQLabel('Charge:',ctip,'r',14)
+        self.etqcgch = mQLineEdit('0',ctip,'l',14)
+        self.qcggrid.addWidget(self.rtqcgch,1,0,1,1)
+        self.qcggrid.addWidget(self.etqcgch,1,1,1,1)
+        # text for specifying spin state
+        ctip = 'Spin multiplicity of the system, default: 1'
+        self.rtqcgspin = mQLabel('Spin:',ctip,'r',14)
+        self.etqcgspin = mQLineEdit('1',ctip,'l',14)
+        self.qcggrid.addWidget(self.rtqcgspin,1,2,1,1)
+        self.qcggrid.addWidget(self.etqcgspin,1,3,1,1)
+        # drop menu for selecting type of calculation
+        qcav = ['energy','minimize','ts']
+        ctip = 'Specify calculation type, default: minimize'
+        self.rtqcgcalc = mQLabel('Calculation:',ctip,'r',14)
+        self.qcgcalc = mQComboBox(qcav,ctip,14)
+        self.qcggrid.addWidget(self.rtqcgcalc,2,0,1,1)
+        self.qcggrid.addWidget(self.qcgcalc,2,1,1,1)
+        # text for specifying electronic structure method
+        ctip = 'Select electronic structure method, default: ub3lyp'
+        self.rtqcgmethod = mQLabel('Method:',ctip,'r',14)
+        self.etqcgmethod = mQLineEdit('ub3lyp',ctip,'l',14)
+        self.qcggrid.addWidget(self.rtqcgmethod,2,2,1,1)
+        self.qcggrid.addWidget(self.etqcgmethod,2,3,1,1)
+        # text for specifying basis set
+        ctip = 'Select GBASIS input, default: 6'
+        self.rtqcgbasis = mQLabel('GBASIS:',ctip,'r',14)
+        self.etqcgbasis = mQLineEdit('6',ctip,'l',14)
+        self.qcggrid.addWidget(self.rtqcgbasis,3,0,1,1)
+        self.qcggrid.addWidget(self.etqcgbasis,3,1,1,1)
+        # text for specifying basis set
+        ctip = 'Select NGAUSS input, default: N31'
+        self.rtqcngauss = mQLabel('NGAUSS:',ctip,'r',14)
+        self.etqcngauss = mQLineEdit('N31',ctip,'l',14)
+        self.qcggrid.addWidget(self.rtqcngauss,3,2,1,1)
+        self.qcggrid.addWidget(self.etqcngauss,3,3,1,1)
+        # text for specifying polarization functions
+        ctip = 'Select NPFUNC input, default: 0'
+        self.rtqcnpfunc = mQLabel('NPFUNC:',ctip,'r',14)
+        self.etqcnpfunc = mQLineEdit('',ctip,'l',14)
+        self.qcggrid.addWidget(self.rtqcnpfunc,4,0,1,1)
+        self.qcggrid.addWidget(self.etqcnpfunc,4,1,1,1)
+        # text for specifying polarization functions
+        ctip = 'Select NDFUNC input, default: 0'
+        self.rtqcndfunc = mQLabel('NDFUNC:',ctip,'r',14)
+        self.etqcndfunc = mQLineEdit('',ctip,'l',14)
+        self.qcggrid.addWidget(self.rtqcndfunc,4,2,1,1)
+        self.qcggrid.addWidget(self.etqcndfunc,4,3,1,1)
+        # editor for additional input
+        ctip='Specify additional input for block SYS here'
+        self.rtqcgadd1 = mQLabel('SYS input:',ctip,'Cr',14)
+        self.qcgedsys = mQTextEdit('','l',12)
+        self.qcggrid.addWidget(self.rtqcgadd1,5,0,1,1)
+        self.qcggrid.addWidget(self.qcgedsys,5,1,1,1)
+        # editor for additional input
+        ctip='Specify additional input for block CTRL here'
+        self.rtqcgadd1 = mQLabel('CTRL input:',ctip,'Cr',14)
+        self.qcgedctrl = mQTextEdit('','l',12)
+        self.qcggrid.addWidget(self.rtqcgadd1,5,2,1,1)
+        self.qcggrid.addWidget(self.qcgedctrl,5,3,1,1)
+        # editor for additional input
+        ctip='Specify additional input for block SCF here'
+        self.rtqcgadd3 = mQLabel('SCF input:',ctip,'Cr',14)
+        self.qcgedscf = mQTextEdit('','l',12)
+        self.qcggrid.addWidget(self.rtqcgadd3,6,0,1,1)
+        self.qcggrid.addWidget(self.qcgedscf,6,1,1,1)
+        # editor for additional input
+        ctip='Specify additional input for block STAT here'
+        self.rtqcgadd4 = mQLabel('STAT input:',ctip,'Cr',14)
+        self.qcgedstat = mQTextEdit('','l',12)
+        self.qcggrid.addWidget(self.rtqcgadd4,6,2,1,1)
+        self.qcggrid.addWidget(self.qcgedstat,6,3,1,1)
+        # button for addition
+        ctip = 'make default'
+        self.butqcglf = mQPushButton('Make default',ctip,14)
+        self.butqcglf.clicked.connect(self.qcgdef)
+        self.qcggrid.addWidget(self.butqcglf,7,0,1,1)
+        # button for addition
+        ctip = 'Submit input for Quantum Chemistry'
+        self.butqcgSub = mQPushButton('Submit',ctip,14)
+        self.butqcgSub.clicked.connect(self.qretmain)
+        self.qcggrid.addWidget(self.butqcgSub,7,1,1,2)
+        # button for return
+        ctip = 'Return to main menu'
+        self.butqcgRet = mQPushButton('Return',ctip,14)
+        self.butqcgRet.clicked.connect(self.qretmain)
+        self.qcggrid.addWidget(self.butqcgRet,7,3,1,1)
+        self.qcggrid.setRowMinimumHeight(7,30)
+        # load defaults if existing
+        if glob.glob(globs.homedir+'/.gamdefinput.inp'):
+                loadfrominputgam(self,globs.homedir+'/.gamdefinput.inp')
+        #######################################
+        #### create Qchem-qc input window #####
+        #######################################
+        self.qcQWindow = QWidget() # TC QC window
+        self.qcQgrid = QGridLayout()
+        self.qctWindow.setWindowTitle('QChem Input')
+        self.sgrid.addWidget(self.qcQWindow) # add to stacked grid
+        self.qcQWindow.setPalette(p) # set background color
+        self.qcQWindow.setLayout(self.qcQgrid) # set layout
+        # top text
+        self.txtQqc = mQLabel('QChem Input','','c',18)
+        self.qcQgrid.addWidget(self.txtQqc,0,0,1,5)
+        # text for specifying charge
+        ctip = 'Charge of the system, default: 0'
+        self.rtqcQch = mQLabel('Charge:',ctip,'r',14)
+        self.etqcQch = mQLineEdit('0',ctip,'l',14)
+        self.qcQgrid.addWidget(self.rtqcQch,1,0,1,1)
+        self.qcQgrid.addWidget(self.etqcQch,1,1,1,1)
+        # text for specifying spin state
+        ctip = 'Spin multiplicity of the system, default: 1'
+        self.rtqcQspin = mQLabel('Spin:',ctip,'r',14)
+        self.etqcQspin = mQLineEdit('1',ctip,'l',14)
+        self.qcQgrid.addWidget(self.rtqcQspin,1,2,1,1)
+        self.qcQgrid.addWidget(self.etqcQspin,1,3,1,1)
+        # additional molecule
+        ctip = 'Unrestricted calculation?'
+        self.chQun = mQCheckBox('Unrestricted',ctip,14)
+        self.chQun.setChecked(True)
+        self.qcQgrid.addWidget(self.chQun,1,4,1,1)
+        # drop menu for selecting type of calculation
+        qcav = ['energy','minimize','ts']
+        ctip = 'Specify calculation type, default: minimize'
+        self.rtqcQcalc = mQLabel('Calculation:',ctip,'r',14)
+        self.qcQcalc = mQComboBox(qcav,ctip,14)
+        self.qcQgrid.addWidget(self.rtqcQcalc,2,0,1,1)
+        self.qcQgrid.addWidget(self.qcQcalc,2,1,1,1)
+        # text for specifying basis set
+        ctip = 'Select basis set, default: lanl2dz'
+        self.rtqcQbasis = mQLabel('Basis:',ctip,'r',14)
+        self.etqcQbasis = mQLineEdit('lanl2dz',ctip,'l',14)
+        self.qcQgrid.addWidget(self.rtqcQbasis,2,2,1,1)
+        self.qcQgrid.addWidget(self.etqcQbasis,2,3,1,1)
+        # text for specifying exchange
+        ctip = 'Select exchange, default: b3lyp'
+        self.rtqcQex = mQLabel('Exchange:',ctip,'r',14)
+        self.etqcQex = mQLineEdit('b3lyp',ctip,'l',14)
+        self.qcQgrid.addWidget(self.rtqcQex,3,0,1,1)
+        self.qcQgrid.addWidget(self.etqcQex,3,1,1,1)
+        # text for specifying electronic structure method
+        ctip = 'Select correlation, default: none'
+        self.rtqcQcor = mQLabel('Correlation:',ctip,'r',14)
+        self.etqcQcor = mQLineEdit('none',ctip,'l',14)
+        self.qcQgrid.addWidget(self.rtqcQcor,3,2,1,1)
+        self.qcQgrid.addWidget(self.etqcQcor,3,3,1,1)
+        # editor for additional input
+        ctip='Specify additional input here'
+        self.rtqcQadd = mQLabel('Additional input:',ctip,'Cr',14)
+        self.qcQeditor = mQTextEdit('','l',12)
+        self.qcQgrid.addWidget(self.rtqcQadd,4,1,1,1)
+        self.qcQgrid.addWidget(self.qcQeditor,4,2,1,2)
+        # button for addition
+        ctip = 'make default'
+        self.butqcQlf = mQPushButton('Make default',ctip,14)
+        self.butqcQlf.clicked.connect(self.qcqdef)
+        self.qcQgrid.addWidget(self.butqcQlf,5,0,1,1)
+        # button for addition
+        ctip = 'Submit input for Quantum Chemistry'
+        self.butqcQSub = mQPushButton('Submit',ctip,14)
+        self.butqcQSub.clicked.connect(self.qretmain)
+        self.qcQgrid.addWidget(self.butqcQSub,5,2,1,2)
+        # button for return
+        ctip = 'Return to main menu'
+        self.butqcQRet = mQPushButton('Return',ctip,14)
+        self.butqcQRet.clicked.connect(self.qretmain)
+        self.qcQgrid.addWidget(self.butqcQRet,5,4,1,1)
+        # load defaults if existing
+        if glob.glob(globs.homedir+'/.qchdefinput.inp'):
+            loadfrominputqch(self,globs.homedir+'/.qchdefinput.inp')
+        #####################################
+        ### create jobscript input window ###
+        #####################################
+        self.jWindow = QWidget() # jobscript window
+        self.jgrid = QGridLayout()
+        self.jWindow.setWindowTitle('Jobscript parameters')
+        self.sgrid.addWidget(self.jWindow) # add to stacked grid
+        self.jWindow.setPalette(p) # set background color
+        self.jWindow.setLayout(self.jgrid) # set layout
+        c1 = mQPixmap(globs.installdir+'/icons/sge.png')
+        c2 = mQPixmap(globs.installdir+'/icons/slurm.png')
+        self.jgrid.addWidget(c1,1,2,1,1)
+        self.jgrid.addWidget(c2,1,4,1,1)
+        # top text
+        self.txtj = mQLabel('Jobscript Input','','r',18)
+        self.jgrid.addWidget(self.txtj,0,2,1,2)
+        # text for main job identifier
+        ctip = 'Job main identifier, e.g. feII'
+        self.rtjname = mQLabel('Job name:',ctip,'r',14)
+        self.etjname = mQLineEdit('myjob',ctip,'l',14)
+        self.jgrid.addWidget(self.rtjname,2,1,1,1)
+        self.jgrid.addWidget(self.etjname,2,2,1,1)
+        # text for specifying spin state
+        ctip = 'Queue to use, e.g. gpus'
+        self.rtjqueue = mQLabel('Queue:',ctip,'r',14)
+        self.etjqueue = mQLineEdit('',ctip,'l',14)
+        self.jgrid.addWidget(self.rtjqueue,2,3,1,1)
+        self.jgrid.addWidget(self.etjqueue,2,4,1,1)
+        # text for specifying wall time
+        ctip = 'Wall time request, e.g. 48'
+        self.rtjwallt = mQLabel('Wall time:',ctip,'r',14)
+        self.etjwallt = mQLineEdit('48h',ctip,'l',14)
+        self.jgrid.addWidget(self.rtjwallt,3,1,1,1)
+        self.jgrid.addWidget(self.etjwallt,3,2,1,1)
+        # text for specifying memory
+        ctip = 'Memory request, e.g. 10G'
+        self.rtjmem = mQLabel('Memory:',ctip,'r',14)
+        self.etjmem = mQLineEdit('10G',ctip,'l',14)
+        self.jgrid.addWidget(self.rtjmem,3,3,1,1)
+        self.jgrid.addWidget(self.etjmem,3,4,1,1)
+        # text for specifying charge
+        ctip = 'Number of CPUs requested, default: 0'
+        self.rtjcpus = mQLabel('CPUs:',ctip,'r',14)
+        self.etjcpus = mQLineEdit('',ctip,'l',14)
+        self.jgrid.addWidget(self.rtjcpus,4,1,1,1)
+        self.jgrid.addWidget(self.etjcpus,4,2,1,1)
+        # text for specifying spin state
+        ctip = 'Number of GPUs requested, default: 0'
+        self.rtjgpus = mQLabel('GPUs:',ctip,'r',14)
+        self.etjgpus = mQLineEdit('',ctip,'l',14)
+        self.jgrid.addWidget(self.rtjgpus,4,3,1,1)
+        self.jgrid.addWidget(self.etjgpus,4,4,1,1)
+        # text for modules to be loaded
+        ctip = 'Modules to be loaded, e.g. terachem, openmpi'
+        self.rtjmod = mQLabel('Modules:',ctip,'r',14)
+        self.etjmod = mQLineEdit('',ctip,'l',14)
+        self.jgrid.addWidget(self.rtjmod,5,1,1,1)
+        self.jgrid.addWidget(self.etjmod,5,2,1,1)
+        # editor for additional input
+        ctip='Specify additional input for initial options, e.g. -j y'
+        self.rtjadd1 = mQLabel('Options:',ctip,'r',14)
+        self.etjopt = mQTextEdit('','l',12)
+        self.jgrid.addWidget(self.rtjadd1,6,1,1,1)
+        self.jgrid.addWidget(self.etjopt,6,2,1,1)
+        # editor for additional input
+        ctip='Specify additional commands, e.g. mkdir $WORKDIR/test'
+        self.rtjadd2 = mQLabel('Commands:',ctip,'Cr',14)
+        self.jcomm = mQTextEdit('','l',12)
+        self.jgrid.addWidget(self.rtjadd2,6,3,1,1)
+        self.jgrid.addWidget(self.jcomm,6,4,1,1)
+        # button for addition
+        ctip = 'make default'
+        self.butqcJlf = mQPushButton('Make default',ctip,14)
+        self.butqcJlf.clicked.connect(self.jobdef)
+        self.jgrid.addWidget(self.butqcJlf,7,1,1,1)
+        # button for addition
+        ctip = 'Submit input for Quantum Chemistry'
+        self.butqcgSub = mQPushButton('Submit',ctip,14)
+        self.butqcgSub.clicked.connect(self.qretmain)
+        self.jgrid.addWidget(self.butqcgSub,7,2,1,2)
+        # button for return
+        ctip = 'Return to main menu'
+        self.butqcgRet = mQPushButton('Return',ctip,14)
+        self.butqcgRet.clicked.connect(self.qretmain)
+        self.jgrid.addWidget(self.butqcgRet,7,4,1,1)
+        # load defaults if existing
+        if glob.glob(globs.homedir+'/.jobdefinput.inp'):
+            loadfrominputjob(self,globs.homedir+'/.jobdefinput.inp')
+        ##########################################
+        ### create local DB interaction window ###
+        ##########################################
+        self.DBWindow = QWidget() # DB Window
+        self.DBlgrid = QGridLayout()
+        self.sgrid.addWidget(self.DBWindow)
+        self.DBWindow.setPalette(p)
+        self.DBWindow.setLayout(self.DBlgrid)
+        self.DBWindow.setWindowTitle('Insert/remove to/from Database')
+        # top text
+        self.txtdb = mQLabel('Database Update','','c',18)
+        self.DBlgrid.addWidget(self.txtdb,0,0,1,4)
+        # drop menu for selecting type
+        ctip = 'Select what type of molecule you want to add/remove to/from the database'
+        self.rtDBsel = mQLabel('Select type:','','r',14)
+        qcav = ['core','ligand','binding']
+        self.DBsel = mQComboBox(qcav,ctip,14)
+        self.DBsel.setCurrentIndex(1)
+        self.DBlgrid.addWidget(self.rtDBsel,1,1,1,1)
+        self.DBlgrid.addWidget(self.DBsel,1,2,1,1)
+        # text for selecting type
+        ctip = 'Type SMILES string for molecule'
+        self.rtDBsmi = mQLabel('SMILES or file:','','r',14)
+        self.etDBsmi = mQLineEdit('',ctip,'l',14)
+        self.DBlgrid.addWidget(self.rtDBsmi,2,1,1,1)
+        self.DBlgrid.addWidget(self.etDBsmi,2,2,1,1)
+        # text for specifying name
+        ctip = 'Type name for molecule'
+        self.rtDBname = mQLabel('Name:','','r',14)
+        self.etDBname = mQLineEdit('',ctip,'l',14)
+        self.DBlgrid.addWidget(self.rtDBname,3,1,1,1)
+        self.DBlgrid.addWidget(self.etDBname,3,2,1,1)
+        # drop menu for denticity
+        ctip = 'Type denticity for SMILES molecule'
+        self.rtDBsmident = mQLabel('Denticity:','','r',14)
+        qcav = ['1','2','3','4','5','6','7','8']
+        self.DBdent = mQComboBox(qcav,ctip,14)
+        self.DBdent.setCurrentIndex(0)
+        self.rtDBsmident.setDisabled(True)
+        self.DBdent.setDisabled(True)
+        self.DBlgrid.addWidget(self.rtDBsmident,4,1,1,1)
+        self.DBlgrid.addWidget(self.DBdent,4,2,1,1)
+        self.DBsel.currentIndexChanged.connect(self.dbchange)  ### error if not here
+        # text for typing input connection atoms 
+        ctip = 'Type indices for connection atoms, default: 1'
+        self.rtDBsmicat = mQLabel('Catoms:',ctip,'r',14)
+        self.etDBsmicat = mQLineEdit('',ctip,'l',14)
+        self.rtDBsmicat.setDisabled(True)
+        self.etDBsmicat.setDisabled(True)
+        self.DBlgrid.addWidget(self.rtDBsmicat,5,1,1,1)
+        self.DBlgrid.addWidget(self.etDBsmicat,5,2,1,1)
+        # button for addition
+        ctip = 'Load example input'
+        self.butDBAlf = mQPushButton('Load file..',ctip,14)
+        self.butDBAlf.clicked.connect(self.qDBload)
+        self.DBlgrid.addWidget(self.butDBAlf,6,0,1,1)
+        # button for addition
+        ctip = 'Add new molecule to database'
+        self.butDBAub = mQPushButton('Add',ctip,14)
+        self.butDBAub.clicked.connect(self.qaddDB)
+        self.DBlgrid.addWidget(self.butDBAub,6,1,1,1)
+        # button for removal
+        ctip = 'Remove molecule database'
+        self.butDBDub = mQPushButton('Remove',ctip,14)
+        self.butDBDub.clicked.connect(self.qdelDB)
+        self.DBlgrid.addWidget(self.butDBDub,6,2,1,1)
+        # button for return
+        ctip = 'Return to main menu'
+        self.butDBRet = mQPushButton('Return',ctip,14)
+        self.butDBRet.clicked.connect(self.qretmain)
+        self.DBlgrid.addWidget(self.butDBRet,6,3,1,1)
+        #############################################
+        ### create chemical DB interaction window ###
+        #############################################
+        self.cDBWindow = QWidget() # DB Window
+        self.cDBgrid = QGridLayout()
+        self.sgrid.addWidget(self.cDBWindow)
+        self.cDBWindow.setPalette(p)
+        self.cDBWindow.setLayout(self.cDBgrid)
+        self.cDBWindow.setWindowTitle('Chemical Database Search')
+        ctip = 'Specify screening options or similarity search.'
+        # top text
+        self.txtcdb = mQLabel('Database Search',ctip,'c',18)
+        self.cDBgrid.addWidget(self.txtcdb,0,0,1,9)
+        # text for reference
+        self.rtcDBref = mQLabel('Similarity search','','c',18)
+        self.cDBgrid.addWidget(self.rtcDBref,1,0,1,3)
+        # text for selecting type
+        ctip = 'Type SMILES string or molecule name for reference molecule in similarity search'
+        self.rtcDBsmi = mQLabel('SMILES:',ctip,'r',14)
+        self.etcDBsmi = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.rtcDBsmi,2,0,1,1)
+        self.cDBgrid.addWidget(self.etcDBsmi,2,1,1,2)
+        # button for loading from file
+        ctip = 'Load reference molecule from file'
+        self.rtcDBAlf = mQLabel('From file:',ctip,'r',14)
+        self.butcDBAlf = mQPushButton('Load..',ctip,14)
+        self.butcDBAlf.clicked.connect(self.qcDBload)
+        self.cDBgrid.addWidget(self.rtcDBAlf,3,0,1,1)
+        self.cDBgrid.addWidget(self.butcDBAlf,3,1,1,2)
+        # connection atoms for smarts/smiles
+        ctip = 'Specify the connection atoms in SMARTS/SMILES. Default: 1'
+        self.rtcDBcatoms = mQLabel('Conn atoms:',ctip,'r',14)
+        self.etcDBcatoms = mQLineEdit('1',ctip,'l',14)
+        self.cDBgrid.addWidget(self.rtcDBcatoms,4,0,1,1)
+        self.cDBgrid.addWidget(self.etcDBcatoms,4,1,1,1)
+        # how many molecules to return
+        ctip = 'Specify the number of results you want.'
+        self.rtcDBres = mQLabel('Results:',ctip,'r',14)
+        self.etcDBnres = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.rtcDBres,5,0,1,1)
+        self.cDBgrid.addWidget(self.etcDBnres,5,1,1,1)
+        # text for output file
+        ctip = 'Please type in output file'
+        self.rtcDBsoutf = mQLabel('Output file:',ctip,'r',14)
+        self.etcDBoutf = mQLineEdit('simres',ctip,'l',14)
+        self.cDBgrid.addWidget(self.rtcDBsoutf,6,0,1,1)
+        self.cDBgrid.addWidget(self.etcDBoutf,6,1,1,1)
+        # drop menu for output file
+        qcav = ['.smi']#,'.mol','.sdf']
+        self.cDBdent = mQComboBox(qcav,ctip,14)
+        self.cDBgrid.addWidget(self.cDBdent,6,2,1,1)
+        # text for screening options
+        self.rtcDBsc = mQLabel('Screening options',ctip,'c',18)
+        self.cDBgrid.addWidget(self.rtcDBsc,1,6,1,4)
+        # text for selecting database
+        self.rtcDBsel = mQLabel('Select database:',ctip,'c',14)
+        self.cDBgrid.addWidget(self.rtcDBsel,2,5,1,2)
+        # get existing databases
+        ctip = 'Select the database you want to use. Please note that fastsearch indexes DBs allow for much faster screening.'
+        dbdir = globs.chemdbdir
+        dbs0 = glob.glob(dbdir+"/*.sdf")
+        dbs1 = [d.rsplit('/',1)[-1] for d in dbs0]
+        dbs = [d.split('.',1)[0] for d in dbs1]
+        self.cDBsel = mQComboBox(dbs,ctip,14)
+        self.cDBgrid.addWidget(self.cDBsel,2,7,1,2)
+        # text for SMARTS pattern
+        ctip = 'Type SMARTS pattern for matching'
+        self.rtcDBsmarts = mQLabel('SMARTS:',ctip,'r',14)
+        self.etcDBsmarts = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.rtcDBsmarts,3,5,1,2)
+        self.cDBgrid.addWidget(self.etcDBsmarts,3,7,1,2)
+        ctip = 'Select molecular fingerprint'
+        # text for selecting fingerprint
+        self.rtcDBsf = mQLabel('Select Fingerprint:',ctip,'r',14)
+        self.cDBgrid.addWidget(self.rtcDBsf,4,5,1,2)
+        # select fingerprint
+        opts = ['FP2','FP3','FP4','MACCS']
+        self.cDBsf = mQComboBox(opts,ctip,14)
+        self.cDBgrid.addWidget(self.cDBsf,4,7,1,2)
+        # get options for screening
+        ctip = 'Specify minimum and maximum values for filters.'
+        self.rtcDBmin = mQLabel('min',ctip,'c',14)
+        self.rtcDBmax = mQLabel('max',ctip,'c',14)
+        self.cDBgrid.addWidget(self.rtcDBmin,6,7,1,1)
+        self.cDBgrid.addWidget(self.rtcDBmax,6,8,1,1)
+        ctip = 'Total number of atoms.'
+        self.rtcDBat0 = mQLabel('atoms:',ctip,'r',14)
+        self.cDBgrid.addWidget(self.rtcDBat0,7,5,1,2)
+        ctip = 'Minimum number of atoms.'
+        self.etcDBsatoms0 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBsatoms0,7,7,1,1)
+        ctip = 'Maximum number of atoms.'
+        self.etcDBsatoms1 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBsatoms1,7,8,1,1)
+        ctip = 'Total number of bonds.'
+        self.rtcDBb0 = mQLabel('bonds:',ctip,'r',14)
+        self.cDBgrid.addWidget(self.rtcDBb0,8,5,1,2)
+        ctip = 'Minimum number of total bonds.'
+        self.etcDBsbonds0 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBsbonds0,8,7,1,1)
+        ctip = 'Maximum number of total bonds.'
+        self.etcDBsbonds1 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBsbonds1,8,8,1,1)
+        ctip = 'Total number of aromatic.'
+        self.rtcDBba0 = mQLabel('aromatic bonds:',ctip,'r',14)
+        self.cDBgrid.addWidget(self.rtcDBba0,9,5,1,2)
+        ctip = 'Minimum number of aromatic bonds.'
+        self.etcDBsabonds0 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBsabonds0,9,7,1,1)
+        ctip = 'Maximum number of aromatic bonds.'
+        self.etcDBsabonds1 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBsabonds1,9,8,1,1)
+        ctip = 'Total number of single bonds.'
+        self.rtcDBs0 = mQLabel('single bonds:',ctip,'r',14)
+        self.cDBgrid.addWidget(self.rtcDBs0,10,5,1,2)
+        ctip = 'Minimum number of single bonds.'
+        self.etcDBsbondss0 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBsbondss0,10,7,1,1)
+        ctip = 'Maximum number of single bonds.'
+        self.etcDBsbondss1 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBsbondss1,10,8,1,1)
+        ctip = 'Molecular weight.'
+        self.rtcDBbtmw0 = mQLabel('MW:',ctip,'',14)
+        self.cDBgrid.addWidget(self.rtcDBbtmw0,11,5,1,2)
+        ctip = 'Minimum molecular weight.'
+        self.etcDBmw0 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBmw0,11,7,1,1)
+        ctip = 'Maximum molecular weight.'
+        self.etcDBmw1 = mQLineEdit('',ctip,'l',14)
+        self.cDBgrid.addWidget(self.etcDBmw1,11,8,1,1)
+        # aspirin icon
+        c = mQPixmap(globs.installdir+'/icons/chemdb.png')
+        relresize(c,c,0.4)
+        self.cDBgrid.addWidget(c,7,0,4,2)
+        # button for addition
+        ctip = 'Search database:'
+        self.butcDBAub = mQPushButton('Search',ctip,14)
+        self.butcDBAub.clicked.connect(self.qaddcDB)
+        self.cDBgrid.addWidget(self.butcDBAub,11,0,1,2)
+        # button for addition
+        ctip = 'Draw results'
+        self.butcDBd0 = mQPushButton('Draw',ctip,14)
+        self.butcDBd0.clicked.connect(self.drawres)
+        self.cDBgrid.addWidget(self.butcDBd0,9,2,1,1)
+        # button for return
+        ctip = 'Return to main menu'
+        self.butcDBRet = mQPushButton('Return',ctip,14)
+        self.butcDBRet.clicked.connect(self.qretmain)
+        self.cDBgrid.addWidget(self.butcDBRet,11,2,1,1)
+        ###########################
+        ### post-process window ###
+        ###########################
+        self.pWindow = QWidget() # Post Window
+        self.pgrid = QGridLayout()
+        self.sgrid.addWidget(self.pWindow)
+        self.pWindow.setPalette(p)
+        self.pWindow.setLayout(self.pgrid)
+        self.pWindow.setWindowTitle('Post-processing')
+        self.pgrid.setRowMinimumHeight(0,50)
+        self.pgrid.setRowMinimumHeight(2,30)
+        # top text
+        self.txtp = mQLabel('Post-processing setup','','c',18)
+        self.pgrid.addWidget(self.txtp,0,0,1,4)
+        # input for jobscripts
+        ctip = 'Select top jobs directory'
+        self.butpd = mQPushButton('Select directory',ctip,16)
+        self.butpd.clicked.connect(self.pdload)
+        self.pgrid.addWidget(self.butpd,1,0,1,1)
+        self.etpdir = mQLineEdit(globs.rundir,ctip,'l',16)
+        self.pgrid.addWidget(self.etpdir,1,1,1,1)
+        # select qc code
+        ctip = 'Select QC code'
+        qcav = ['TeraChem','GAMESS']
+        self.rpcode = mQLabel('QC code:','','c',16)
+        self.pgrid.addWidget(self.rpcode,1,2,1,1)
+        self.pqcode = mQComboBox(qcav,ctip,14)
+        self.pgrid.addWidget(self.pqcode,1,3,1,1)
+        # general summary
+        ctip = 'Generate results summary'
+        self.psum = mQCheckBox('Summary',ctip,16)
+        self.pgrid.addWidget(self.psum,3,1,1,1)
+        # metal charges
+        ctip = 'Calculate metal charge'
+        self.pch = mQCheckBox('Charge',ctip,16)
+        self.pgrid.addWidget(self.pch,3,2,1,1)
+        # wavefunction properties
+        ctip = 'Generate average properties of the wavefunction'
+        self.pwfnav = mQCheckBox('Wavefunction',ctip,16)
+        self.pgrid.addWidget(self.pwfnav,4,1,1,1)
+        # cube files
+        ctip = 'Generate cubefiles'
+        self.pcub = mQCheckBox('Cubes',ctip,16)
+        self.pgrid.addWidget(self.pcub,4,2,1,1)
+        # molecular orbital information
+        ctip = 'Molecular Orbital information'
+        self.porbs = mQCheckBox('MO',ctip,16)
+        self.pgrid.addWidget(self.porbs,5,1,1,1)
+        # NBO analysis
+        ctip = 'NBO analysis'
+        self.pnbo = mQCheckBox('NBO',ctip,16)
+        self.pgrid.addWidget(self.pnbo,5,2,1,1)
+        # d-orbital information
+        #ctip = 'd-orbital information'
+        #self.pdorbs = mCheck(self.pWindow,0.55,0.525,0.2,0.1,'d-orbitals',ctip,16)
+        # delocalization indices
+        ctip = 'Localization and delocalization indices'
+        self.pdeloc = mQCheckBox('Deloc',ctip,16)
+        self.pgrid.addWidget(self.pdeloc,6,1,1,1)
+        # button for addition
+        ctip = 'Run post-processing'
+        self.butpR = mQPushButton('Run',ctip,16)
+        self.pgrid.addWidget(self.butpR,7,1,1,2)
+        self.butpR.clicked.connect(self.postprocGUI)
+        # button for return
+        ctip = 'Return to main menu'
+        self.butpret = mQPushButton('Return',ctip,16)
+        self.butpret.clicked.connect(self.qretmain)
+        self.pgrid.addWidget(self.butpret,7,3,1,2)
+        #c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
+        c3p = mQPixmap(globs.installdir+'/icons/wft3.png')
+        self.pgrid.addWidget(c3p,3,0,4,1)
+        #c2p = mPic(self.pWindow,globs.installdir+'/icons/wft2.png',0.04,0.035,0.2)
+        
         
         ####################
         ### Run main GUI ###
@@ -671,478 +1312,6 @@ class mGUI():
         relresize(self.iWtxt,self.iWind,1.0)
         app.processEvents()
         app.exec_()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        ##########################################
-        ### create local DB interaction window ###
-        ##########################################
-        self.DBWindow = mWgen(0.3,0.4,'Insert/remove to/from Database') # DB window
-        # top text
-        self.txtdb = mRtext(self.DBWindow,0.3,0.05,0.4,0.1,'Database Update','',18,'r','c')
-        ctip = 'Select what type of molecule you want to add/remove to/from the database'
-        # text for selecting type
-        self.rtDBsel = mRtext(self.DBWindow,0.14,0.20,0.3,0.1,'Select type:',ctip,14,'r','r')
-        # text for selecting type
-        ctip = 'Type SMILES string for molecule'
-        self.rtDBsmi = mRtext(self.DBWindow,0.14,0.3,0.3,0.1,'SMILES or file:',ctip,14,'r','r')
-        self.etDBsmi = mEtext(self.DBWindow,0.465,0.3,0.25,0.08,'',ctip,14,'r','l')
-        # text for specifying name
-        ctip = 'Type name for molecule'
-        self.rtDBname = mRtext(self.DBWindow,0.14,0.4,0.3,0.1,'Name:',ctip,14,'r','r')
-        self.etDBname = mEtext(self.DBWindow,0.465,0.4,0.25,0.08,'',ctip,14,'r','l')
-        # text for typing denticity
-        ctip = 'Type denticity for SMILES molecule'
-        self.rtDBsmident = mRtext(self.DBWindow,0.14,0.50,0.3,0.1,'Denticity:',ctip,14,'r','r')
-        # drop menu for selecting type
-        qcav = ['1','2','3','4','5','6','7','8']
-        self.DBdent = mDbox(self.DBWindow,0.465,0.49,0.1,0.08,qcav,ctip,14)
-        self.DBdent.setCurrentIndex(0)
-        self.rtDBsmident.setDisabled(True)
-        self.DBdent.setDisabled(True)
-        # text for typing input atoms 
-        ctip = 'Type indices for connection atoms, default: 1'
-        self.rtDBsmicat = mRtext(self.DBWindow,0.14,0.60,0.3,0.1,'Catoms:',ctip,14,'r','r')
-        self.etDBsmicat = mEtext(self.DBWindow,0.465,0.60,0.25,0.08,'',ctip,14,'r','l')
-        self.rtDBsmicat.setDisabled(True)
-        self.etDBsmicat.setDisabled(True)
-        # drop menu for selecting type
-        qcav = ['core','ligand','binding']
-        self.DBsel = mDbox(self.DBWindow,0.465,0.20,0.2,0.08,qcav,ctip,14)
-        self.DBsel.currentIndexChanged.connect(self.dbchange)
-        self.DBsel.setCurrentIndex(1)
-        # button for addition
-        ctip = 'Load example input'
-        self.butDBAlf = mButton(self.DBWindow,0.0625,0.7675,0.175,0.09,'Load file',ctip,14)
-        self.butDBAlf.clicked.connect(self.qDBload)
-        # button for addition
-        ctip = 'Add new molecule to database'
-        self.butDBAub = mButton(self.DBWindow,0.285,0.75,0.2,0.125,'Add',ctip,14)
-        self.butDBAub.clicked.connect(self.qaddDB)
-        # button for removal
-        ctip = 'Remove molecule database'
-        self.butDBDub = mButton(self.DBWindow,0.525,0.75,0.2,0.125,'Remove',ctip,14)
-        self.butDBDub.clicked.connect(self.qdelDB)
-        # button for return
-        ctip = 'Return to main menu'
-        self.butDBRet = mButton(self.DBWindow,0.7625,0.7675,0.175,0.09,'Return',ctip,14)
-        self.butDBRet.clicked.connect(self.DBWindow.qexitM)
-        #############################################
-        ### create chemical DB interaction window ###
-        #############################################
-        self.cDBWindow = mWgen(0.4,0.6,'Chemical Database Search') # DB window
-        c = mPic(self.cDBWindow,globs.installdir+'/icons/chemdb.png',0.05,0.75,0.2)
-        # top text
-        self.txtcdb = mRtext(self.cDBWindow,0.3,0.05,0.4,0.1,'Database Search','',18,'r','c')
-        ctip = 'Select the database you want to use. Please not that fastsearch indexes DBs allow for much faster screening.'
-        # text for reference
-        ctip = 'Reference molecule could be either a SMILES string or a molecule loaded from a file.'
-        self.rtcDBref = mRtext(self.cDBWindow,0.05,0.15,0.3,0.1,'Similarity search',ctip,16,'r','r')
-        # text for screening options
-        ctip = 'Specify screening options or similarity search.'
-        self.rtcDBsc = mRtext(self.cDBWindow,0.55,0.15,0.3,0.1,'Screening options',ctip,16,'r','r')
-        # text for selecting database
-        self.rtcDBsel = mRtext(self.cDBWindow,0.425,0.265,0.3,0.1,'Select database:',ctip,14,'r','r')
-        # get existing databases
-        dbdir = globs.chemdbdir
-        dbs0 = glob.glob(dbdir+"/*.sdf")
-        dbs1 = [d.rsplit('/',1)[-1] for d in dbs0]
-        dbs = [d.split('.',1)[0] for d in dbs1]
-        self.cDBsel = mDbox(self.cDBWindow,0.75,0.255,0.15,0.07,dbs,ctip,14)
-        # text for selecting fingerprint
-        self.rtcDBsf = mRtext(self.cDBWindow,0.425,0.455,0.3,0.07,'Select Fingerprint:',ctip,14,'r','r')
-        # select fingerprint
-        opts = ['FP2','FP3','FP4','MACCS']
-        self.cDBsf = mDbox(self.cDBWindow,0.75,0.45,0.15,0.06,opts,ctip,14)
-        # get options for screening
-        ctip = 'Specify minimum and maximum values for filters.'
-        self.rtcDBminmax = mRtext(self.cDBWindow,0.575,0.52,0.3,0.07,'min    max',ctip,14,'r','r')
-        ctip = 'Total number of atoms.'
-        self.rtcDBat0 = mRtext(self.cDBWindow,0.625,0.56,0.1,0.05,'atoms:',ctip,14,'r','r')
-        ctip = 'Minimum number of atoms.'
-        self.etcDBsatoms0 = mEtext(self.cDBWindow,0.7575,0.56,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Maximum number of atoms.'
-        self.etcDBsatoms1 = mEtext(self.cDBWindow,0.8275,0.56,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Total number of bonds.'
-        self.rtcDBb0 = mRtext(self.cDBWindow,0.625,0.62,0.1,0.05,'bonds:',ctip,14,'r','r')
-        ctip = 'Minimum number of total bonds.'
-        self.etcDBsbonds0 = mEtext(self.cDBWindow,0.7575,0.62,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Maximum number of total bonds.'
-        self.etcDBsbonds1 = mEtext(self.cDBWindow,0.8275,0.62,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Total number of aromatic.'
-        self.rtcDBba0 = mRtext(self.cDBWindow,0.525,0.68,0.2,0.05,'aromatic bonds:',ctip,14,'r','r')
-        ctip = 'Minimum number of aromatic bonds.'
-        self.etcDBsabonds0 = mEtext(self.cDBWindow,0.7575,0.68,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Maximum number of aromatic bonds.'
-        self.etcDBsabonds1 = mEtext(self.cDBWindow,0.8275,0.68,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Total number of single bonds.'
-        self.rtcDBbs0 = mRtext(self.cDBWindow,0.575,0.74,0.15,0.05,'single bonds:',ctip,14,'r','r')
-        ctip = 'Minimum number of single bonds.'
-        self.etcDBsbondss0 = mEtext(self.cDBWindow,0.7575,0.74,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Maximum number of single bonds.'
-        self.etcDBsbondss1 = mEtext(self.cDBWindow,0.8275,0.74,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Molecular weight.'
-        self.rtcDBbtmw0 = mRtext(self.cDBWindow,0.575,0.80,0.15,0.05,'MW:',ctip,14,'r','r')
-        ctip = 'Minimum molecular weight.'
-        self.etcDBmw0 = mEtext(self.cDBWindow,0.7575,0.80,0.05,0.05,'',ctip,14,'r','l')
-        ctip = 'Maximum molecular weight.'
-        self.etcDBmw1 = mEtext(self.cDBWindow,0.8275,0.80,0.05,0.05,'',ctip,14,'r','l')
-        # text for selecting type
-        ctip = 'Type SMILES string or molecule name for reference molecule in similarity search'
-        self.rtcDBsmi = mRtext(self.cDBWindow,0.05,0.2625,0.1,0.1,'SMILES:',ctip,14,'r','r')
-        self.etcDBsmi = mEtext(self.cDBWindow,0.16,0.25,0.225,0.08,'',ctip,14,'r','l')
-        # text for SMARTS pattern
-        ctip = 'Type SMARTS pattern for matching'
-        self.rtcDBsmarts = mRtext(self.cDBWindow,0.525,0.3625,0.125,0.1,'SMARTS:',ctip,14,'r','r')
-        self.etcDBsmarts = mEtext(self.cDBWindow,0.675,0.35,0.225,0.08,'',ctip,14,'r','l')
-        # text for output file
-        ctip = 'Please type in output file'
-        self.etcDBoutf = mEtext(self.cDBWindow,0.215,0.58,0.15,0.08,'dbres',ctip,14,'r','l')
-        self.rtcDBsoutf = mRtext(self.cDBWindow,0.0,0.595,0.175,0.08,'Output file:',ctip,14,'r','r')
-        # drop menu for output file
-        qcav = ['.smi']#,'.mol','.sdf']
-        self.cDBdent = mDbox(self.cDBWindow,0.375,0.58,0.1,0.08,qcav,ctip,14)
-        # button for loading from file
-        ctip = 'Load reference molecule from file'
-        self.rtcDBAlf = mRtext(self.cDBWindow,0.03,0.375,0.125,0.1,'From file:',ctip,14,'r','r')
-        self.butcDBAlf = mButton(self.cDBWindow,0.175,0.365,0.15,0.075,'Load..',ctip,14)
-        self.butcDBAlf.clicked.connect(self.qcDBload)
-        # how many molecules to return
-        ctip = 'Specify the number of results you want.'
-        self.rtcDBres = mRtext(self.cDBWindow,0.03,0.475,0.125,0.1,'Results:',ctip,14,'r','r')
-        self.etcDBnres = mEtext(self.cDBWindow,0.18,0.465,0.05,0.07,'',ctip,14,'r','l')
-        # connection atoms for smarts/smiles
-        ctip = 'Specify the connection atoms in SMARTS/SMILES. Default: 1'
-        self.rtcDBcatoms = mRtext(self.cDBWindow,0.235,0.475,0.15,0.1,'Conn atoms:',ctip,14,'r','r')
-        self.etcDBcatoms = mEtext(self.cDBWindow,0.395,0.465,0.075,0.07,'1',ctip,14,'r','l')
-        # button for addition
-        ctip = 'Search database:'
-        self.butcDBAub = mButton(self.cDBWindow,0.325,0.8,0.2,0.125,'Search',ctip,14)
-        self.butcDBAub.clicked.connect(self.qaddcDB)
-        # button for addition
-        ctip = 'Draw results'
-        self.butcDBd0 = mButton(self.cDBWindow,0.175,0.675,0.15,0.085,'Draw',ctip,14)
-        self.butcDBd0.clicked.connect(self.drawres)
-        # button for return
-        ctip = 'Return to main menu'
-        self.butcDBRet = mButton(self.cDBWindow,0.6,0.875,0.15,0.08,'Return',ctip,14)
-        self.butcDBRet.clicked.connect(self.cDBWindow.qexitM)
-        #######################################
-        ### create terachem-qc input window ###
-        #######################################
-        self.qctWindow = mWgen(0.3,0.4,'TeraChem input') # QC window
-        c0 = mPic(self.qctWindow,globs.installdir+'/icons/petachem.png',0.025,0.025,0.2)
-        # top text
-        self.txtqc = mRtext(self.qctWindow,0.3,0.05,0.4,0.1,'TeraChem Input','',18,'r','c')
-        # text for specifying charge
-        ctip = 'Charge of the system, default: 0'
-        self.rtqctch = mRtext(self.qctWindow,0.14,0.2,0.15,0.1,'Charge:',ctip,14,'r','r')
-        self.etqctch = mEtext(self.qctWindow,0.315,0.2,0.1,0.08,'0',ctip,14,'r','l')
-        # text for specifying spin state
-        ctip = 'Spin multiplicity of the system, default: 1'
-        self.rtqctspin = mRtext(self.qctWindow,0.50,0.2,0.15,0.1,'Spin:',ctip,14,'r','r')
-        self.etqctspin = mEtext(self.qctWindow,0.675,0.2,0.1,0.08,'1',ctip,14,'r','l')
-        # drop menu for selecting type of calculation
-        qcav = ['energy','minimize','ts']
-        ctip = 'Specify calculation type, default: minimize'
-        self.rtqctcalc = mRtext(self.qctWindow,0.09,0.3,0.2,0.1,'Calculation:',ctip,14,'r','r')
-        self.qctcalc = mDbox(self.qctWindow,0.315,0.3,0.2,0.08,qcav,ctip,14)
-        # text for specifying electronic structure method
-        ctip = 'Select electronic structure method, default: ub3lyp'
-        self.rtqctmethod = mRtext(self.qctWindow,0.50,0.3,0.15,0.1,'Method:',ctip,14,'r','r')
-        self.etqctmethod = mEtext(self.qctWindow,0.675,0.3,0.2,0.08,'ub3lyp',ctip,14,'r','l')
-        # text for specifying basis set
-        ctip = 'Select basis set, default: lacvp_s'
-        self.rtqctbasis = mRtext(self.qctWindow,0.14,0.4,0.15,0.1,'Basis:',ctip,14,'r','r')
-        self.etqctbasis = mEtext(self.qctWindow,0.315,0.4,0.2,0.08,'lacvps_ecp',ctip,14,'r','l')
-        # drop menu for selecting dispersion
-        qcav = ['yes','no','d2','d3']
-        ctip = 'Select dispersion correction'
-        self.rtqcdisp = mRtext(self.qctWindow,0.5,0.4,0.15,0.1,'Disp:',ctip,14,'r','r')
-        self.qctsel = mDbox(self.qctWindow,0.675,0.4,0.2,0.08,qcav,ctip,14)
-        self.qctsel.setCurrentIndex(1)
-        # editor for additional input
-        ctip='Specify additional input here'
-        self.rtqctadd1 = mRtext(self.qctWindow,0.23,0.55,0.15,0.1,'Additional',ctip,14,'r','c')
-        self.rtqctadd2 = mRtext(self.qctWindow,0.23,0.60,0.15,0.1,'input',ctip,14,'r','c')
-        self.qceditor = mEdtext(self.qctWindow,0.425,0.515,0.375,0.215,'',12,'r','l')
-        # button for addition
-        ctip = 'make default'
-        self.butqctlf = mButton(self.qctWindow,0.1125,0.7875,0.225,0.09,'Make default',ctip,14)
-        self.butqctlf.clicked.connect(self.qctdef)
-        # button for addition
-        ctip = 'Submit input for Quantum Chemistry'
-        self.butqctSub = mButton(self.qctWindow,0.4125,0.775,0.2,0.125,'Submit',ctip,14)
-        self.butqctSub.clicked.connect(self.qctWindow.qexitM)
-        # button for return
-        ctip = 'Return to main menu'
-        self.butqctRet = mButton(self.qctWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
-        self.butqctRet.clicked.connect(self.qctWindow.qexitM)
-        # load defaults if existing
-        if glob.glob(globs.homedir+'/.tcdefinput.inp'):
-                loadfrominputtc(self,globs.homedir+'/.tcdefinput.inp')
-        #######################################
-        #### create Qchem-qc input window #####
-        #######################################
-        self.qcQWindow = mWgen(0.3,0.4,'Qchem Input') # QC window
-        # top text
-        self.txtqc = mRtext(self.qcQWindow,0.3,0.05,0.4,0.1,'QChem Input','',18,'r','c')
-        # text for specifying charge
-        ctip = 'Charge of the system, default: 0'
-        self.rtqcQch = mRtext(self.qcQWindow,0.1,0.2,0.15,0.1,'Charge:',ctip,14,'r','r')
-        self.etqcQch = mEtext(self.qcQWindow,0.265,0.2,0.1,0.08,'0',ctip,14,'r','l')
-        # text for specifying spin state
-        ctip = 'Spin multiplicity of the system, default: 1'
-        self.rtqcQspin = mRtext(self.qcQWindow,0.315,0.2,0.15,0.1,'Spin:',ctip,14,'r','r')
-        self.etqcQspin = mEtext(self.qcQWindow,0.49,0.2,0.1,0.08,'1',ctip,14,'r','l')
-        # additional molecule
-        ctip = 'Unrestricted calculation?'
-        self.chQun = mCheck(self.qcQWindow,0.60,0.2,0.25,0.07,'Unrestricted',ctip,14)
-        self.chQun.setChecked(True)
-        # drop menu for selecting type of calculation
-        qcav = ['energy','minimize','ts']
-        ctip = 'Specify calculation type, default: minimize'
-        self.rtqcQcalc = mRtext(self.qcQWindow,0.09,0.3,0.2,0.1,'Calculation:',ctip,14,'r','r')
-        self.qcQcalc = mDbox(self.qcQWindow,0.315,0.3,0.175,0.08,qcav,ctip,14)
-        # text for specifying basis set
-        ctip = 'Select basis set, default: lanl2dz'
-        self.rtqcQbasis = mRtext(self.qcQWindow,0.50,0.3,0.15,0.1,'Basis:',ctip,14,'r','r')
-        self.etqcQbasis = mEtext(self.qcQWindow,0.675,0.3,0.2,0.08,'lanl2dz',ctip,14,'r','l')
-        # text for specifying exchange
-        ctip = 'Select exchange, default: b3lyp'
-        self.rtqcQex = mRtext(self.qcQWindow,0.10,0.4,0.175,0.1,'Exchange:',ctip,14,'r','r')
-        self.etqcQex = mEtext(self.qcQWindow,0.275,0.4,0.175,0.08,'b3lyp',ctip,14,'r','l')
-        # text for specifying electronic structure method
-        ctip = 'Select correlation, default: none'
-        self.rtqcQcor = mRtext(self.qcQWindow,0.50,0.4,0.175,0.1,'Correlation:',ctip,14,'r','r')
-        self.etqcQcor = mEtext(self.qcQWindow,0.675,0.4,0.2,0.08,'none',ctip,14,'r','l')
-        # editor for additional input
-        ctip='Specify additional input here'
-        self.rtqcQadd1 = mRtext(self.qcQWindow,0.23,0.55,0.15,0.1,'Additional',ctip,14,'r','c')
-        self.rtqcQadd2 = mRtext(self.qcQWindow,0.23,0.60,0.15,0.1,'input',ctip,14,'r','c')
-        self.qcQeditor = mEdtext(self.qcQWindow,0.425,0.515,0.375,0.215,'',12,'r','l')
-        # button for addition
-        ctip = 'make default'
-        self.butqcQlf = mButton(self.qcQWindow,0.1125,0.7875,0.225,0.09,'Make default',ctip,14)
-        self.butqcQlf.clicked.connect(self.qcqdef)
-        # button for addition
-        ctip = 'Submit input for Quantum Chemistry'
-        self.butqcQSub = mButton(self.qcQWindow,0.4125,0.775,0.2,0.125,'Submit',ctip,14)
-        self.butqcQSub.clicked.connect(self.qcQWindow.qexitM)
-        # button for return
-        ctip = 'Return to main menu'
-        self.butqcQRet = mButton(self.qcQWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
-        self.butqcQRet.clicked.connect(self.qcQWindow.qexitM)
-        # load defaults if existing
-        if glob.glob(globs.homedir+'/.qchdefinput.inp'):
-            loadfrominputqch(self,globs.homedir+'/.qchdefinput.inp')
-        #####################################
-        ### create gamess-qc input window ###
-        #####################################
-        self.qcgWindow = mWgen(0.4,0.5,'GAMESS Input') # QC window
-        # top text
-        self.txtqcg = mRtext(self.qcgWindow,0.3,0.04,0.4,0.1,'GAMESS Input','',18,'r','c')
-        # text for specifying charge
-        ctip = 'Charge of the system, default: 0'
-        self.rtqcgch = mRtext(self.qcgWindow,0.14,0.155,0.125,0.1,'Charge:',ctip,14,'r','r')
-        self.etqcgch = mEtext(self.qcgWindow,0.315,0.15,0.06,0.07,'0',ctip,14,'r','l')
-        # text for specifying spin state
-        ctip = 'Spin multiplicity of the system, default: 1'
-        self.rtqcgspin = mRtext(self.qcgWindow,0.50,0.155,0.125,0.1,'Spin:',ctip,14,'r','r')
-        self.etqcgspin = mEtext(self.qcgWindow,0.675,0.15,0.06,0.07,'1',ctip,14,'r','l')
-        # drop menu for selecting type of calculation
-        qcav = ['energy','minimize','ts']
-        ctip = 'Specify calculation type, default: minimize'
-        self.rtqcgcalc = mRtext(self.qcgWindow,0.09,0.235,0.2,0.1,'Calculation:',ctip,14,'r','r')
-        self.qcgcalc = mDbox(self.qcgWindow,0.315,0.23,0.2,0.07,qcav,ctip,14)
-        # text for specifying electronic structure method
-        ctip = 'Select electronic structure method, default: ub3lyp'
-        self.rtqcgmethod = mRtext(self.qcgWindow,0.50,0.235,0.15,0.1,'Method:',ctip,14,'r','r')
-        self.etqcgmethod = mEtext(self.qcgWindow,0.675,0.23,0.15,0.07,'ubl3yp',ctip,14,'r','l')
-        # text for specifying basis set
-        ctip = 'Select GBASIS input, default: 6'
-        self.rtqcgbasis = mRtext(self.qcgWindow,0.14,0.315,0.15,0.1,'GBASIS:',ctip,14,'r','r')
-        self.etqcgbasis = mEtext(self.qcgWindow,0.315,0.31,0.15,0.07,'6',ctip,14,'r','l')
-        # text for specifying basis set
-        ctip = 'Select NGAUSS input, default: N31'
-        self.rtqcngauss = mRtext(self.qcgWindow,0.50,0.315,0.15,0.1,'NGAUSS:',ctip,14,'r','r')
-        self.etqcngauss = mEtext(self.qcgWindow,0.675,0.31,0.15,0.07,'N31',ctip,14,'r','l')
-        # text for specifying polarization functions
-        ctip = 'Select NPFUNC input, default: 0'
-        self.rtqcnpfunc = mRtext(self.qcgWindow,0.14,0.395,0.15,0.1,'NPFUNC:',ctip,14,'r','r')
-        self.etqcnpfunc = mEtext(self.qcgWindow,0.315,0.39,0.15,0.07,'',ctip,14,'r','l')
-        # text for specifying polarization functions
-        ctip = 'Select NDFUNC input, default: 0'
-        self.rtqcndfunc = mRtext(self.qcgWindow,0.50,0.395,0.15,0.1,'NDFUNC:',ctip,14,'r','r')
-        self.etqcndfunc = mEtext(self.qcgWindow,0.675,0.39,0.15,0.07,'',ctip,14,'r','l')
-        # editor for additional input
-        ctip='Specify additional input for block SYS here'
-        self.rtqcgadd1 = mRtext(self.qcgWindow,0.12,0.485,0.15,0.1,'SYS input:',ctip,14,'r','c')
-        self.qcgedsys = mEdtext(self.qcgWindow,0.275,0.475,0.225,0.125,'',12,'r','l')
-        # editor for additional input
-        ctip='Specify additional input for block CTRL here'
-        self.rtqcgadd2 = mRtext(self.qcgWindow,0.5,0.485,0.15,0.1,'CTRL input:',ctip,14,'r','c')
-        self.qcgedctrl = mEdtext(self.qcgWindow,0.655,0.475,0.225,0.125,'',12,'r','l')
-        # editor for additional input
-        ctip='Specify additional input for block SCF here'
-        self.rtqcgadd3 = mRtext(self.qcgWindow,0.12,0.63,0.15,0.1,'SCF input:',ctip,14,'r','c')
-        self.qcgedscf = mEdtext(self.qcgWindow,0.275,0.62,0.225,0.125,'',12,'r','l')
-        # editor for additional input
-        ctip='Specify additional input for block STAT here'
-        self.rtqcgadd4 = mRtext(self.qcgWindow,0.5,0.63,0.15,0.1,'STAT input:',ctip,14,'r','c')
-        self.qcgedstat = mEdtext(self.qcgWindow,0.655,0.62,0.225,0.125,'',12,'r','l')
-        # button for addition
-        ctip = 'make default'
-        self.butqcglf = mButton(self.qcgWindow,0.1125,0.7875,0.225,0.09,'Make default',ctip,14)
-        self.butqcglf.clicked.connect(self.qcgdef)
-        # button for addition
-        ctip = 'Submit input for Quantum Chemistry'
-        self.butqcgSub = mButton(self.qcgWindow,0.4125,0.775,0.2,0.125,'Submit',ctip,14)
-        self.butqcgSub.clicked.connect(self.qcgWindow.qexitM)
-        # button for return
-        ctip = 'Return to main menu'
-        self.butqcgRet = mButton(self.qcgWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
-        self.butqcgRet.clicked.connect(self.qcgWindow.qexitM)
-        # load defaults if existing
-        if glob.glob(globs.homedir+'/.gamdefinput.inp'):
-                loadfrominputgam(self,globs.homedir+'/.gamdefinput.inp')
-        #####################################
-        ### create jobscript input window ###
-        #####################################
-        self.jWindow = mWgen(0.4,0.5,'Jobscript parameters') # jobscript window
-        c1 = mPic(self.jWindow,globs.installdir+'/icons/sge.png',0.025,0.035,0.2)
-        c2 = mPic(self.jWindow,globs.installdir+'/icons/slurm.png',0.88,0.025,0.1)
-        # top text
-        self.txtj = mRtext(self.jWindow,0.3,0.025,0.4,0.1,'Jobscript Input','',18,'r','c')
-        # text for main job identifier
-        ctip = 'Job main identifier, e.g. feII'
-        self.rtjname = mRtext(self.jWindow,0.14,0.155,0.125,0.1,'Job name:',ctip,14,'r','r')
-        self.etjname = mEtext(self.jWindow,0.315,0.15,0.15,0.07,'myjob',ctip,14,'r','l')
-        # text for specifying spin state
-        ctip = 'Queue to use, e.g. gpus'
-        self.rtjqueue = mRtext(self.jWindow,0.50,0.155,0.125,0.1,'Queue:',ctip,14,'r','r')
-        self.etjqueue = mEtext(self.jWindow,0.675,0.15,0.15,0.07,'',ctip,14,'r','l')
-        # text for specifying wall time
-        ctip = 'Wall time request, e.g. 48'
-        self.rtjwallt = mRtext(self.jWindow,0.14,0.235,0.125,0.1,'Wall time:',ctip,14,'r','r')
-        self.etjwallt = mEtext(self.jWindow,0.315,0.23,0.15,0.07,'48h',ctip,14,'r','l')
-        # text for specifying memory
-        ctip = 'Memory request, e.g. 10G'
-        self.rtjmem = mRtext(self.jWindow,0.50,0.235,0.125,0.1,'Memory:',ctip,14,'r','r')
-        self.etjmem = mEtext(self.jWindow,0.675,0.23,0.15,0.07,'10G',ctip,14,'r','l')
-        # text for specifying charge
-        ctip = 'Number of CPUs requested, default: 0'
-        self.rtjcpus = mRtext(self.jWindow,0.14,0.315,0.125,0.1,'CPUs:',ctip,14,'r','r')
-        self.etjcpus = mEtext(self.jWindow,0.315,0.31,0.06,0.07,'',ctip,14,'r','l')
-        # text for specifying spin state
-        ctip = 'Number of GPUs requested, default: 0'
-        self.rtjgpus = mRtext(self.jWindow,0.50,0.315,0.125,0.1,'GPUs:',ctip,14,'r','r')
-        self.etjgpus = mEtext(self.jWindow,0.675,0.31,0.06,0.07,'',ctip,14,'r','l')
-        # text for modules to be loaded
-        ctip = 'Modules to be loaded, e.g. terachem, openmpi'
-        self.rtjmod = mRtext(self.jWindow,0.14,0.395,0.125,0.1,'Modules:',ctip,14,'r','r')
-        self.etjmod = mEtext(self.jWindow,0.315,0.39,0.325,0.07,'',ctip,14,'r','l')
-        # editor for additional input
-        ctip='Specify additional input for initial options, e.g. -j y'
-        self.rtjadd1 = mRtext(self.jWindow,0.12,0.525,0.15,0.1,'Options:',ctip,14,'r','c')
-        self.etjopt = mEdtext(self.jWindow,0.275,0.485,0.225,0.20,'',12,'r','l')
-        # editor for additional input
-        ctip='Specify additional commands, e.g. mkdir $WORKDIR/test'
-        self.rtjadd2 = mRtext(self.jWindow,0.5,0.525,0.15,0.1,'Commands:',ctip,14,'r','c')
-        self.jcomm = mEdtext(self.jWindow,0.655,0.485,0.225,0.20,'',12,'r','l')
-        # button for addition
-        ctip = 'make default'
-        self.butqcJlf = mButton(self.jWindow,0.1125,0.7875,0.225,0.09,'Make default',ctip,14)
-        self.butqcJlf.clicked.connect(self.jobdef)
-        # button for addition
-        ctip = 'Submit input for Quantum Chemistry'
-        self.butqcgSub = mButton(self.jWindow,0.4125,0.775,0.2,0.125,'Submit',ctip,14)
-        self.butqcgSub.clicked.connect(self.jWindow.qexitM)
-        # button for return
-        ctip = 'Return to main menu'
-        self.butqcgRet = mButton(self.jWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
-        self.butqcgRet.clicked.connect(self.jWindow.qexitM)
-        # load defaults if existing
-        if glob.glob(globs.homedir+'/.jobdefinput.inp'):
-            loadfrominputjob(self,globs.homedir+'/.jobdefinput.inp')
-        ###########################
-        ### post-process window ###
-        ###########################
-        # create window
-        self.pWindow = mWgen(0.4,0.5,'Post-processing') # jobscript window
-        #c1p = mPic(self.pWindow,globs.installdir+'/icons/wft1.png',0.04,0.7,0.2)
-        c3p = mPic(self.pWindow,globs.installdir+'/icons/wft3.png',0.04,0.4,0.2)
-        #c2p = mPic(self.pWindow,globs.installdir+'/icons/wft2.png',0.04,0.035,0.2)
-        # top text
-        self.txtp = mRtext(self.pWindow,0.3,0.05,0.4,0.1,'Post-processing setup','',18,'r','c')
-        # input for jobscripts
-        ctip = 'Select top jobs directory'
-        self.butpd = mButton(self.pWindow,0.15,0.2,0.2,0.1,'Select directory',ctip,14)
-        self.butpd.clicked.connect(self.pdload)
-        self.etpdir = mEtext(self.pWindow,0.375,0.215,0.2,0.07,globs.rundir,ctip,14,'r','l')
-        # select qc code
-        ctip = 'Select QC code'
-        qcav = ['TeraChem','GAMESS']
-        self.txtpqe= mRtext(self.pWindow,0.575,0.2,0.15,0.1,'QC code:','',14,'r','c')
-        self.pqcode = mDbox(self.pWindow,0.725,0.21,0.15,0.085,qcav,ctip,14)
-        # general summary
-        ctip = 'Generate results summary'
-        self.psum = mCheck(self.pWindow,0.325,0.325,0.2,0.1,'Summary',ctip,16)
-        # metal charges
-        ctip = 'Calculate metal charge'
-        self.pch = mCheck(self.pWindow,0.55,0.325,0.2,0.1,'Charge',ctip,16)
-        # wavefunction properties
-        ctip = 'Generate average properties of the wavefunction'
-        self.pwfnav = mCheck(self.pWindow,0.325,0.425,0.2,0.1,'Wavefunction',ctip,16)
-        # cube files
-        ctip = 'Generate cubefiles'
-        self.pcub = mCheck(self.pWindow,0.55,0.425,0.2,0.1,'Cubes',ctip,16)
-        # molecular orbital information
-        ctip = 'Molecular Orbital information'
-        self.porbs = mCheck(self.pWindow,0.325,0.525,0.2,0.1,'MO',ctip,16)
-        # d-orbital information
-        #ctip = 'd-orbital information'
-        #self.pdorbs = mCheck(self.pWindow,0.55,0.525,0.2,0.1,'d-orbitals',ctip,16)
-        # delocalization indices
-        ctip = 'Localization and delocalization indices'
-        self.pdeloc = mCheck(self.pWindow,0.325,0.625,0.2,0.1,'Deloc',ctip,16)
-        # NBO analysis
-        ctip = 'NBO analysis'
-        self.pnbo = mCheck(self.pWindow,0.55,0.525,0.2,0.1,'NBO',ctip,16)
-        # button for addition
-        ctip = 'Run post-processing'
-        self.butpR = mButton(self.pWindow,0.4125,0.775,0.2,0.125,'Run',ctip,14)
-        self.butpR.clicked.connect(self.postprocGUI)
-        # button for return
-        ctip = 'Return to main menu'
-        self.butpret = mButton(self.pWindow,0.7125,0.7875,0.175,0.09,'Return',ctip,14)
-        self.butpret.clicked.connect(self.pWindow.qexitM)
     '''
     #############################
     ### Callbacks for buttons ###
@@ -1382,10 +1551,6 @@ class mGUI():
                 self.cDBsel.addItem(d)
     ### callback for database search
     def qaddcDB(self):
-        # search database
-        dbinfw = mWindow(0.2,0.2)
-        tt = mRtext(dbinfw,0.5,0.5,0.1,0.1,'Searching...','',14,'r','c')
-        dbinfw.show()
          ### collects all the info and passes it to molSimplify ###
         rdir = self.etrdir.text()
         if rdir[-1]=='/':
@@ -1397,8 +1562,8 @@ class mGUI():
         defaultparams = ['main.py','-i',rdir+'/dbinput.inp']
         emsg = startgen(defaultparams,True,self)
         if not emsg:
-            choice = QMessageBox.information(self.DBWindow,'DONE','Search is done..')
-        self.cDBWindow.show()
+            choice = QMessageBox.information(self.cDBWindow,'DONE','Search is done..')
+        self.sgrid.setCurrentWidget(self.cDBWindow)
     ### db type change
     def cdbchange(self):
         ci = self.DBsel.currentIndex()
@@ -1452,8 +1617,7 @@ class mGUI():
             os.mkdir(rdir)
         args = grabguivars(self)
         if len(args['-lig']) < 1:
-            qm = QMessageBox.warning('Warning','No ligands are specified.')
-            qm.setParent(self.wmain)
+            qm = mQDialogWarn('Warning','No ligands are specified.')
             return False
         else:
             args['-lig']=args['-lig'].replace(' ','')
@@ -1477,7 +1641,7 @@ class mGUI():
                     ll = l
                 lig,emsg = lig_load(globs.installdir+'/',ll,licores)
                 if emsg:
-                    QMessageBox.warning(self.mainWindow,'Error',emsg)
+                    mQDialogWarn('Error',emsg)
                 else:
                     ligs.append(lig.OBmol)
             if len(ligs)==0:
@@ -1501,7 +1665,7 @@ class mGUI():
             if glob.glob(outputf):
                 os.remove(outputf)
             else:
-                QMessageBox.information(self.mainWindow,'Error','Image could not be generated\n.')
+                mQDialogErr('Error','Image could not be generated\n.')
                 return
             ####################
             ### draw ligands ###
@@ -1513,18 +1677,26 @@ class mGUI():
             s = mybash(cmd)
             print s
             if not glob.glob(locf+'.png') :
-                QMessageBox.information(self.mainWindow,'Done','2D representation of ligands generated in file ' +outbase+'.svg ! Conversion to png failed.')
+                mQDialogInf('Done','2D representation of ligands generated in file ' +outbase+'.svg ! Conversion to png failed.')
             else:
                 os.remove(locf+".svg")
                 shutil.move(locf+'.png',outbase+'.png')
                 # create window
-                self.lwindow = mWgen(0.4,0.5,'Ligands') # jobscript window
-                c1p = mPic2(self.lwindow,outbase+'.png',0.0,0.0,0.5,0.5)
-                self.lwindow.show()
+                self.lwindow = QWidget()
+                self.lgrid = QGridLayout()
+                self.lwindow.setLayout(self.lgrid)
+                self.sgrid.addWidget(self.lwindow)
+                self.lwindow.setWindowTitle('Ligands 2D')
+                c1p = mQPixmap(outbase+'.png')
+                self.lgrid.addWidget(c1p)
                 # button for closing window
                 ctip = 'Close current window'
-                self.lwclose = mButton(self.lwindow,0.40,0.85,0.2,0.1,'Close',ctip,14)
-                self.lwclose.clicked.connect(self.qexit)
+                self.lwclose = mQPushButton('Close',ctip,14)
+                self.lwclose.clicked.connect(self.qretmain2)
+                self.lgrid.addWidget(self.lwclose)
+                self.sgrid.setCurrentWidget(self.lwindow)
+                self.lwindow.show()
+                center(self.lwindow)
     ### draw results from db search
     def drawres(self):
         ### collects all the info and passes it to molSimplify ###
@@ -1536,9 +1708,8 @@ class mGUI():
             os.mkdir(rdir)
         outf = rdir+'/'+self.etcDBoutf.text()
         outf = outf.replace(' ','')+'.smi'
-        print outf
         if not glob.glob(outf):
-            QMessageBox.warning(self.cDBWindow,'Warning','No database results file in '+rdir)
+            mQDialogWarn('Warning','No database results file in '+rdir)
             return False
         else:
             lls = [outf]
@@ -1560,9 +1731,7 @@ class mGUI():
                 else:
                     ll = l
                 lig,emsg = lig_load(globs.installdir+'/',ll,licores)
-                if emsg:
-                    QMessageBox.warning(self.mainWindow,'Error',emsg)
-                else:
+                if not emsg:
                     ligs.append(lig.OBmol)
             if len(ligs)==0:
                 return
@@ -1585,7 +1754,7 @@ class mGUI():
             if glob.glob(outputf):
                 os.remove(outputf)
             else:
-                QMessageBox.information(self.cDBWindow,'Error','Image could not be generated\n.')
+                mQDialogInf('Error','Image could not be generated\n.')
                 return
             ####################
             ### draw ligands ###
@@ -1597,19 +1766,26 @@ class mGUI():
             s = mybash(cmd)
             print s
             if not glob.glob(locf+'.png') :
-                QMessageBox.information(self.cDBWindow,'Done','2D representation of ligands generated in file ' +outbase+'.svg ! Conversion to png failed.')
+                mQDialogInf('Done','2D representation of ligands generated in file ' +outbase+'.svg ! Conversion to png failed.')
             else:
                 os.remove(locf+".svg")
                 shutil.move(locf+'.png',outbase+'.png')
                 # create window
-                self.lwindow = mWgen(0.4,0.5,'Ligands') # jobscript window
-                c1p = mPic2(self.lwindow,outbase+'.png',0.0,0.0,0.5,0.5)
-                self.lwindow.setWindowModality(2)
-                self.lwindow.show()
+                self.lwindow = QWidget()
+                self.lgrid = QGridLayout()
+                self.lwindow.setLayout(self.lgrid)
+                self.sgrid.addWidget(self.lwindow)
+                self.lwindow.setWindowTitle('Ligands 2D')
+                c1p = mQPixmap(outbase+'.png')
+                self.lgrid.addWidget(c1p)
                 # button for closing window
                 ctip = 'Close current window'
-                self.lwclose = mButton(self.lwindow,0.40,0.85,0.2,0.1,'Close',ctip,14)
-                self.lwclose.clicked.connect(self.qexit)
+                self.lwclose = mQPushButton('Close',ctip,14)
+                self.lwclose.clicked.connect(self.qretmain2)
+                self.lgrid.addWidget(self.lwclose)
+                self.sgrid.setCurrentWidget(self.lwindow)
+                self.lwindow.show()
+                center(self.lwindow)
     ### enable random input
     def enablerandom(self):
         if self.randomchk.isChecked():
@@ -1771,16 +1947,16 @@ class mGUI():
     # make default button callback
     def jobdef(self):
         grabguivarsjob(self)
-        QMessageBox.information(self.mainWindow,'Done','The current settings are the default ones now.')
+        QMessageBox.information(self.wmain,'Done','The current settings are the default ones now.')
     def qctdef(self):
         grabguivarstc(self)
-        QMessageBox.information(self.mainWindow,'Done','The current settings are the default ones now.')
+        QMessageBox.information(self.wmain,'Done','The current settings are the default ones now.')
     def qcgdef(self):
         grabguivarsgam(self)
-        QMessageBox.information(self.mainWindow,'Done','The current settings are the default ones now.')
+        QMessageBox.information(self.wmain,'Done','The current settings are the default ones now.')
     def qcqdef(self):
         grabguivarsqch(self)
-        QMessageBox.information(self.mainWindow,'Done','The current settings are the default ones now.')
+        QMessageBox.information(self.wmain,'Done','The current settings are the default ones now.')
     def qcgload(self):
         name = QFileDialog.getOpenFileName(self.qctWindow,'Open File','.',"GAMESS input files")
         if name[0] != '':
@@ -1883,3 +2059,15 @@ class mGUI():
     ### hide current widget ###
     def qhide(self):
         self.hide()
+    ### return to main window ###
+    def qretmain(self):
+        # hide all windows
+        self.qctWindow.hide()
+        self.qcgWindow.hide()
+        self.qcQWindow.hide()
+        self.pWindow.hide()
+        self.jWindow.hide()
+        self.DBWindow.hide()
+        self.cDBWindow.hide()
+    def qretmain2(self):
+        self.sgrid.setCurrentWidget(self.wmain)

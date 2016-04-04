@@ -125,7 +125,7 @@ def getligands(gui):
 #########################################
 ########## set ligands  #############
 #########################################
-def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
+def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
     ligs = filter(None,re.split(' |,|\t|&',ligs))
     ligoccs = filter(None,re.split(' |,|\t|&',ligoccs))
     lcats = filter(None,re.split('/|\t|&',lcats))
@@ -167,6 +167,16 @@ def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
             gui.lig1an.setText(lang[1])
         if len(lname) > 1:
             gui.lig1nam.setText(lname[1])
+        gui.lig0add.hide()
+        gui.lig1.setDisabled(False)
+        gui.lig1occ.setDisabled(False)
+        gui.lig1conn.setDisabled(False)
+        gui.lig1H.setDisabled(False)
+        gui.lig1ML.setDisabled(False)
+        gui.lig1an.setDisabled(False)
+        gui.lig1nam.setDisabled(False)
+        gui.lig1add.show()
+        gui.lig1add.setDisabled(False)
     if len(ligs) > 2:
         gui.lig2.setText(ligs[2])
         if len(ligoccs) > 2:
@@ -184,6 +194,16 @@ def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
             gui.lig2an.setText(lang[2])
         if len(lname) > 2:
             gui.lig2nam.setText(lname[2])
+        gui.lig1add.hide()
+        gui.lig2.setDisabled(False)
+        gui.lig2occ.setDisabled(False)
+        gui.lig2conn.setDisabled(False)
+        gui.lig2H.setDisabled(False)
+        gui.lig2ML.setDisabled(False)
+        gui.lig2an.setDisabled(False)
+        gui.lig2nam.setDisabled(False)
+        gui.lig2add.show()
+        gui.lig2add.setDisabled(False)
     if len(ligs) > 3:
         gui.lig3.setText(ligs[3])
         if len(ligoccs) > 3:
@@ -201,6 +221,16 @@ def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
             gui.lig3an.setText(lang[3])
         if len(lname) > 3:
             gui.lig3nam.setText(lname[3])
+        gui.lig2add.hide()
+        gui.lig3.setDisabled(False)
+        gui.lig3occ.setDisabled(False)
+        gui.lig3conn.setDisabled(False)
+        gui.lig3H.setDisabled(False)
+        gui.lig3ML.setDisabled(False)
+        gui.lig3an.setDisabled(False)
+        gui.lig3nam.setDisabled(False)
+        gui.lig3add.show()
+        gui.lig3add.setDisabled(False)
     if len(ligs) > 4:
         gui.lig4.setText(ligs[4])
         if len(ligoccs) > 4:
@@ -218,6 +248,16 @@ def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
             gui.lig4an.setText(lang[4])
         if len(lname) > 2:
             gui.lig4nam.setText(lname[4])
+        gui.lig3add.hide()
+        gui.lig4.setDisabled(False)
+        gui.lig4occ.setDisabled(False)
+        gui.lig4conn.setDisabled(False)
+        gui.lig4H.setDisabled(False)
+        gui.lig4ML.setDisabled(False)
+        gui.lig4an.setDisabled(False)
+        gui.lig4nam.setDisabled(False)
+        gui.lig4add.show()
+        gui.lig4add.setDisabled(False)
     if len(ligs) > 5:
         gui.lig5.setText(ligs[5])
         if len(ligoccs) > 5:
@@ -235,6 +275,16 @@ def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
             gui.lig5an.setText(lang[5])
         if len(lname) > 5:
             gui.lig5nam.setText(lname[5])
+        gui.lig4add.hide()
+        gui.lig5.setDisabled(False)
+        gui.lig5occ.setDisabled(False)
+        gui.lig5conn.setDisabled(False)
+        gui.lig5H.setDisabled(False)
+        gui.lig5ML.setDisabled(False)
+        gui.lig5an.setDisabled(False)
+        gui.lig5nam.setDisabled(False)
+        gui.lig5add.show()
+        gui.lig5add.setDisabled(False)
     if len(ligs) > 6:
         gui.lig6.setText(ligs[6])
         if len(ligoccs) > 6:
@@ -252,6 +302,17 @@ def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
             gui.lig6an.setText(lang[6])
         if len(lname) > 6:
             gui.lig6nam.setText(lname[6])
+        gui.lig5add.hide()
+        gui.lig6.setDisabled(False)
+        gui.lig6occ.setDisabled(False)
+        gui.lig6conn.setDisabled(False)
+        gui.lig6H.setDisabled(False)
+        gui.lig6ML.setDisabled(False)
+        gui.lig6an.setDisabled(False)
+        gui.lig6nam.setDisabled(False)
+        gui.lig6add.setDisabled(False)
+        gui.lig6add.show()
+        gui.lig6add.setDisabled(False)
     if len(ligs) > 7:
         gui.lig7.setText(ligs[7])
         if len(ligoccs) > 7:
@@ -269,6 +330,15 @@ def setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname):
             gui.lig7an.setText(lang[7])
         if len(lname) > 7:
             gui.lig7nam.setText(lname[7])
+        gui.lig6add.hide()
+        gui.lig7.setDisabled(False)
+        gui.lig7occ.setDisabled(False)
+        gui.lig7conn.setDisabled(False)
+        gui.lig7H.setDisabled(False)
+        gui.lig7ML.setDisabled(False)
+        gui.lig7an.setDisabled(False)
+        gui.lig7nam.setDisabled(False)
+        gui.lig7add.setDisabled(False)
 
 #####################################################
 ########## write options to input file  #############
@@ -706,6 +776,7 @@ def loadfrominputfile(gui,fname):
     s = filter(None,s.splitlines())
     f.close()
     db = False
+    ligs,ligoccs,lcats,kHs,MLb,lang,lname='','','','','','',''
     ### general structure generation options ###
     for ss in s:
         st = ss.split(None,1)
@@ -920,6 +991,6 @@ def loadfrominputfile(gui,fname):
             ssp = st[-1].split('<')
             gui.etcDBmw0.setText(ssp[0])
             gui.etcDBmw1.setText(ssp[-1])
-    setligands(ligs,ligoccs,lcats,kHs,MLb,lang,lname)
+    setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname)
     if db:
         gui.searchDBW()

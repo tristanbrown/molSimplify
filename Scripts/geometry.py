@@ -73,6 +73,23 @@ def checkcolinear(R1,R2,R3):
         return True
     else:
         return False
+        
+#####################################
+### Checks if 4 points are planar ###
+#####################################
+def checkplanar(R1,R2,R3,R4):
+    # INPUT
+    #   - R1: 3-element list representing point 1
+    #   - R2: 3-element list representing point 2
+    #   - R3: 3-element list representing point 3
+    #   - R4: 3-element list representing point 4
+    theta,u0 = rotation_params(R2,R1,R3)
+    theta,u1 = rotation_params(R2,R4,R3)
+    dd = cross(array(u0),array(u1))
+    if norm(dd) < 1.e-01:
+        return True
+    else:
+        return False
 
 ###############################################
 ### calculates angle between vectors r1, r2 ###
@@ -402,6 +419,31 @@ def setPdistance(mol, Rr, Rp, bond):
     # get center of mass
     # get unit vector through line r = r0 + t*u
     u = [a-b for a,b in zip(Rr,Rp)]
+    t = bl/norm(u) # get t as t=bl/norm(r1-r0)
+    # get shift for centermass
+    dxyz = [0,0,0]
+    dxyz[0] = Rp[0]+t*u[0]-Rr[0]
+    dxyz[1] = Rp[1]+t*u[1]-Rr[1]
+    dxyz[2] = Rp[2]+t*u[2]-Rr[2]
+    # translate molecule
+    mol.translate(dxyz)
+    return mol
+    
+#########################################################
+########## sets distance of atom in molecule ############
+########## from reference point on axis u ###############
+#########################################################
+def setPdistanceu(mol, Rr, Rp, bond, u):
+    # INPUT
+    #   - mol: molecule to be manipulated
+    #   - Rr: coordinates of atom in molecule
+    #   - Rp: reference point [x,y,z] not in molecule
+    #   - bond: final bond length between Rr, Rp
+    # OUTPUT
+    #   - mol: translated molecule
+    # get float bond length
+    bl = float(bond)
+    # get unit vector through line r = r0 + t*u
     t = bl/norm(u) # get t as t=bl/norm(r1-r0)
     # get shift for centermass
     dxyz = [0,0,0]

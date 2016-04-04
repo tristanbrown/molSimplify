@@ -148,6 +148,11 @@ def addtobdb(smimol,sminame):
             return emsg
         bind.convert2mol3D() # convert to mol3D
                 # new entry for dictionary
+                # create shortname
+        if len(sminame) > 5:
+            shortname = sminame[0:3]+sminame[-2:]
+        else:
+            shortname = sminame
         if bind.OBmol:
             # write smiles file in Bind species directory
             bind.OBmol.write('smi',globs.installdir+'/Bind/'+sminame+'.smi')

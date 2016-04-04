@@ -151,6 +151,7 @@ def loadcoord(installdir,coord):
         b.append([float(l[0]),float(l[1]),float(l[2])])
     return b
     
+    
 ###########################
 ###    load core and    ###
 ### convert to molecule ###

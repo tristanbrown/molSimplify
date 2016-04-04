@@ -423,7 +423,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
             if args.genall:
                 tstrfiles = []
                 # generate xyz with FF and trained ML
-                args.ff = 'MMFF94'
+                args.ff = 'mmff94'
                 args.ffoption = 'ba'
                 args.MLbonds = False
                 strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
@@ -437,6 +437,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
                     tstrfiles.append(strf+'FFc')
                     os.rename(strf+'.xyz',strf+'FFc.xyz')
                 args.ff = False
+                args.ffoption = False
                 args.MLbonds = False
                 # generate xyz without FF and trained ML
                 strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
@@ -449,6 +450,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
                 for strf in strfiles:
                     tstrfiles.append(strf+'c')
                     os.rename(strf+'.xyz',strf+'c.xyz')
+                strfiles = tstrfiles
             else:
                 # generate xyz files
                 strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
