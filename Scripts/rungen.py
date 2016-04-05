@@ -41,9 +41,10 @@ def randomgen(installdir,rundir,args,globs):
         combol = list(combo)
         random.shuffle(combol)
         for cj in combol:
-            rocc = random.randint(1,7-args.totocc+1)
-            trocc = rocc*int(len(licores[licores.keys()[cj]][1:]))
-            if args.totocc+trocc <= 7:
+            rocc = random.randint(1,8-args.totocc+1) # random occupation
+            cats = licores[licores.keys()[cj]][2] # connection atoms
+            trocc = rocc*int(len(cats)) # denticity*occs
+            if args.totocc+trocc <= 8:
                 args.lig.append(licores.keys()[cj])
                 args.ligocc.append(rocc)
                 args.totocc += trocc
@@ -81,8 +82,8 @@ def getconstsample(no_rgen,args,licores,coord):
         totdent = 0
         dents =[]
         for l in combo:
-            totdent += int(len(licores[licores.keys()[l]][2:]))
-            dents.append(int(len(licores[licores.keys()[l]][2:])))
+            totdent += int(len(licores[licores.keys()[l]][2]))
+            dents.append(int(len(licores[licores.keys()[l]][2])))
         # check for multiple multidentate ligands
         dsorted = sorted(dents)
         if not coord or (coord and totdent == coord):
@@ -146,14 +147,14 @@ def constrgen(installdir,rundir,args,globs):
             if args.lignum:
                 args.lignum = str(int(args.lignum) - 1)
             if coord:
-                coord -= int(args.ligocc[i])*len(licores[l][2:])
+                coord -= int(args.ligocc[i])*len(licores[l][2])
             licores.pop(l, None) # remove from dictionary
     # get a sample of these combinations
     samps = getconstsample(int(args.rgen[0]),args,licores,coord)
     if len(samps)==0:
         if coord==0:
             args.lig = [a for a in ligs0]
-            args.ligocc = [a for a in ligocc0]
+            args.ligocc = [int(a) for a in ligocc0]
             emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
         else:
             if args.gui:
@@ -167,7 +168,7 @@ def constrgen(installdir,rundir,args,globs):
     # loop over samples
     for combo in samps:
         args.lig = [a for a in ligs0]
-        args.ligocc = [a for a in ligocc0]
+        args.ligocc = [int(a) for a in ligocc0]
         for cj in set(combo):
             lcount = Counter(combo)
             rocc = lcount[cj]

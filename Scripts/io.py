@@ -6,7 +6,7 @@
 ##########################################################
 
 # import std modules
-import pybel, glob, os, re, argparse, sys
+import pybel, glob, os, re, argparse, sys, random
 from Classes.mol3D import *
 from Classes.globalvars import *
 
@@ -50,12 +50,16 @@ def getgeoms():
     for line in s:
         if (line[0]!='#'):
             vals = filter(None,re.split(',| |:',line))
-            coords.append(vals[0])
-            geomnames.append(vals[1])
-            geomshorts.append(vals[2])
-    geomgroups = list([] for a in set(coords))
-    for i,g in enumerate(coords):
-        geomgroups[int(g)-1].append(geomshorts[i])
+            coords.append(vals[0]) # get coordination
+            geomnames.append(vals[1]) # get name of geometry
+            geomshorts.append(vals[2]) # get short names
+    geomgroups = list([] for a in set(coords)) # get unique coordinations
+    count = 0
+    geomgroups[count].append(geomshorts[0])
+    for i in range(1,len(coords)):
+        if coords[i-1]!=coords[i]:
+            count += 1
+        geomgroups[count].append(geomshorts[i])
     return coords,geomnames,geomshorts,geomgroups
 
 ###################################
@@ -71,7 +75,15 @@ def readdict(fname):
         if (line[0]!='#'):
             key = filter(None,line.split(':')[0])
             val = filter(None,line.split(':')[1])
-            d[key] = filter(None,re.split(',| ',val))
+            vals = filter(None,re.split(',',val))
+            vv = []
+            for i,val in enumerate(vals):
+                vvs = (filter(None,val.split(' ')))
+                if len(vvs) > 1 or i > 2:
+                    vv.append(vvs)
+                else:
+                    vv += vvs
+            d[key] = vv
     return d 
 
 ##############################
@@ -86,6 +98,17 @@ def getligs(installdir):
     a = ' '.join(a)
     return a
 
+#########################
+### get ligand groups ###
+#########################
+def getligroups(licores):
+    groups = []
+    for entry in licores:
+        groups += licores[entry][3]
+    groups = sorted(list(set(groups)))
+    a = ' '.join(groups)
+    return a
+    
 ###################################
 ### put [] on metals for SMILES ###
 ###################################
@@ -95,7 +118,6 @@ def checkTMsmiles(smi):
         if m in smi:
             smi = smi.replace(m,'['+m+']')
     return smi
-
 
 ##############################
 ### get ligands dictionary ###
@@ -164,8 +186,9 @@ def core_load(installdir,usercore,mcores):
     core = mol3D() # initialize core molecule
     ### check if core exists in dictionary
     if usercore in mcores:
+        dbentry = mcores[usercore]
         # load core mol file (with hydrogens)
-        fcore = installdir+'Cores/'+mcores[usercore][0]
+        fcore = installdir+'Cores/'+dbentry[0]
         # check if core xyz/mol file exists
         if not glob.glob(fcore):
             emsg ="We can't find the core structure file %s right now! Something is amiss. Exiting..\n" % fcore
@@ -178,9 +201,9 @@ def core_load(installdir,usercore,mcores):
         elif ('.smi' in fcore):
             core.OBmol = core.getOBmol(fcore,'smif')
             core.OBmol.make3D('mmff94',0) # generate 3D coords
-        core.cat = [int(l) for l in filter(None,mcores[usercore][1:])]
-        core.denticity = mcores[usercore][-1]
-        core.ident = mcores[usercore][0].split('.')[0]
+        core.cat = [int(l) for l in filter(None,dbentry[1])]
+        core.denticity = dbentry[2]
+        core.ident = dbentry[0].split('.')[0]
     ### load from file
     elif ('.mol' in usercore or '.xyz' in usercore or '.smi' in usercore):
         if glob.glob(usercore):
@@ -224,6 +247,17 @@ def core_load(installdir,usercore,mcores):
 ### convert to molecule ###
 ###########################
 def lig_load(installdir,userligand,licores):
+    ### get groups ###
+    groups = []
+    for entry in licores:
+        groups += licores[entry][3]
+    groups = sorted(list(set(groups)))
+    # check if user requested group
+    if userligand.lower() in groups:
+        subligs = [key for key in licores if userligand.lower() in licores[key][3]]
+        # randomly select ligand
+        userligand = random.choice(subligs)
+    print userligand
     if '~' in userligand:
         homedir = os.path.expanduser("~")
         userligand = userligand.replace('~',homedir)
@@ -231,8 +265,9 @@ def lig_load(installdir,userligand,licores):
     lig = mol3D() # initialize ligand molecule
     ### check if ligand exists in dictionary
     if userligand in licores:
+        dbentry = licores[userligand]
         # load lig mol file (with hydrogens)
-        flig = installdir+'Ligands/'+licores[userligand][0]
+        flig = installdir+'Ligands/'+dbentry[0]
         # check if ligand xyz/mol file exists
         if not glob.glob(flig):
             emsg = "We can't find the ligand structure file %s right now! Something is amiss. Exiting..\n" % flig
@@ -245,10 +280,14 @@ def lig_load(installdir,userligand,licores):
         elif ('.smi' in flig):
             lig.OBmol = lig.getOBmol(flig,'smif')
             lig.OBmol.make3D('mmff94',0) # generate 3D coords
-        lig.cat = [int(l) for l in licores[userligand][2:]]
-        lig.denticity = len(licores[userligand][2:])
-        lig.ident = licores[userligand][1]
+        lig.cat = [int(l) for l in dbentry[2]]
+        lig.denticity = len(dbentry[2])
+        lig.ident = dbentry[1]
         lig.charge = lig.OBmol.charge
+        if len(dbentry) > 2:
+            lig.grps = dbentry[3]
+        else:
+            lig.grps = []
         ### load from file
     elif ('.mol' in userligand or '.xyz' in userligand or '.smi' in userligand or '.sdf' in userligand):
         if glob.glob(userligand):
@@ -280,6 +319,7 @@ def lig_load(installdir,userligand,licores):
             emsg = "We tried converting the string '%s' to a molecule but it wasn't a valid SMILES string.\n" % userligand
             emsg += "Furthermore, we couldn't find the ligand structure: '%s' in the ligands dictionary. Try again!\n" % userligand
             emsg += "\nAvailable ligands are: %s\n" % getligs(installdir)
+            emsg += "\nAnd available groups are: %s\n" % getligroups(licores)
             print emsg
             return False,emsg
         lig.cat = [0]

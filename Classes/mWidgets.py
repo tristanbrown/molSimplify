@@ -39,6 +39,15 @@ def relresize(self,parent,scale):
     ymarg = 0.5*(1.0-scale)*parentgeom.height()
     self.setGeometry(xmarg,ymarg,width,height)
 
+###########################
+#### Main Window class ####
+###########################
+class mQMainWindow(QMainWindow):
+    def __init__(self):
+        super(mQMainWindow,self).__init__()
+    def closeEvent(self,event):
+        sys.exit()
+
 ##########################
 #### Pushbutton class ####
 ##########################

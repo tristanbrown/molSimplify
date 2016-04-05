@@ -537,7 +537,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         else:
             issmiles.append('-')
         # otherwise get denticity from ligands dictionary
-            dent_i = int(len(licores[ligname][2:]))
+            dent_i = int(len(licores[ligname][2]))
         # get occurrence for each ligand if specified (default 1)
         oc_i = int(ligoc[i]) if i < len(ligoc) else 1
         occs0.append(0)         # initialize occurrences list
@@ -1250,7 +1250,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         else:
             issmiles.append('-')
         # otherwise get denticity from ligands dictionary
-            dent_i = int(len(licores[ligname][2:]))
+            dent_i = int(len(licores[ligname][2]))
         # get occurrence for each ligand if specified (default 1)
         oc_i = int(ligoc[i]) if i < len(ligoc) else 1
         occs0.append(0)         # initialize occurrences list

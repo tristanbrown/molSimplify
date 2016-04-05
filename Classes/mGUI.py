@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtWebKitWidgets import *
 from Classes.mWidgets import *
-from Classes.mGUI import *
 from Classes.globalvars import *
 from Classes.mol3D import mol3D
 from Scripts.generator import startgen
@@ -16,9 +15,7 @@ from Scripts.grabguivars import *
 from Scripts.io import *
 from Scripts.addtodb import *
 import sys, os, random, shutil, unicodedata, inspect, glob, time
-from imolecule import *
 import pybel
-
 
 class mGUI():
     getgeoms()
@@ -41,24 +38,25 @@ class mGUI():
         overX = True if 'localhost' in os.environ['DISPLAY'].lower() else False # detect running over X
         configfile = False if not glob.glob(homedir+'/.molSimplify') else True
         if not configfile:
-            self.wwindow = Qwmain() 
+            self.wwindow = QMainWindow() 
             self.wwindow.resize(0.5,0.5)
             QMessageBox.information(self.wwindow,'Setup',"It looks like the configuration file '~/.molSimplify' does not exist!Please follow the next steps to configure the file.")
             QMessageBox.information(self.wwindow,'Installation directory',"Please select the top installation directory for the program.")
+            instdir = QFileDialog.getExistingDirectory(self.wwindow, "Select Directory")
             f = open(homedir+'/.molSimplify','w')
             if len(instdir) > 1: 
                 f.write("INSTALLDIR="+instdir+'\n')
         ### end set-up configuration file ###
         ### main window widget
+        self.wmwindow = mQMainWindow()
+        self.wmwindow.show()
         self.wmain = QWidget()
-        self.wmain.setWindowTitle("molSimplify")
-        self.wmain.setMinimumSize(1000,700)
-        # for some reason it forces the widgets to reset and the window to come up properly
-        #mQMessageBox('','','info',True)
+        self.wmwindow.setWindowTitle("molSimplify")
+        self.wmwindow.setMinimumSize(1000,700)
         # set background color
         p = QPalette()
         p.setColor(QPalette.Background,QtCore.Qt.white)
-        self.wmain.setPalette(p)
+        self.wmwindow.setPalette(p)
         ### main grid layout ###
         self.grid = QGridLayout()
         ### stacked layouts ###
@@ -66,42 +64,39 @@ class mGUI():
         self.sgrid.setStackingMode(1)
         self.sgrid.addWidget(self.wmain)
         ### create menubar and callbacks ###
-        menubar = QMenuBar()
+        menubar = self.wmwindow.menuBar()
         menu0 = menubar.addMenu('&File')
         menu1 = menubar.addMenu('&Load')
         menu2 = menubar.addMenu('&Help')
-        exitAction = QAction('&Exit',self.wmain) 
+        exitAction = QAction('&Exit',self.wmwindow) 
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.qexit)
         menu0.addAction(exitAction)
-        saveAction = QAction('&Save As..',self.wmain)
+        saveAction = QAction('&Save As..',self.wmwindow)
         saveAction.setShortcut('Ctrl+S')
         saveAction.setStatusTip('Save current input settings')
         saveAction.triggered.connect(self.qsaveinput)
         menu0.addAction(saveAction)
-        loadAction = QAction('&Load',self.wmain)
+        loadAction = QAction('&Load',self.wmwindow)
         loadAction.setShortcut('Ctrl+O')
         loadAction.setStatusTip('Load input file')
         loadAction.triggered.connect(self.qloadinput)
         menu1.addAction(loadAction)
-        helpAction = QAction('&Help',self.wmain)
+        helpAction = QAction('&Help',self.wmwindow)
         helpAction.setShortcut('Ctrl+H')
         helpAction.setStatusTip('Show input options')
         helpAction.triggered.connect(self.qshowhelp)
         menu2.addAction(helpAction)
-        menubar.setNativeMenuBar(True)
-        menubar.setStyleSheet("border:white;color:white;background-color: white")
-        self.grid.addWidget(menubar,0,0,1,1)
         ### place title top ###
         self.grid.setRowMinimumHeight(0,15)
         self.grid.setRowMinimumHeight(2,120)
         self.grid.setRowMinimumHeight(3,15)
         self.grid.setRowMinimumHeight(4,50)
         clogo = mQPixmap(globs.installdir+'/icons/logo.png')
-        self.grid.addWidget(clogo,1,10,2,18)
+        self.grid.addWidget(clogo,1,9,2,18)
         self.txtdev = mQLabel('Developed by Kulik group @ MIT','','c',16)
-        self.grid.addWidget(self.txtdev,19,10,2,18)
+        self.grid.addWidget(self.txtdev,19,9,2,18)
         ###################################################
         ###################################################
         ########## STRUCTURE GENERATION INPUTS ############
@@ -133,7 +128,8 @@ class mGUI():
         ctip = 'Number of ligands connected to the metal.'
         self.rcoord = mQLabel('Coordination:',ctip,'Cr',12)
         self.grid.addWidget(self.rcoord,8,2,1,2)
-        qcav = ['1','2','3','4','5','6','7']
+        coords,geomnames,geomshorts,geomgroups = getgeoms()
+        qcav = sorted(list(set(coords)))
         self.dcoord = mQComboBox(qcav,ctip,12)
         self.dcoord.setCurrentIndex(5)
         self.dcoord.currentIndexChanged.connect(self.matchgeomcoord)
@@ -142,12 +138,12 @@ class mGUI():
         self.dcoordg = mQComboBox('','',12)
         self.dcoordg.setCurrentIndex(0)
         self.matchgeomcoord()
-        self.grid.addWidget(self.dcoordg,8,5,1,2)
+        self.grid.addWidget(self.dcoordg,8,5,1,3)
         # add new coordination
         ctip = 'Add geometry'
         self.butaddg = mQPushButton('Add geometry',ctip,12)
         self.butaddg.clicked.connect(self.addgeom)
-        self.grid.addWidget(self.butaddg,8,7,1,3)
+        self.grid.addWidget(self.butaddg,8,8,1,2)
         #############################################
         ################## LIGANDS ##################
         ### ligands tables ###
@@ -1038,45 +1034,47 @@ class mGUI():
         self.etDBname = mQLineEdit('',ctip,'l',14)
         self.DBlgrid.addWidget(self.rtDBname,3,1,1,1)
         self.DBlgrid.addWidget(self.etDBname,3,2,1,1)
+        # text for specifying name
+        ctip = 'Type groups for ligand'
+        self.rtDBgrps = mQLabel('Groups:','','r',14)
+        self.etDBgrps = mQLineEdit('',ctip,'l',14)
+        self.DBlgrid.addWidget(self.rtDBgrps,4,1,1,1)
+        self.DBlgrid.addWidget(self.etDBgrps,4,2,1,1)
         # drop menu for denticity
         ctip = 'Type denticity for SMILES molecule'
         self.rtDBsmident = mQLabel('Denticity:','','r',14)
         qcav = ['1','2','3','4','5','6','7','8']
         self.DBdent = mQComboBox(qcav,ctip,14)
         self.DBdent.setCurrentIndex(0)
-        self.rtDBsmident.setDisabled(True)
-        self.DBdent.setDisabled(True)
-        self.DBlgrid.addWidget(self.rtDBsmident,4,1,1,1)
-        self.DBlgrid.addWidget(self.DBdent,4,2,1,1)
+        self.DBlgrid.addWidget(self.rtDBsmident,5,1,1,1)
+        self.DBlgrid.addWidget(self.DBdent,5,2,1,1)
         self.DBsel.currentIndexChanged.connect(self.dbchange)  ### error if not here
         # text for typing input connection atoms 
         ctip = 'Type indices for connection atoms, default: 1'
         self.rtDBsmicat = mQLabel('Catoms:',ctip,'r',14)
         self.etDBsmicat = mQLineEdit('',ctip,'l',14)
-        self.rtDBsmicat.setDisabled(True)
-        self.etDBsmicat.setDisabled(True)
-        self.DBlgrid.addWidget(self.rtDBsmicat,5,1,1,1)
-        self.DBlgrid.addWidget(self.etDBsmicat,5,2,1,1)
+        self.DBlgrid.addWidget(self.rtDBsmicat,6,1,1,1)
+        self.DBlgrid.addWidget(self.etDBsmicat,6,2,1,1)
         # button for addition
         ctip = 'Load example input'
         self.butDBAlf = mQPushButton('Load file..',ctip,14)
         self.butDBAlf.clicked.connect(self.qDBload)
-        self.DBlgrid.addWidget(self.butDBAlf,6,0,1,1)
+        self.DBlgrid.addWidget(self.butDBAlf,7,0,1,1)
         # button for addition
         ctip = 'Add new molecule to database'
         self.butDBAub = mQPushButton('Add',ctip,14)
         self.butDBAub.clicked.connect(self.qaddDB)
-        self.DBlgrid.addWidget(self.butDBAub,6,1,1,1)
+        self.DBlgrid.addWidget(self.butDBAub,7,1,1,1)
         # button for removal
-        ctip = 'Remove molecule database'
+        ctip = 'Remove molecule from database'
         self.butDBDub = mQPushButton('Remove',ctip,14)
         self.butDBDub.clicked.connect(self.qdelDB)
-        self.DBlgrid.addWidget(self.butDBDub,6,2,1,1)
+        self.DBlgrid.addWidget(self.butDBDub,7,2,1,1)
         # button for return
         ctip = 'Return to main menu'
         self.butDBRet = mQPushButton('Return',ctip,14)
         self.butDBRet.clicked.connect(self.qretmain)
-        self.DBlgrid.addWidget(self.butDBRet,6,3,1,1)
+        self.DBlgrid.addWidget(self.butDBRet,7,3,1,1)
         #############################################
         ### create chemical DB interaction window ###
         #############################################
@@ -1299,16 +1297,78 @@ class mGUI():
         c3p = mQPixmap(globs.installdir+'/icons/wft3.png')
         self.pgrid.addWidget(c3p,3,0,4,1)
         #c2p = mPic(self.pWindow,globs.installdir+'/icons/wft2.png',0.04,0.035,0.2)
-        
-        
+        ##################################
+        ### create add geometry window ###
+        ##################################
+        self.geWindow = QWidget() # Geometry window
+        self.gegrid = QGridLayout()
+        self.sgrid.addWidget(self.geWindow)
+        self.geWindow.setPalette(p)
+        self.geWindow.setLayout(self.gegrid)
+        self.geWindow.setWindowTitle('Add new geometry')
+        # top text
+        self.txtg = mQLabel('New geometry','','c',18)
+        self.gegrid.addWidget(self.txtg,0,0,1,4)
+        # text for specifying name
+        ctip = 'Type name of geometry'
+        self.rtgname = mQLabel('Name:','','r',14)
+        self.etgname = mQLineEdit('',ctip,'l',14)
+        self.gegrid.addWidget(self.rtgname,1,0,1,1)
+        self.gegrid.addWidget(self.etgname,1,1,1,1)
+        # text for specifying short name
+        ctip = 'Type short identifier of geometry (2-4 letters)'
+        self.rtgshort = mQLabel('Short identifier:','','r',14)
+        self.etgshort = mQLineEdit('',ctip,'l',14)
+        self.gegrid.addWidget(self.rtgshort,2,0,1,1)
+        self.gegrid.addWidget(self.etgshort,2,1,1,1)
+        # xyz file
+        ctip = 'Load xyz file with geometry.'
+        self.rtgf = mQLabel('Filename:','','r',14)
+        self.etgf = mQLineEdit('',ctip,'l',14)
+        self.gegrid.addWidget(self.rtgf,3,0,1,1)
+        self.gegrid.addWidget(self.etgf,3,1,1,1)
+        # load file
+        self.butge = mQPushButton('Load file..',ctip,14)
+        self.butge.clicked.connect(self.qgeomload)
+        self.gegrid.addWidget(self.butge,4,0,1,1)
+        # button for addition
+        ctip = 'Add new geometry to database'
+        self.butgAub = mQPushButton('Add',ctip,14)
+        self.butgAub.clicked.connect(self.qaddg)
+        self.gegrid.addWidget(self.butgAub,4,1,1,1)
+        # button for removal
+        ctip = 'Remove geometry from database'
+        self.butgDub = mQPushButton('Remove',ctip,14)
+        self.butgDub.clicked.connect(self.qdelg)
+        self.gegrid.addWidget(self.butgDub,5,0,1,1)
+        # button for return
+        ctip = 'Return to main menu'
+        self.butgRet = mQPushButton('Return',ctip,14)
+        self.butgRet.clicked.connect(self.qretmain)
+        self.gegrid.addWidget(self.butgRet,5,1,1,1)
+        ################################
+        ### create ligands 2D window ###
+        ################################
+        self.lwindow = QWidget()
+        self.lgrid = QGridLayout()
+        self.lwindow.setLayout(self.lgrid)
+        self.sgrid.addWidget(self.lwindow)
+        self.lwindow.setWindowTitle('Ligands 2D')
+        self.c1p = QWidget()
+        ####################
+        ####################
         ####################
         ### Run main GUI ###
         ####################
+        ####################
+        ####################
         self.wmain.setLayout(self.grid)
+        self.wmwindow.setCentralWidget(self.wmain)
+        self.sgrid.setCurrentWidget(self.wmain)
         self.wmain.showMaximized()
-        center(self.wmain)
+        self.wmwindow.showMaximized()
         # resize other windows
-        relresize(self.iWind,self.wmain,0.7)
+        relresize(self.iWind,self.wmwindow,0.7)
         relresize(self.iWtxt,self.iWind,1.0)
         app.processEvents()
         app.exec_()
@@ -1430,9 +1490,6 @@ class mGUI():
             self.lig7ML.setDisabled(False)
             self.lig7an.setDisabled(False)
             self.lig7nam.setDisabled(False)
-    ### enable add new geometry
-    def addgeom(self):
-        a=1
     ##############################
     ### Local Database window ####
     ##############################
@@ -1445,6 +1502,7 @@ class mGUI():
     def enableDB(self):
         self.DBWindow.setWindowModality(2)
         self.DBWindow.show()
+        self.sgrid.setCurrentWidget(self.DBWindow)
     ### callback for addition button, adds to database
     def qaddDB(self):
         coption = self.DBsel.currentText()
@@ -1452,12 +1510,13 @@ class mGUI():
         sminame = self.etDBname.text()
         smident = self.DBdent.currentText()
         smicat = self.etDBsmicat.text()
+        smigrps = self.etDBgrps.text()
         if smimol=='' or sminame=='':
             choice = QMessageBox.warning(self.DBWindow,'Error','Please specify molecule and name!')
         else:
             # add to database
             if 'ligand' in coption:
-                emsg = addtoldb(smimol,sminame,smident,smicat)
+                emsg = addtoldb(smimol,sminame,smident,smicat,smigrps)
             elif 'core' in coption:
                 emsg = addtocdb(smimol,sminame,smicat)
             elif 'bind' in coption:
@@ -1487,16 +1546,22 @@ class mGUI():
             self.DBdent.setDisabled(False)
             self.rtDBsmicat.setDisabled(False)
             self.etDBsmicat.setDisabled(False)
+            self.etDBgrps.setDisabled(False)
+            self.etDBgrps.setDisabled(False)
         elif(ci==0):
             self.rtDBsmident.setDisabled(True)
             self.DBdent.setDisabled(True)
             self.rtDBsmicat.setDisabled(False)
             self.etDBsmicat.setDisabled(False)
+            self.etDBgrps.setDisabled(True)
+            self.etDBgrps.setDisabled(True)
         else:
             self.rtDBsmident.setDisabled(True)
             self.DBdent.setDisabled(True)
             self.rtDBsmicat.setDisabled(True)
             self.etDBsmicat.setDisabled(True)
+            self.etDBgrps.setDisabled(True)
+            self.etDBgrps.setDisabled(True)
     ### perform post-processing
     def postprocGUI(self):
         rdir = self.etpdir.text()
@@ -1509,6 +1574,86 @@ class mGUI():
         emsg = startgen(defaultparams,True,self)
         if not emsg:
             choice = QMessageBox.information(self.pWindow,'DONE','Your results are ready..')
+    #############################
+    #### Add geometry window ####
+    #############################
+    ### load molecule from file
+    def qgeomload(self):
+        name = QFileDialog.getOpenFileName(self.DBWindow,'Open File','.',"Molecule files *.xyz (*.xyz)")
+        if name[0] != '':
+            self.etgf.setText(os.path.relpath(name[0]))
+    ### enable add new geometry
+    def addgeom(self):
+        self.geWindow.setWindowModality(2)
+        self.geWindow.show()
+        ### callback for addition button, adds to database
+    def qaddg(self):
+        globs = globalvars()
+        gname = self.etgname.text()
+        gshort = self.etgshort.text()
+        gfile = self.etgf.text()
+        if gname=='' or gfile=='':
+            choice = QMessageBox.warning(self.geWindow,'Error','Please specify name and xyz file!')
+        elif not glob.glob(gfile):
+            choice = QMessageBox.warning(self.geWindow,'Error','XYZ file '+gfile+' does not exist!')
+        else:
+            f = open(globs.installdir+'/Data/coordinations.dict','r')
+            s = f.read().splitlines()
+            f.close()
+            if gname.lower() in s:
+                choice = QMessageBox.warning(self.geWindow,'Add','Coordination '+gname+' already exists.')
+                return
+            # get geometry from xyz file
+            f = open(gfile,'r')
+            snew = f.read().splitlines()
+            f.close()
+            dent = int(snew[0])-1
+            xyzl = ''
+            for ii in range(0,dent+1):
+                l = filter(None,re.split(' |\t',snew[2+ii]))
+                xyzl += l[1]+' '+l[2]+' '+l[3]+'\n'
+            # write new entry in coordinations.dict
+            s.append(str(dent)+': '+gname+' '+gshort)
+            ssort = filter(None,list(sorted(s[1:])))
+            f = open(globs.installdir+'/Data/coordinations.dict','w')
+            f.write(s[0]+'\n')
+            for ss in ssort:
+                f.write(ss+'\n')
+            f.close()
+            # write new backbone file
+            f = open(globs.installdir+'/Data/'+gshort+'.dat','w')
+            f.write(xyzl)
+            f.close()
+            choice = QMessageBox.information(self.geWindow,'Add','Successfully added to the database!')
+    ### callback for removal button, removes from db
+    def qdelg(self):
+        globs = globalvars()
+        gname = self.etgname.text()
+        if gname=='':
+            choice = QMessageBox.warning(self.geWindow,'Error','Please specify geometry name!')
+        else:
+            f = open(globs.installdir+'/Data/coordinations.dict','r')
+            s = f.read()
+            f.close()
+            if gname.lower() not in s:
+                choice = QMessageBox.warning(self.geWindow,'Remove','Coordination '+gname+' does not exist.')
+                return
+            # remove entry from coordinations.dict
+            snew = ''
+            srem = ''
+            for ss in s.splitlines():
+                if gname.lower() not in ss:
+                    snew += ss+'\n'
+                else:
+                    srem = ss
+            f = open(globs.installdir+'/Data/coordinations.dict','w')
+            f.write(snew)
+            f.close()
+            # remove file
+            sf = filter(None,srem.split(' '))[-1]
+            if globs.globs(globs.installdir+'/Data/'+sf+'.dat'):
+                os.remove(globs.installdir+'/Data/'+sf+'.dat')
+            choice = QMessageBox.information(self.geWindow,'Remove','Successfully removed from the database!')
     #############################
     ### Chem Database window ####
     #############################
@@ -1681,21 +1826,14 @@ class mGUI():
             else:
                 os.remove(locf+".svg")
                 shutil.move(locf+'.png',outbase+'.png')
-                # create window
-                self.lwindow = QWidget()
-                self.lgrid = QGridLayout()
-                self.lwindow.setLayout(self.lgrid)
-                self.sgrid.addWidget(self.lwindow)
-                self.lwindow.setWindowTitle('Ligands 2D')
-                c1p = mQPixmap(outbase+'.png')
-                self.lgrid.addWidget(c1p)
+                self.c1p = mQPixmap(outbase+'.png')
+                self.lgrid.addWidget(self.c1p,0,0)
                 # button for closing window
                 ctip = 'Close current window'
                 self.lwclose = mQPushButton('Close',ctip,14)
-                self.lwclose.clicked.connect(self.qretmain2)
-                self.lgrid.addWidget(self.lwclose)
-                self.sgrid.setCurrentWidget(self.lwindow)
-                self.lwindow.show()
+                self.lwclose.clicked.connect(self.qcloseligs)
+                self.lgrid.addWidget(self.lwclose,1,0)
+                self.lwindow.showMaximized()
                 center(self.lwindow)
     ### draw results from db search
     def drawres(self):
@@ -1770,21 +1908,14 @@ class mGUI():
             else:
                 os.remove(locf+".svg")
                 shutil.move(locf+'.png',outbase+'.png')
-                # create window
-                self.lwindow = QWidget()
-                self.lgrid = QGridLayout()
-                self.lwindow.setLayout(self.lgrid)
-                self.sgrid.addWidget(self.lwindow)
-                self.lwindow.setWindowTitle('Ligands 2D')
-                c1p = mQPixmap(outbase+'.png')
-                self.lgrid.addWidget(c1p)
+                self.c1p = mQPixmap(outbase+'.png')
+                self.lgrid.addWidget(self.c1p,0,0)
                 # button for closing window
                 ctip = 'Close current window'
                 self.lwclose = mQPushButton('Close',ctip,14)
-                self.lwclose.clicked.connect(self.qretmain2)
-                self.lgrid.addWidget(self.lwclose)
-                self.sgrid.setCurrentWidget(self.lwindow)
-                self.lwindow.show()
+                self.lwclose.clicked.connect(self.qcloseligs)
+                self.lgrid.addWidget(self.lwclose,1,0)
+                self.lwindow.showMaximized()
                 center(self.lwindow)
     ### enable random input
     def enablerandom(self):
@@ -1849,6 +1980,7 @@ class mGUI():
         self.distper.setText('Distort:'+str(val)+'%')
     ### match index with coordination
     def matchgeomcoord(self):
+        globs = globalvars()
         # get current index
         dc=self.dcoord.currentIndex()
         coords,geomnames,geomshorts,geomgroups = getgeoms()
@@ -1860,7 +1992,8 @@ class mGUI():
         qc = qcav[dc]
         # add to box
         for i,t in enumerate(qc):
-            self.dcoordg.insertItem(i,t)
+            self.dcoordg.addItem(QIcon(globs.installdir+'/icons/geoms/'+t+'.png'),t)
+        self.dcoordg.setIconSize(QSize(60,60))
         # set default geometry
         self.dcoordg.setCurrentIndex(0)
         # get global index
@@ -2059,6 +2192,9 @@ class mGUI():
     ### hide current widget ###
     def qhide(self):
         self.hide()
+    ### close ligands window
+    def qcloseligs(self):
+        self.lwindow.hide()
     ### return to main window ###
     def qretmain(self):
         # hide all windows
@@ -2069,5 +2205,5 @@ class mGUI():
         self.jWindow.hide()
         self.DBWindow.hide()
         self.cDBWindow.hide()
-    def qretmain2(self):
-        self.sgrid.setCurrentWidget(self.wmain)
+        self.geWindow.hide()
+

@@ -35,7 +35,7 @@ def checkinput(args):
 ########## check true or false  ###########
 ###########################################
 def checkTrue(arg):
-    if 'y' in arg.lower() or '1' in arg.lower() or 't' in arg.lower():
+    if 'y' in arg.lower() or '1' in arg.lower() or 't' in arg.lower() or arg==1:
         return True
     else:
         return False

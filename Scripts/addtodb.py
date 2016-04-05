@@ -17,7 +17,7 @@ import pybel, openbabel, random
 ###############################
 ### adds to ligand database ###
 ###############################
-def addtoldb(smimol,sminame,smident,smicat):
+def addtoldb(smimol,sminame,smident,smicat,smigrps):
     #  INPUT
     #   - smimol: SMILES string or molecule file to be added
     #   - sminame: name of ligand for key in dictionary
@@ -30,11 +30,15 @@ def addtoldb(smimol,sminame,smident,smicat):
     licores = readdict(globs.installdir+'/Ligands/ligands.dict')
     # check if ligand exists
     if sminame in licores.keys():
-        emsg = 'Ligand '+sminame+' already existing in ligands database.'
+        emsg = 'Ligand '+sminame+' already existing in ligands database.' 
+        emsg += ' To replace, delete the existing entry first.'
         return emsg
     else:
         # get connection atoms
         ccats = filter(None,re.split(' |,|\t',smicat))
+        # get groups
+        groups = filter(None,re.split(' |,|\t',smigrps))
+        grp = 'all '+' '.join(groups)
         if smicat=='':
             cats = range(0,int(smident))
         else:
@@ -58,11 +62,11 @@ def addtoldb(smimol,sminame,smident,smicat):
         if lig.OBmol:
             # write smiles file in Ligands directory
             lig.OBmol.write('smi',globs.installdir+'/Ligands/'+sminame+'.smi')
-            snew = sminame+':'+sminame+'.smi,'+shortname+','+css
+            snew = sminame+':'+sminame+'.smi,'+shortname+','+css+','+grp
         else:
             # write xyz file in Ligands directory
             lig.writexyz(globs.installdir+'/Ligands/'+sminame+'.xyz') # write xyz file
-            snew = sminame+':'+sminame+'.xyz,'+shortname+','+css
+            snew = sminame+':'+sminame+'.xyz,'+shortname+','+css+','+grp
         # update dictionary
         f = open(globs.installdir+'/Ligands/ligands.dict','r')
         ss = f.read().splitlines()

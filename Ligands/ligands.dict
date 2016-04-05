@@ -1,40 +1,41 @@
 # ligand name, ligand structure file, abbreviation (unique), connection atoms
-acetonitrile:acetonitrile.mol,actnt,1
-amine:amine.mol,ami,0
-ammonia:ammonia.mol,ammo,0
-benzene:benzene.mol,bnz,4 
-bipy:bipy.mol,bip,0 1
-bipyridine:bipy.mol,bip,0 1
-bpabipy:BPAbipy.mol,bpabp,0 13 26 48 30
-bromide:bromide.smi,brode,0
-bromine:bromine.mol,brom,0
-carbonyl:carbonyl.mol,crbn,0
-carboxyl:carboxyl.mol,crbx,1
-chloride:chloride.smi,chlde,0
-chlorine:chlorine.mol,chlo,0
-cyanide:cyanide.mol,cyan,0
-edta:edta.mol,edta,0 1 2 3 4 5
-ethyl:ethyl.mol,eth,1
-fluorine:fluorine.mol,fluo,0
-hydrocyanide:hydrocyanide.mol,hydc,1
-hydroisocyanide:hydroisocyanide.mol,hisc,0
-hydroxyl:hydroxyl.mol,hxl,0
-imidazole:imidazole.mol,imd,2
-imine:imine.mol,imi,0
-isothiocyanate:isothiocyanate.mol,ithcynt,0
-methanal:methanal.mol,metha,0
-methyl:methyl.mol,meth,0
-nitro:nitro.mol,nit,1
-nitroso:nitroso.mol,nits,0
-oxygen:oxygen.mol,oxd,0
-pph3:PPh3.mol,pph,2
-pyr:pyridine.mol,pyrd,3
-pyridine:pyridine.mol,pyrd,3
-terpy:terpy.mol,trpy,0 1 2
-terpyridine:terpy.mol,trpy,0 1 2
-thiocyanate:thiocyanate.mol,thcynt,0
-thiol:thiol.mol,thil,0
-tpp:tpp.mol,tpp,0 1 2 3
-trifluoromethyl:trifluoromethyl.mol,trflume,0
-water:water.mol,wat,0
-x:x.mol,x,0
+acetonitrile:acetonitrile.mol,actnt,1,all small
+amine:amine.mol,ami,0,all small
+ammonia:ammonia.mol,ammo,0,all small
+benzene:benzene.mol,bnz,4,all small organic
+bipy:bipy.mol,bip,0 1,all bidentate
+bipyridine:bipy.mol,bip,0 1,all bidentate
+bpabipy:BPAbipy.mol,bpabp,0 13 26 48 30,all
+bromide:bromide.smi,brode,0,all small
+bromine:bromine.mol,brom,0,all small
+carbonyl:carbonyl.mol,crbn,0,all small
+carboxyl:carboxyl.mol,crbx,1,all small
+chloride:chloride.smi,chlde,0,all small
+chlorine:chlorine.mol,chlo,0,all small
+cyanide:cyanide.mol,cyan,0,all small
+edta:edta.mol,edta,0 1 2 3 4 5,all big
+ethyl:ethyl.mol,eth,1,all small
+fluorine:fluorine.mol,fluo,0,all small
+hydrocyanide:hydrocyanide.mol,hydc,1,all small
+hydroisocyanide:hydroisocyanide.mol,hisc,0,all small
+hydroxyl:hydroxyl.mol,hxl,0,all small
+imidazole:imidazole.mol,imd,2,all small
+imine:imine.mol,imi,0,all small
+isothiocyanate:isothiocyanate.mol,ithcynt,0,all small
+methanal:methanal.mol,metha,0,all small
+methyl:methyl.mol,meth,0,all small
+nitro:nitro.mol,nit,1,all small
+nitroso:nitroso.mol,nits,0,all small
+oxalate:oxalate.smi,oxate,1 5,all bidentate
+oxygen:oxygen.mol,oxd,0,all small
+pph3:PPh3.mol,pph,2,all bulky big
+pyr:pyridine.mol,pyrd,3,all organic
+pyridine:pyridine.mol,pyrd,3,all organic
+terpy:terpy.mol,trpy,0 1 2,all tridentate
+terpyridine:terpy.mol,trpy,0 1 2,all tridentate
+thiocyanate:thiocyanate.mol,thcynt,0,all small
+thiol:thiol.mol,thil,0,all small
+tpp:tpp.mol,tpp,0 1 2 3,all bulky
+trifluoromethyl:trifluoromethyl.mol,trflume,0,all small
+water:water.mol,wat,0,all small
+x:x.mol,x,0,all small
