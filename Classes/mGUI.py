@@ -6,7 +6,6 @@
 ####################################################
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5.QtWebKitWidgets import *
 from Classes.mWidgets import *
 from Classes.globalvars import *
 from Classes.mol3D import mol3D
@@ -38,7 +37,7 @@ class mGUI():
         overX = True if 'localhost' in os.environ['DISPLAY'].lower() else False # detect running over X
         configfile = False if not glob.glob(homedir+'/.molSimplify') else True
         if not configfile:
-            self.wwindow = QMainWindow() 
+            self.wwindow = mQMainWindow() 
             self.wwindow.resize(0.5,0.5)
             QMessageBox.information(self.wwindow,'Setup',"It looks like the configuration file '~/.molSimplify' does not exist!Please follow the next steps to configure the file.")
             QMessageBox.information(self.wwindow,'Installation directory',"Please select the top installation directory for the program.")
@@ -55,7 +54,7 @@ class mGUI():
         self.wmwindow.setMinimumSize(1000,700)
         # set background color
         p = QPalette()
-        p.setColor(QPalette.Background,QtCore.Qt.white)
+        p.setColor(QPalette.Background,Qt.white)
         self.wmwindow.setPalette(p)
         ### main grid layout ###
         self.grid = QGridLayout()
@@ -83,9 +82,9 @@ class mGUI():
         loadAction.setStatusTip('Load input file')
         loadAction.triggered.connect(self.qloadinput)
         menu1.addAction(loadAction)
-        helpAction = QAction('&Help',self.wmwindow)
+        helpAction = QAction('&About',self.wmwindow)
         helpAction.setShortcut('Ctrl+H')
-        helpAction.setStatusTip('Show input options')
+        helpAction.setStatusTip('Show program information')
         helpAction.triggered.connect(self.qshowhelp)
         menu2.addAction(helpAction)
         ### place title top ###
@@ -144,11 +143,16 @@ class mGUI():
         self.butaddg = mQPushButton('Add geometry',ctip,12)
         self.butaddg.clicked.connect(self.addgeom)
         self.grid.addWidget(self.butaddg,8,8,1,2)
+        # add new coordination
+        ctip = 'View geometry with atom labels'
+        self.butvg = mQPushButton('View geometry',ctip,12)
+        self.butvg.clicked.connect(self.viewgeom)
+        self.grid.addWidget(self.butvg,8,10,1,1)
         #############################################
         ################## LIGANDS ##################
         ### ligands tables ###
         ctip0 = 'Ligand(s) to be used' 
-        self.rtligh = mQLabel('Ligands',ctip0,'c',12) # ligand header
+        self.rtligh = mQLabel('Ligand',ctip0,'c',12) # ligand header
         f = QFont("Helvetica",12,75)
         self.rtligh.setFont(f)
         ctip1 = 'Occurrence of corresponding ligand(s)'
@@ -158,22 +162,27 @@ class mGUI():
         ctip3 = 'Do not remove hydrogens while connecting ligand to core. default False' # keep Hs header
         self.keepHh = mQLabel('keep\nHs',ctip3,'c',12) # occurrence header
         ctip4 = 'Custom bond length for M-L in Angstrom' 
-        self.MLbondsh = mQLabel('M-L bond',ctip4,'c',12)# custom metal ligand bond length header
+        self.MLbondsh = mQLabel('M-L\nbond',ctip4,'c',12)# custom metal ligand bond length header
         ctip5 = 'Custom angles for connection points (polar theta, azimuthal phi) in degrees separated with /. e.g 10/20'
         self.canglesh = mQLabel('Angle',ctip5,'c',12) # custom angles for distortion header
         ctip6 = 'Name of ligand'
         self.nameligh = mQLabel('Name',ctip6,'c',12) # name of ligand header
         ctip7 = 'Force ligand order and disable smart reordering'
-        self.ligforder = mQCheckBox('Force\norder',ctip7,12) 
+        self.ligfloc = mQCheckBox('Force\nlocation',ctip7,12) 
+        ctip8 = 'Ligand smart alignment. Aligns first the bulky ligands.'
+        self.ligfalign = mQCheckBox('Smart\nalignment',ctip8,12) 
+        self.ligfalign.setChecked(True)
         # add to layout
+        self.grid.setColumnMinimumWidth(0,150)
         self.grid.addWidget(self.rtligh,9,0,1,2)
         self.grid.addWidget(self.rtligocch,9,2,1,2)
         self.grid.addWidget(self.rtsmicath,9,4,1,2)
         self.grid.addWidget(self.keepHh,9,6,1,1)
         self.grid.addWidget(self.MLbondsh,9,7,1,2)
-        self.grid.addWidget(self.canglesh,9,9,1,2)
-        self.grid.addWidget(self.nameligh,9,11,1,2)
-        self.grid.addWidget(self.ligforder,9,13,1,1)
+        self.grid.addWidget(self.canglesh,9,9,1,1)
+        self.grid.addWidget(self.nameligh,9,10,1,1)
+        self.grid.addWidget(self.ligfalign,8,13,1,1)
+        self.grid.addWidget(self.ligfloc,9,13,1,1)
         ## ligands ##
         self.lig0 = mQLineEdit('',ctip0,'l',12)
         self.lig1 = mQLineEdit('',ctip0,'l',12)
@@ -322,14 +331,14 @@ class mGUI():
         self.lig6an.setDisabled(True)
         self.lig7an.setDisabled(True)
         # add to layout
-        self.grid.addWidget(self.lig0an,10,9,1,2)
-        self.grid.addWidget(self.lig1an,11,9,1,2)
-        self.grid.addWidget(self.lig2an,12,9,1,2)
-        self.grid.addWidget(self.lig3an,13,9,1,2)
-        self.grid.addWidget(self.lig4an,14,9,1,2)
-        self.grid.addWidget(self.lig5an,15,9,1,2)
-        self.grid.addWidget(self.lig6an,16,9,1,2)
-        self.grid.addWidget(self.lig7an,17,9,1,2)
+        self.grid.addWidget(self.lig0an,10,9,1,1)
+        self.grid.addWidget(self.lig1an,11,9,1,1)
+        self.grid.addWidget(self.lig2an,12,9,1,1)
+        self.grid.addWidget(self.lig3an,13,9,1,1)
+        self.grid.addWidget(self.lig4an,14,9,1,1)
+        self.grid.addWidget(self.lig5an,15,9,1,1)
+        self.grid.addWidget(self.lig6an,16,9,1,1)
+        self.grid.addWidget(self.lig7an,17,9,1,1)
         ## ligand names ##
         self.lig0nam = mQLineEdit('',ctip6,'l',12)
         self.lig1nam = mQLineEdit('',ctip6,'l',12)
@@ -348,14 +357,14 @@ class mGUI():
         self.lig6nam.setDisabled(True)
         self.lig7nam.setDisabled(True)
         # add to layout
-        self.grid.addWidget(self.lig0nam,10,11,1,1)
-        self.grid.addWidget(self.lig1nam,11,11,1,1)
-        self.grid.addWidget(self.lig2nam,12,11,1,1)
-        self.grid.addWidget(self.lig3nam,13,11,1,1)
-        self.grid.addWidget(self.lig4nam,14,11,1,1)
-        self.grid.addWidget(self.lig5nam,15,11,1,1)
-        self.grid.addWidget(self.lig6nam,16,11,1,1)
-        self.grid.addWidget(self.lig7nam,17,11,1,1)
+        self.grid.addWidget(self.lig0nam,10,10,1,1)
+        self.grid.addWidget(self.lig1nam,11,10,1,1)
+        self.grid.addWidget(self.lig2nam,12,10,1,1)
+        self.grid.addWidget(self.lig3nam,13,10,1,1)
+        self.grid.addWidget(self.lig4nam,14,10,1,1)
+        self.grid.addWidget(self.lig5nam,15,10,1,1)
+        self.grid.addWidget(self.lig6nam,16,10,1,1)
+        self.grid.addWidget(self.lig7nam,17,10,1,1)
         ## add buttons ##
         ctip = 'Add new ligand.'
         self.lig0add = mQPushButton('+',ctip,12)
@@ -436,36 +445,55 @@ class mGUI():
         self.rtrgen.setDisabled(True)
         self.etrgen.setDisabled(True)
         # number of different ligands to use
-        ctip = 'For random generation: number of different ligand types.'
-        self.rtlignum = mQLabel('Different ligands:',ctip,'Cr',12)
-        self.etlignum = mQLineEdit('',ctip,'l',12)
-        self.grid.addWidget(self.rtlignum,8,25,1,2)
-        self.grid.addWidget(self.etlignum,8,27,1,1)
+        ctip = 'For random generation: total number of different ligands including specified ones.'
+        self.rtlignum = mQLabel('Different\nligands:',ctip,'Cr',12)
+        qcav = ['1','2','3','4','5','6','7','8','9','10']
+        self.etlignum = mQComboBox(qcav,ctip,12)
+        self.grid.addWidget(self.rtlignum,8,25,1,1)
+        self.grid.addWidget(self.etlignum,8,26,1,1)
         self.rtlignum.setDisabled(True)
         self.etlignum.setDisabled(True)
+        # keep Hs
+        ctip = 'Keep hydrogens for random generation.'
+        self.randkHs = mQCheckBox('Keep Hs',ctip,12)
+        self.grid.addWidget(self.randkHs,8,27,1,1)
+        self.randkHs.setDisabled(True)
+        # group of different ligands
+        ctip = 'For random generation: select random ligands from group.'
+        self.rtliggrp = mQLabel('Ligand\ngroup:',ctip,'Cr',12)
+        qcav0 = getligroups(readdict(globs.installdir+'/Ligands/ligands.dict'))
+        qcav = filter(None,qcav0.split(' '))
+        self.etliggrp = mQComboBox(qcav,ctip,12)
+        self.grid.addWidget(self.rtliggrp,9,23,1,1)
+        self.grid.addWidget(self.etliggrp,9,24,1,1)
+        self.rtliggrp.setDisabled(True)
+        self.etliggrp.setDisabled(True)
+        # ligand category
+        ctip = 'For random generation: select random ligands from category.\nOptions are all'
+        ctip += '"build" for building complexes, "functinoalize" for functionalizing'
+        self.rtligctg = mQLabel('Ligand\ncategory:',ctip,'Cr',12)
+        qcav = ['all','build','functionalize']
+        self.etligctg = mQComboBox(qcav,ctip,12)
+        self.grid.addWidget(self.rtligctg,9,25,1,1)
+        self.grid.addWidget(self.etligctg,9,26,1,2)
+        self.rtligctg.setDisabled(True)
+        self.etligctg.setDisabled(True)
         # oxidation state
         ctip = 'Metal Oxidation state'
         self.roxstate = mQLabel('Ox State:',ctip,'Cr',12)
         qcav = ['0','I','II','III','IV','V','VI','VII','VIII']
         self.doxs = mQComboBox(qcav,ctip,12)
         self.doxs.setCurrentIndex(0)
-        self.grid.addWidget(self.roxstate,9,23,1,1)
-        self.grid.addWidget(self.doxs,9,24,1,1)
+        self.grid.addWidget(self.roxstate,10,23,1,1)
+        self.grid.addWidget(self.doxs,10,24,1,1)
         # spin state
         ctip = 'System spin multiplicity'
         self.rspstate = mQLabel('Spin:',ctip,'Cr',12)
         qcav = ['1','2','3','4','5','6','7','8','9','10']
         self.dspin = mQComboBox(qcav,ctip,12)
         self.dspin.setCurrentIndex(0)
-        self.grid.addWidget(self.rspstate,9,26,1,1)
-        self.grid.addWidget(self.dspin,9,27,1,1)
-        # create distortion slider
-        ctip = 'Percent random distortion from default coordination geometry.'
-        self.distper = mQLabel('Distort:0%',ctip,'Cr',12)
-        self.sdist = mQSlider(ctip)
-        self.sdist.valueChanged.connect(self.sliderChanged)
-        self.grid.addWidget(self.distper,10,23,1,2)
-        self.grid.addWidget(self.sdist,10,25,1,2)
+        self.grid.addWidget(self.rspstate,10,26,1,1)
+        self.grid.addWidget(self.dspin,10,27,1,1)
         # force field optimization
         ctip = 'Perform Force Field optimization'
         self.chkFF = mQCheckBox('FF optimize',ctip,12)
@@ -490,33 +518,40 @@ class mGUI():
         self.dffba.setDisabled(True)
         self.dffba.setCurrentIndex(2)
         self.grid.addWidget(self.dffba,12,25,1,3)
+        # create distortion slider
+        ctip = 'Percent random distortion from default coordination geometry.'
+        self.distper = mQLabel('Distort:0%',ctip,'Cr',12)
+        self.sdist = mQSlider(ctip)
+        self.sdist.valueChanged.connect(self.sliderChanged)
+        self.grid.addWidget(self.distper,13,24,1,2)
+        self.grid.addWidget(self.sdist,13,26,1,2)
         ### jobs dir ###
         ctip = 'Top directory for job folders.'
         self.rtrdir = mQLabel('Jobs dir:',ctip,'Cr',12)
-        self.grid.addWidget(self.rtrdir,13,23,1,1)
+        self.grid.addWidget(self.rtrdir,14,23,1,1)
         self.etrdir = mQLineEdit(globs.rundir,ctip,'l',12)
-        self.grid.addWidget(self.etrdir,13,24,1,2)
+        self.grid.addWidget(self.etrdir,14,24,1,2)
         # button for browsing rundir
         ctip = 'Browse running directory.'
         self.butpbrdir = mQPushButton('Browse..',ctip,12)
         self.butpbrdir.clicked.connect(self.dirload)
-        self.grid.addWidget(self.butpbrdir,13,26,1,2)
+        self.grid.addWidget(self.butpbrdir,14,26,1,2)
         # suffix
         ctip = 'Suffix for job directories.'
         self.rtsuff = mQLabel('Suffix:',ctip,'Cr',12)
         self.etsuff = mQLineEdit('',ctip,'l',12)
-        self.grid.addWidget(self.rtsuff,14,23,1,1)
-        self.grid.addWidget(self.etsuff,14,24,1,2)
+        self.grid.addWidget(self.rtsuff,15,23,1,1)
+        self.grid.addWidget(self.etsuff,15,24,1,2)
         # structure generation
         ctip = 'Generate structures'
         self.butGen = mQPushButton('Generate',ctip,18)
         self.butGen.clicked.connect(self.runGUI)
-        self.grid.addWidget(self.butGen,16,23,2,2)
+        self.grid.addWidget(self.butGen,17,23,2,2)
         # post-processing setup
         ctip = 'Setup post-processing'
         self.butPost = mQPushButton('Post-process',ctip,16)
         self.butPost.clicked.connect(self.setupp)
-        self.grid.addWidget(self.butPost,16,26,2,2)
+        self.grid.addWidget(self.butPost,17,26,2,2)
         ###################################################
         ###################################################
         ########### ADDITIONAL MOLECULE INPUTS ############
@@ -683,7 +718,7 @@ class mGUI():
         self.qctgrid.addWidget(self.rtqctspin,1,3,1,1)
         self.qctgrid.addWidget(self.etqctspin,1,4,1,1)
         # drop menu for selecting type of calculation
-        qcav = ['energy','minimize','ts']
+        qcav = ['energy','minimize','gradient','ts']
         ctip = 'Specify calculation type, default: minimize'
         self.rtqctcalc = mQLabel('Calculation:',ctip,'r',14)
         self.qctcalc = mQComboBox(qcav,ctip,14)
@@ -704,8 +739,9 @@ class mGUI():
         # drop menu for selecting dispersion
         qcav = ['yes','no','d2','d3']
         ctip = 'Select dispersion correction'
+        self.rtcdisp = mQLabel('Dispersion:',ctip,'r',14)
         self.qctsel = mQComboBox(qcav,ctip,14)
-        self.qctgrid.addWidget(self.qctsel,3,3,1,1)
+        self.qctgrid.addWidget(self.rtcdisp,3,3,1,1)
         self.qctgrid.addWidget(self.qctsel,3,4,1,1)
         self.qctsel.setCurrentIndex(1)
         # editor for additional input
@@ -730,8 +766,8 @@ class mGUI():
         self.butqctRet.clicked.connect(self.qretmain)
         self.qctgrid.addWidget(self.butqctRet,5,4,2,1)
         # load defaults if existing
-        if glob.glob(globs.homedir+'/.tcdefinput.inp'):
-                loadfrominputtc(self,globs.homedir+'/.tcdefinput.inp')
+        if glob.glob(globs.installdir+'/Data/.tcdefinput.inp'):
+                loadfrominputtc(self,globs.installdir+'/Data/.tcdefinput.inp')
         #####################################
         ### create gamess-qc input window ###
         #######################################
@@ -834,8 +870,8 @@ class mGUI():
         self.qcggrid.addWidget(self.butqcgRet,7,3,1,1)
         self.qcggrid.setRowMinimumHeight(7,30)
         # load defaults if existing
-        if glob.glob(globs.homedir+'/.gamdefinput.inp'):
-                loadfrominputgam(self,globs.homedir+'/.gamdefinput.inp')
+        if glob.glob(globs.installdir+'/Data/.gamdefinput.inp'):
+                loadfrominputgam(self,globs.installdir+'/Data/.gamdefinput.inp')
         #######################################
         #### create Qchem-qc input window #####
         #######################################
@@ -912,8 +948,8 @@ class mGUI():
         self.butqcQRet.clicked.connect(self.qretmain)
         self.qcQgrid.addWidget(self.butqcQRet,5,4,1,1)
         # load defaults if existing
-        if glob.glob(globs.homedir+'/.qchdefinput.inp'):
-            loadfrominputqch(self,globs.homedir+'/.qchdefinput.inp')
+        if glob.glob(globs.installdir+'/Data/.qchdefinput.inp'):
+            loadfrominputqch(self,globs.installdir+'/Data/.qchdefinput.inp')
         #####################################
         ### create jobscript input window ###
         #####################################
@@ -1000,8 +1036,8 @@ class mGUI():
         self.butqcgRet.clicked.connect(self.qretmain)
         self.jgrid.addWidget(self.butqcgRet,7,4,1,1)
         # load defaults if existing
-        if glob.glob(globs.homedir+'/.jobdefinput.inp'):
-            loadfrominputjob(self,globs.homedir+'/.jobdefinput.inp')
+        if glob.glob(globs.installdir+'/Data/.jobdefinput.inp'):
+            loadfrominputjob(self,globs.installdir+'/Data/.jobdefinput.inp')
         ##########################################
         ### create local DB interaction window ###
         ##########################################
@@ -1034,47 +1070,64 @@ class mGUI():
         self.etDBname = mQLineEdit('',ctip,'l',14)
         self.DBlgrid.addWidget(self.rtDBname,3,1,1,1)
         self.DBlgrid.addWidget(self.etDBname,3,2,1,1)
-        # text for specifying name
+        # text for specifying category
         ctip = 'Type groups for ligand'
         self.rtDBgrps = mQLabel('Groups:','','r',14)
         self.etDBgrps = mQLineEdit('',ctip,'l',14)
         self.DBlgrid.addWidget(self.rtDBgrps,4,1,1,1)
         self.DBlgrid.addWidget(self.etDBgrps,4,2,1,1)
+        # text for specifying groups
+        ctip = 'Type category for ligand. It can be used for building complexes("build")\n'
+        ctip += 'functionalizing existing cores("functionalize") or both.'
+        self.rtDBctg = mQLabel('Category:','','r',14)
+        self.etDBctg = mQComboBox(['all','build','functionalize'],ctip,14)
+        self.DBlgrid.addWidget(self.rtDBctg,5,1,1,1)
+        self.DBlgrid.addWidget(self.etDBctg,5,2,1,1)
+        # checkboxes for FF optimization
+        ctip = 'Force-field optimize in isolation'
+        self.lFFb = mQCheckBox('FF before',ctip,14)
+        self.DBlgrid.addWidget(self.lFFb,6,1,1,1)
+        self.lFFb.setChecked(True)
+        # checkboxes for FF optimization
+        ctip = 'Force-field optimize in molecule'
+        self.lFFa = mQCheckBox('FF after',ctip,14)
+        self.DBlgrid.addWidget(self.lFFa,6,2,1,1)
+        self.lFFa.setChecked(True)
         # drop menu for denticity
         ctip = 'Type denticity for SMILES molecule'
         self.rtDBsmident = mQLabel('Denticity:','','r',14)
-        qcav = ['1','2','3','4','5','6','7','8']
+        qcav = ['1','2','3','4','5','6','7','8','9','10']
         self.DBdent = mQComboBox(qcav,ctip,14)
         self.DBdent.setCurrentIndex(0)
-        self.DBlgrid.addWidget(self.rtDBsmident,5,1,1,1)
-        self.DBlgrid.addWidget(self.DBdent,5,2,1,1)
+        self.DBlgrid.addWidget(self.rtDBsmident,7,1,1,1)
+        self.DBlgrid.addWidget(self.DBdent,7,2,1,1)
         self.DBsel.currentIndexChanged.connect(self.dbchange)  ### error if not here
         # text for typing input connection atoms 
         ctip = 'Type indices for connection atoms, default: 1'
         self.rtDBsmicat = mQLabel('Catoms:',ctip,'r',14)
         self.etDBsmicat = mQLineEdit('',ctip,'l',14)
-        self.DBlgrid.addWidget(self.rtDBsmicat,6,1,1,1)
-        self.DBlgrid.addWidget(self.etDBsmicat,6,2,1,1)
+        self.DBlgrid.addWidget(self.rtDBsmicat,8,1,1,1)
+        self.DBlgrid.addWidget(self.etDBsmicat,8,2,1,1)
         # button for addition
-        ctip = 'Load example input'
+        ctip = 'Load molecule from file'
         self.butDBAlf = mQPushButton('Load file..',ctip,14)
         self.butDBAlf.clicked.connect(self.qDBload)
-        self.DBlgrid.addWidget(self.butDBAlf,7,0,1,1)
+        self.DBlgrid.addWidget(self.butDBAlf,9,0,1,1)
         # button for addition
         ctip = 'Add new molecule to database'
         self.butDBAub = mQPushButton('Add',ctip,14)
         self.butDBAub.clicked.connect(self.qaddDB)
-        self.DBlgrid.addWidget(self.butDBAub,7,1,1,1)
+        self.DBlgrid.addWidget(self.butDBAub,9,1,1,1)
         # button for removal
         ctip = 'Remove molecule from database'
         self.butDBDub = mQPushButton('Remove',ctip,14)
         self.butDBDub.clicked.connect(self.qdelDB)
-        self.DBlgrid.addWidget(self.butDBDub,7,2,1,1)
+        self.DBlgrid.addWidget(self.butDBDub,9,2,1,1)
         # button for return
         ctip = 'Return to main menu'
         self.butDBRet = mQPushButton('Return',ctip,14)
         self.butDBRet.clicked.connect(self.qretmain)
-        self.DBlgrid.addWidget(self.butDBRet,7,3,1,1)
+        self.DBlgrid.addWidget(self.butDBRet,9,3,1,1)
         #############################################
         ### create chemical DB interaction window ###
         #############################################
@@ -1350,6 +1403,7 @@ class mGUI():
         ### create ligands 2D window ###
         ################################
         self.lwindow = QWidget()
+        self.lwindow.setPalette(p)
         self.lgrid = QGridLayout()
         self.lwindow.setLayout(self.lgrid)
         self.sgrid.addWidget(self.lwindow)
@@ -1511,12 +1565,23 @@ class mGUI():
         smident = self.DBdent.currentText()
         smicat = self.etDBsmicat.text()
         smigrps = self.etDBgrps.text()
+        smictg = self.etDBctg.currentText()
+        if self.lFFb.getState() and self.lFFa.getState():
+            ffopt = 'BA'
+        elif self.lFFb.getState() and not self.lFFa.getState():
+            ffopt = 'B'
+        elif not self.lFFb.getState() and self.lFFa.getState():
+            ffopt = 'A'
+        else:
+            ffopt = 'N'
+        if smictg == 'all':
+            smictg = 'build functionalize'
         if smimol=='' or sminame=='':
             choice = QMessageBox.warning(self.DBWindow,'Error','Please specify molecule and name!')
         else:
             # add to database
             if 'ligand' in coption:
-                emsg = addtoldb(smimol,sminame,smident,smicat,smigrps)
+                emsg = addtoldb(smimol,sminame,smident,smicat,smigrps,smictg,ffopt)
             elif 'core' in coption:
                 emsg = addtocdb(smimol,sminame,smicat)
             elif 'bind' in coption:
@@ -1548,6 +1613,8 @@ class mGUI():
             self.etDBsmicat.setDisabled(False)
             self.etDBgrps.setDisabled(False)
             self.etDBgrps.setDisabled(False)
+            self.lFFb.setDisabled(False)
+            self.lFFa.setDisabled(False)
         elif(ci==0):
             self.rtDBsmident.setDisabled(True)
             self.DBdent.setDisabled(True)
@@ -1555,6 +1622,8 @@ class mGUI():
             self.etDBsmicat.setDisabled(False)
             self.etDBgrps.setDisabled(True)
             self.etDBgrps.setDisabled(True)
+            self.lFFb.setDisabled(True)
+            self.lFFa.setDisabled(True)
         else:
             self.rtDBsmident.setDisabled(True)
             self.DBdent.setDisabled(True)
@@ -1562,6 +1631,8 @@ class mGUI():
             self.etDBsmicat.setDisabled(True)
             self.etDBgrps.setDisabled(True)
             self.etDBgrps.setDisabled(True)
+            self.lFFb.setDisabled(True)
+            self.lFFa.setDisabled(True)
     ### perform post-processing
     def postprocGUI(self):
         rdir = self.etpdir.text()
@@ -1589,7 +1660,8 @@ class mGUI():
         ### callback for addition button, adds to database
     def qaddg(self):
         globs = globalvars()
-        gname = self.etgname.text()
+        gname = self.etgname.text().lower()
+        gname = gname.replace(' ','_')
         gshort = self.etgshort.text()
         gfile = self.etgf.text()
         if gname=='' or gfile=='':
@@ -1625,35 +1697,39 @@ class mGUI():
             f.write(xyzl)
             f.close()
             choice = QMessageBox.information(self.geWindow,'Add','Successfully added to the database!')
+        self.matchgeomcoord()
     ### callback for removal button, removes from db
     def qdelg(self):
         globs = globalvars()
-        gname = self.etgname.text()
-        if gname=='':
+        gname = self.etgname.text().lower()
+        gname = gname.replace(' ','_')
+        gshort = self.etgshort.text()
+        if gname=='' and gshort=='':
             choice = QMessageBox.warning(self.geWindow,'Error','Please specify geometry name!')
         else:
             f = open(globs.installdir+'/Data/coordinations.dict','r')
             s = f.read()
             f.close()
-            if gname.lower() not in s:
+            if gname.lower() not in s and gshort.lower() not in s:
                 choice = QMessageBox.warning(self.geWindow,'Remove','Coordination '+gname+' does not exist.')
                 return
             # remove entry from coordinations.dict
             snew = ''
             srem = ''
             for ss in s.splitlines():
-                if gname.lower() not in ss:
+                sl = filter(None,ss.split(' '))
+                if gname.lower()!=sl[1] and gshort.lower()!=sl[2]:
                     snew += ss+'\n'
                 else:
-                    srem = ss
+                    srem = filter(None,ss.split(' ')[-1])
             f = open(globs.installdir+'/Data/coordinations.dict','w')
             f.write(snew)
             f.close()
             # remove file
-            sf = filter(None,srem.split(' '))[-1]
-            if globs.globs(globs.installdir+'/Data/'+sf+'.dat'):
-                os.remove(globs.installdir+'/Data/'+sf+'.dat')
+            if glob.glob(globs.installdir+'/Data/'+srem+'.dat'):
+                os.remove(globs.installdir+'/Data/'+srem+'.dat')
             choice = QMessageBox.information(self.geWindow,'Remove','Successfully removed from the database!')
+        self.matchgeomcoord()
     #############################
     ### Chem Database window ####
     #############################
@@ -1731,15 +1807,20 @@ class mGUI():
         rdir = self.etrdir.text()
         if rdir[-1]=='/':
             rdir = rdir[:-1]
-        # creat running dir if not existing
+        # create running dir if not existing
         if not os.path.isdir(rdir):
-            os.mkdir(rdir)
+            try:
+                os.mkdir(rdir)
+            except:
+                emsg = 'Directory '+rdir+' could not be created. Check your input.\n'
+                QMessageBox.critical(self.wmain,'Problem',emsg)
+                return
         # get parameters
         args = grabguivars(self)
         defaultparams = ['main.py','-i',rdir+'/geninput.inp']
         self.sgrid.setCurrentWidget(self.iWind)
         msgBox = QMessageBox()
-        if len(args['-rgen']) > 0:
+        if self.randomchk.getState():
             msgBox.setText("Random generation initiated. This process might take some time.")
             msgBox.setIcon(1)
             msgBox.setInformativeText('Please be patient. OK?')
@@ -1827,14 +1908,42 @@ class mGUI():
                 os.remove(locf+".svg")
                 shutil.move(locf+'.png',outbase+'.png')
                 self.c1p = mQPixmap(outbase+'.png')
+                rows = self.lgrid.rowCount()
+                if rows > 1:
+                    for i in reversed(range(self.lgrid.count())): 
+                        self.lgrid.itemAt(i).widget().setParent(None)
                 self.lgrid.addWidget(self.c1p,0,0)
                 # button for closing window
                 ctip = 'Close current window'
+                self.lwindow.setWindowTitle('Ligands 2D')
                 self.lwclose = mQPushButton('Close',ctip,14)
                 self.lwclose.clicked.connect(self.qcloseligs)
                 self.lgrid.addWidget(self.lwclose,1,0)
-                self.lwindow.showMaximized()
+                self.lwindow.show()
                 center(self.lwindow)
+    ### draw ligands
+    def viewgeom(self):
+        globs = globalvars()
+        # get geometry
+        geom = self.dcoordg.currentText()
+        gfname = globs.installdir+'/icons/geoms/'+geom+'.png'
+        if glob.glob(gfname):
+            rows = self.lgrid.rowCount()
+            if rows > 1:
+                for i in reversed(range(self.lgrid.count())): 
+                    self.lgrid.itemAt(i).widget().setParent(None)
+            self.c1p = mQPixmap(gfname)
+            self.lgrid.addWidget(self.c1p,0,0)
+            # button for closing window
+            ctip = 'Close current window'
+            self.lwclose = mQPushButton('Close',ctip,14)
+            self.lwclose.clicked.connect(self.qcloseligs)
+            self.lgrid.addWidget(self.lwclose,1,0)
+            self.lwindow.setWindowTitle('Geometry:'+self.dcoordg.currentText())
+            self.lwindow.show()
+            center(self.lwindow)
+        else:
+            mQDialogWarn('Warning','No file '+gfname+' exists..')
     ### draw results from db search
     def drawres(self):
         ### collects all the info and passes it to molSimplify ###
@@ -1909,6 +2018,10 @@ class mGUI():
                 os.remove(locf+".svg")
                 shutil.move(locf+'.png',outbase+'.png')
                 self.c1p = mQPixmap(outbase+'.png')
+                rows = self.lgrid.rowCount()
+                if rows > 1:
+                    for i in reversed(range(self.lgrid.count())): 
+                        self.lgrid.itemAt(i).widget().setParent(None)
                 self.lgrid.addWidget(self.c1p,0,0)
                 # button for closing window
                 ctip = 'Close current window'
@@ -1924,11 +2037,23 @@ class mGUI():
             self.etrgen.setDisabled(False)
             self.rtlignum.setDisabled(False)
             self.etlignum.setDisabled(False)
+            self.rtliggrp.setDisabled(False)
+            self.etliggrp.setDisabled(False)
+            self.rtligctg.setDisabled(False)
+            self.etligctg.setDisabled(False)
+            self.randkHs.setDisabled(False)
+            if len(self.etrgen.text())==0:
+                self.etrgen.setText('1')
         else:
             self.rtrgen.setDisabled(True)
             self.etrgen.setDisabled(True)
             self.rtlignum.setDisabled(True)
             self.etlignum.setDisabled(True)
+            self.rtliggrp.setDisabled(True)
+            self.etliggrp.setDisabled(True)
+            self.rtligctg.setDisabled(True)
+            self.etligctg.setDisabled(True)
+            self.randkHs.setDisabled(True)
     ### generate all enable FF input
     def disableffinput(self):
         if self.chkgenall.isChecked():
@@ -1969,7 +2094,8 @@ class mGUI():
             writeinputc(varsg,name)
     ### show help menu
     def qshowhelp(self):
-        a = 1
+        globs = globalvars()
+        QMessageBox.information(self.wmain,'About',globs.about)
     def getscreensize(self):
         screenShape = QDesktopWidget().screenGeometry()
         width = int(screenShape.width())
@@ -2004,17 +2130,6 @@ class mGUI():
         ct = ct[:-2]
         # set correct tooltip
         self.dcoordg.setToolTip(ct)
-    ### start window in browser to visualize molecule
-    def showmolBrowser(self):
-        if len(self.etrdir.text()) > 0 :
-            fd = self.etrdir.text()
-        else:
-            fd = '.'
-        fname = QFileDialog.getOpenFileName(self.qctWindow,'Open File',fd,"Molecule files *.xyz, *.mol *.sdf *.smi (*.xyz *.mol *.sdf *.smi)")[0]
-        if fname != '':
-            fname = os.path.relpath(fname)
-            fname = unicodedata.normalize('NFKD',fname).encode('ascii','ignore')
-            notebook.draw(fname) # draw molecule in browser
     ### enable extra molecule input
     def enableemol(self):
         if self.chkM.isChecked():

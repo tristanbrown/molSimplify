@@ -29,6 +29,20 @@ def norm(u):
         d += (u0*u0)
     d = sqrt(d)
     return d
+    
+#################
+### normalize ###
+#################
+def normalize(u):
+    # INPUT
+    #   - u: n-element list
+    # OUTPUT
+    #   - un: normalized vector
+    d = norm(u)
+    un = []
+    if d > 1.0e-13:
+        un.append(u/d)
+    return un
 
 #########################################
 ### Euclidean distance between points ###
@@ -83,10 +97,12 @@ def checkplanar(R1,R2,R3,R4):
     #   - R2: 3-element list representing point 2
     #   - R3: 3-element list representing point 3
     #   - R4: 3-element list representing point 4
-    theta,u0 = rotation_params(R2,R1,R3)
-    theta,u1 = rotation_params(R2,R4,R3)
-    dd = cross(array(u0),array(u1))
-    if norm(dd) < 1.e-01:
+    r31 = vecdiff(R3,R1)
+    r21 = vecdiff(R2,R1)
+    r43 = vecdiff(R4,R3)
+    cr0 = cross(array(r21),array(r43))
+    dd = dot(r31,cr0)
+    if abs(dd) < 1.e-1:
         return True
     else:
         return False
@@ -99,13 +115,35 @@ def vecangle(r1,r2):
     #   - r1: list representing vector r1
     #   - r2: list representing vector r2
     # OUTPUT
-    #   - theta: angle between vectors
+    #   - theta: angle between vectors in degrees
     # angle between r10 and r21
     if(norm(r2)*norm(r1) > 1e-16):
         theta = 180*arccos(dot(r2,r1)/(norm(r2)*norm(r1)))/pi
     else:
         theta = 0.0
     return theta
+
+################################################
+########## gets point in line on a  ############
+############ predefined distance ###############
+################################################
+def getPointu(Rr, dist, u):
+    # INPUT
+    #   - Rr: coordinates of reference point
+    #   - dist: final distance
+    #   - u: direction
+    # OUTPUT
+    #   - P: final point
+    # get float bond length
+    bl = float(dist)
+    # get unit vector through line r = r0 + t*u
+    t = bl/norm(u) # get t as t=bl/norm(r1-r0)
+    # get point
+    P = [0,0,0]
+    P[0] = t*u[0]-Rr[0]
+    P[1] = t*u[1]-Rr[1]
+    P[2] = t*u[2]-Rr[2]
+    return P
 
 ##################################################
 ### gets perpendicular vector to plane r10,r21 ###

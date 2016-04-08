@@ -98,6 +98,8 @@ def tcgen(args,strfiles,method):
         jobparams['run'] = 'energy'
     elif (args.runtyp and 'ts' in args.runtyp.lower()):
         jobparams['run'] = 'ts'
+    elif (args.runtyp and 'gradient' in args.runtyp.lower()):
+        jobparams['run'] = 'gradient'
     if (args.gpus):
         jobparams['gpus'] = args.gpus
     if (args.dispersion):

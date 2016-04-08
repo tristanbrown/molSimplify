@@ -27,98 +27,66 @@ def getligands(gui):
         ligs += gui.lig0.text().replace(' ','')
         ligoccs += str(gui.lig0occ.value())
         kHs += gui.lig0H.currentText()
-        if len(gui.lig0conn.text().replace(' ','')) > 0:
-            lcats += gui.lig0conn.text().replace(' ','')
-        if len(gui.lig0ML.text().replace(' ','')) > 0:
-            MLb += gui.lig0ML.text().replace(' ','')
-        if len(gui.lig0an.text().replace(' ','')) > 0:
-            lcats += gui.lig0an.text().replace(' ','')
-        if len(gui.lig0nam.text().replace(' ','')) > 0:
-            lcats += gui.lig0nam.text().replace(' ','')
+        lcats += gui.lig0conn.text().replace(' ','')
+        MLb += gui.lig0ML.text().replace(' ','')
+        lang += gui.lig0an.text().replace(' ','')
+        lname += gui.lig0nam.text().replace(' ','')
     if len(gui.lig1.text().replace(' ','')) > 0:
         ligs += ','+gui.lig1.text().replace(' ','')
         ligoccs += ','+str(gui.lig1occ.value())
         kHs += ','+gui.lig1H.currentText()
-        if len(gui.lig1conn.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig1conn.text().replace(' ','')
-        if len(gui.lig1ML.text().replace(' ','')) > 0:
-            MLb += ','+gui.lig1ML.text().replace(' ','')
-        if len(gui.lig1an.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig1an.text().replace(' ','')
-        if len(gui.lig1nam.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig1nam.text().replace(' ','')
+        lcats += '/'+gui.lig1conn.text().replace(' ','')
+        MLb += ','+gui.lig1ML.text().replace(' ','')
+        lang += ','+gui.lig1an.text().replace(' ','')
+        lname += ','+gui.lig1nam.text().replace(' ','')
     if len(gui.lig2.text().replace(' ','')) > 0:
         ligs += ','+gui.lig2.text().replace(' ','')
         ligoccs += ','+str(gui.lig2occ.value())
         kHs += ','+gui.lig2H.currentText()
-        if len(gui.lig2conn.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig2conn.text().replace(' ','')
-        if len(gui.lig2ML.text().replace(' ','')) > 0:
-            MLb += ','+gui.lig2ML.text().replace(' ','')
-        if len(gui.lig2an.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig2an.text().replace(' ','')
-        if len(gui.lig2nam.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig2nam.text().replace(' ','')
+        lcats += '/'+gui.lig2conn.text().replace(' ','')
+        MLb += ','+gui.lig2ML.text().replace(' ','')
+        lang += ','+gui.lig2an.text().replace(' ','')
+        lname += ','+gui.lig2nam.text().replace(' ','')
     if len(gui.lig3.text().replace(' ','')) > 0:
         ligs += ','+gui.lig3.text().replace(' ','')
         ligoccs += ','+str(gui.lig3occ.value())
         kHs += ','+gui.lig3H.currentText()
-        if len(gui.lig3conn.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig3conn.text().replace(' ','')
-        if len(gui.lig3ML.text().replace(' ','')) > 0:
-            MLb += ','+gui.lig3ML.text().replace(' ','')
-        if len(gui.lig3an.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig3an.text().replace(' ','')
-        if len(gui.lig3nam.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig3nam.text().replace(' ','')
+        lcats += '/'+gui.lig3conn.text().replace(' ','')
+        MLb += ','+gui.lig3ML.text().replace(' ','')
+        lang += ','+gui.lig3an.text().replace(' ','')
+        lname += ','+gui.lig3nam.text().replace(' ','')
     if len(gui.lig4.text().replace(' ','')) > 0:
         ligs += ','+gui.lig4.text().replace(' ','')
         ligoccs += ','+str(gui.lig4occ.value())
         kHs += ','+gui.lig4H.currentText()
-        if len(gui.lig4conn.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig4conn.text().replace(' ','')
-        if len(gui.lig4ML.text().replace(' ','')) > 0:
-            MLb += ','+gui.lig4ML.text().replace(' ','')
-        if len(gui.lig4an.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig4an.text().replace(' ','')
-        if len(gui.lig4nam.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig4nam.text().replace(' ','')
+        lcats += ','+gui.lig4conn.text().replace(' ','')
+        MLb += '/'+gui.lig4ML.text().replace(' ','')
+        lang += ','+gui.lig4an.text().replace(' ','')
+        lname += ','+gui.lig4nam.text().replace(' ','')
     if len(gui.lig5.text().replace(' ','')) > 0:
         ligs += ','+gui.lig5.text().replace(' ','')
         ligoccs += ','+str(gui.lig5occ.value())
         kHs += ','+gui.lig5H.currentText()
-        if len(gui.lig5conn.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig5conn.text().replace(' ','')
-        if len(gui.lig5ML.text().replace(' ','')) > 0:
-            MLb += ','+gui.lig5ML.text().replace(' ','')
-        if len(gui.lig5an.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig5an.text().replace(' ','')
-        if len(gui.lig5nam.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig5nam.text().replace(' ','')
+        lcats += '/'+gui.lig5conn.text().replace(' ','')
+        MLb += ','+gui.lig5ML.text().replace(' ','')
+        lang += ','+gui.lig5an.text().replace(' ','')
+        lname += ','+gui.lig5nam.text().replace(' ','')
     if len(gui.lig6.text().replace(' ','')) > 0:
         ligs += ','+gui.lig6.text().replace(' ','')
         ligoccs += ','+str(gui.lig6occ.value())
         kHs += ','+gui.lig6H.currentText()
-        if len(gui.lig6conn.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig6conn.text().replace(' ','')
-        if len(gui.lig6ML.text().replace(' ','')) > 0:
-            MLb += ','+gui.lig6ML.text().replace(' ','')
-        if len(gui.lig6an.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig6an.text().replace(' ','')
-        if len(gui.lig6nam.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig6nam.text().replace(' ','')
+        lcats += '/'+gui.lig6conn.text().replace(' ','')
+        MLb += ','+gui.lig6ML.text().replace(' ','')
+        lang += ','+gui.lig6an.text().replace(' ','')
+        lname += ','+gui.lig6nam.text().replace(' ','')
     if len(gui.lig7.text().replace(' ','')) > 0:
         ligs += ','+gui.lig7.text().replace(' ','')
         ligoccs += ','+str(gui.lig7occ.value())
         kHs += ','+gui.lig7H.currentText()
-        if len(gui.lig7conn.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig7conn.text().replace(' ','')
-        if len(gui.lig7ML.text().replace(' ','')) > 0:
-            MLb += ','+gui.lig7ML.text().replace(' ','')
-        if len(gui.lig7an.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig7an.text().replace(' ','')
-        if len(gui.lig7nam.text().replace(' ','')) > 0:
-            lcats += ','+gui.lig7nam.text().replace(' ','')
+        lcats += '/'+gui.lig7conn.text().replace(' ','')
+        MLb += ','+gui.lig7ML.text().replace(' ','')
+        lang += ','+gui.lig7an.text().replace(' ','')
+        lname += ','+gui.lig7nam.text().replace(' ','')
     return ligs,ligoccs,lcats,kHs,MLb,lang,lname
 
 
@@ -126,13 +94,13 @@ def getligands(gui):
 ########## set ligands  #############
 #########################################
 def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
-    ligs = filter(None,re.split(' |,|\t|&',ligs))
-    ligoccs = filter(None,re.split(' |,|\t|&',ligoccs))
-    lcats = filter(None,re.split('/|\t|&',lcats))
-    kHs = filter(None,re.split(' |,|\t|&',kHs))
-    MLb = filter(None,re.split(' |,|\t|&',MLb))
-    lang = filter(None,re.split(' |,|\t|&',lang))
-    lname = filter(None,re.split(' |,|\t|&',lname))
+    ligs = re.split(',|\t|&',ligs)
+    ligoccs = re.split(',|\t|&',ligoccs)
+    lcats = re.split('/|\t|&',lcats)
+    kHs = re.split(',|\t|&',kHs)
+    MLb = re.split(',|\t|&',MLb)
+    lang = re.split(',|\t|&',lang)
+    lname = re.split(',|\t|&',lname)
     if len(ligs) > 0:
         gui.lig0.setText(ligs[0])
         if len(ligoccs) > 0:
@@ -391,24 +359,38 @@ def grabguivars(gui):
     args['-core'] = gui.etcore.text()
     args['-ccatoms'] = gui.etccat.text()
     ligs,ligoccs,lcats,kHs,MLb,lang,lname=getligands(gui)
+    noligs = len(ligs.split(','))
     args['-lig'] = ligs
-    args['-ligocc'] = ligoccs
-    args['-MLbonds'] = MLb
-    args['-pangles'] = lang
-    args['-keepHs'] = kHs
-    args['-smicat'] = lcats
-    args['-sminame'] = lname
+    if len(ligoccs) > noligs:
+        args['-ligocc'] = ligoccs
+    if len(MLb) > noligs:
+        args['-MLbonds'] = MLb
+    if len(lang) > noligs:
+        args['-pangles'] = lang
+    if len(kHs) > noligs:
+        args['-keepHs'] = kHs
+    if len(lcats) > noligs:
+        args['-smicat'] = lcats
+    if len(lname) > noligs:
+        args['-sminame'] = lname
     if gui.replig.getState():
         args['-replig'] = '1'
-    if gui.ligforder.getState():
-        args['ligorder'] = '1'
+    if gui.ligfloc.getState():
+        args['-ligloc'] = '1'
+    if gui.ligfalign.getState():
+        args['-ligalign'] = '1'
     if gui.chkgenall.getState():
         args['-genall'] = '1'
     args['-coord'] = gui.dcoord.currentText()
     args['-geometry'] = gui.dcoordg.currentText()
-    args['-lignum'] = gui.etlignum.text()
+    if gui.randomchk.getState():
+        args['-lignum'] = gui.etlignum.currentText()
+        args['-liggrp'] = gui.etliggrp.currentText()
+        args['-ligctg'] = gui.etligctg.currentText()
+        args['-rgen'] = gui.etrgen.text()
+        if gui.randkHs.getState():
+            args['-rkHs'] = 'yes'
     args['-distort'] = str(gui.sdist.value())
-    args['-rgen'] = gui.etrgen.text()
     args['-oxstate'] = gui.doxs.currentText()
     args['-spin'] = gui.dspin.currentText()
     args['-rundir'] = gui.etrdir.text()
@@ -504,7 +486,7 @@ def grabguivarstc(gui):
     args['-dispersion'] = gui.qctsel.currentText()
     args['-qoption'] = gui.qceditor.toPlainText()
     ### write input file ###
-    writeinputc(args,globs.homedir+'/.tcdefinput.inp')
+    writeinputc(args,globs.installdir+'/Data/.tcdefinput.inp')
     return args
 
 ######################################################
@@ -527,7 +509,7 @@ def grabguivarsgam(gui):
     args['-scfoption'] = gui.qcgedscf.toPlainText()
     args['-statoption'] = gui.qcgedstat.toPlainText()
     ### write input file ###
-    writeinputc(args,globs.homedir+'/.gamdefinput.inp')
+    writeinputc(args,globs.installdir+'/Data/.gamdefinput.inp')
     return args
 
 #####################################################
@@ -547,7 +529,7 @@ def grabguivarsqch(gui):
     if gui.chQun:
         args['-unrestricted'] = '1'
     ### write input file ###
-    writeinputc(args,globs.homedir+'/.qchdefinput.inp')
+    writeinputc(args,globs.installdir+'/Data/.qchdefinput.inp')
     return args
 
 #########################################################
@@ -567,7 +549,7 @@ def grabguivarsjob(gui):
     args['-joption'] = gui.etjopt.toPlainText()
     args['-jcommand'] = gui.jcomm.toPlainText()
     ### write input file ###
-    writeinputc(args,globs.homedir+'/.jobdefinput.inp')
+    writeinputc(args,globs.installdir+'/Data/.jobdefinput.inp')
     return args
 
 ############################################################
@@ -646,13 +628,13 @@ def loadfrominputtc(gui,fname):
     s = f.read()
     s = filter(None,s.splitlines())
     f.close()
-    db = False
+    gui.qceditor.setText('')
     ### general structure generation options ###
     for ss in s:
         st = ss.split(None,1)
         if '-charge'==st[0]:
             gui.etqctch.setText(st[-1])
-        if 'spin'==st[0]:
+        if '-spin'==st[0]:
             gui.etqctspin.setText(st[-1])
         if '-runtyp'==st[0]:
             gui.qctcalc.setCurrentText(st[-1])
@@ -663,11 +645,9 @@ def loadfrominputtc(gui,fname):
         if '-dispersion'==st[0]:
             gui.qctsel.setCurrentText(st[-1])
         if '-qoption'==st[0]:
-            gui.qceditor.setText(gui.qceditor.toPlainText()+'\n'+st[-1])
+            gui.qceditor.setText(gui.qceditor.toPlainText()+st[-1]+'\n')
         if '-charge'==st[0]:
             gui.etqctch.setText(st[-1])
-        if '-spin'==st[0]:
-            gui.etqctspin.setText(st[-1])
         if '-runtyp'==st[0]:
             gui.qctcalc.setCurrentText(st[-1])
 #####################################################
@@ -678,7 +658,10 @@ def loadfrominputgam(gui,fname):
     s = f.read()
     s = filter(None,s.splitlines())
     f.close()
-    db = False
+    gui.qcgedsys.setText('')
+    gui.qcgedctrl.setText('')
+    gui.qcgedscf.setText('')
+    gui.qcgedstat.setText('')
     ### general structure generation options ###
     for ss in s:
         st = ss.split(None,1)
@@ -700,13 +683,13 @@ def loadfrominputgam(gui,fname):
         if '-ndfunc'==st[0]:
             gui.etqcndfunc.setText(st[-1])
         if '-sysoption'==st[0]:
-            gui.qcgedsys.setText(gui.qcgedsys.toPlainText()+'\n'+st[-1])
+            gui.qcgedsys.setText(gui.qcgedsys.toPlainText()+st[-1]+'\n')
         if '-ctrloption'==st[0]:
-            gui.qcgedctrl.setText(gui.qcgedctrl.toPlainText()+'\n'+st[-1])
+            gui.qcgedctrl.setText(gui.qcgedctrl.toPlainText()+st[-1]+'\n')
         if '-scfoption'==st[0]:
-            gui.qcgedscf.setText(gui.qcgedscf.toPlainText()+'\n'+st[-1])
+            gui.qcgedscf.setText(gui.qcgedscf.toPlainText()+st[-1]+'\n')
         if '-statoption'==st[0]:
-            gui.qcgedstat.setText(gui.qcgedstat.toPlainText()+'\n'+st[-1])
+            gui.qcgedstat.setText(gui.qcgedstat.toPlainText()+st[-1]+'\n')
 ####################################################
 ########### loads input file to QChem  #############
 ####################################################
@@ -715,7 +698,7 @@ def loadfrominputqch(gui,fname):
     s = f.read()
     s = filter(None,s.splitlines())
     f.close()
-    db = False
+    gui.qcQeditor.setText('')
     ### general structure generation options ###
     for ss in s:
         st = ss.split(None,1)
@@ -729,7 +712,7 @@ def loadfrominputqch(gui,fname):
         if '-runtyp'==st[0]:
             gui.qcQcalc.setCurrentText(st[-1])
         if '-remoption'==st[0]:
-            gui.qcQeditor.setText(gui.qcQeditor.toPlainText()+'\n'+st[-1])
+            gui.qcQeditor.setText(gui.qcQeditor.toPlainText()+st[-1]+'\n')
         if '-exchange'==st[0]:
             gui.etqcQex.setText(st[-1])
         if '-correlation'==st[0]:
@@ -744,7 +727,8 @@ def loadfrominputjob(gui,fname):
     s = f.read()
     s = filter(None,s.splitlines())
     f.close()
-    db = False
+    gui.etjopt.setText('')
+    gui.jcomm.setText('')
     ### general structure generation options ###
     for ss in s:
         st = ss.split(None,1)
@@ -764,9 +748,9 @@ def loadfrominputjob(gui,fname):
         if '-modules'==st[0]:
             gui.etjmod.setText(st[-1])
         if '-joption'==st[0]:
-            gui.etjopt.setText(gui.etjopt.toPlainText()+'\n'+st[-1])
+            gui.etjopt.setText(gui.etjopt.toPlainText()+st[-1]+'\n')
         if '-jcommand'==st[0]:
-            gui.jcomm.setText(gui.jcomm.toPlainText()+'\n'+st[-1])
+            gui.jcomm.setText(gui.jcomm.toPlainText()+st[-1]+'\n')
 #################################################
 ########## loads input file to GUI  #############
 #################################################
@@ -777,6 +761,15 @@ def loadfrominputfile(gui,fname):
     f.close()
     db = False
     ligs,ligoccs,lcats,kHs,MLb,lang,lname='','','','','','',''
+    # reset edit boxes
+    gui.qceditor.setText('')
+    gui.qcgedsys.setText('')
+    gui.qcgedctrl.setText('')
+    gui.qcgedscf.setText('')
+    gui.qcgedstat.setText('')
+    gui.qcQeditor.setText('')
+    gui.etjopt.setText('')
+    gui.jcomm.setText('')
     ### general structure generation options ###
     for ss in s:
         st = ss.split(None,1)
@@ -791,9 +784,12 @@ def loadfrominputfile(gui,fname):
         if '-replig'==st[0]:
             if checkTrue(st[-1]):
                 gui.replig.setChecked(True)
-        if '-ligorder'==st[0]:
+        if '-ligloc'==st[0]:
             if checkTrue(st[-1]):
-                gui.ligforder.setChecked(True)
+                gui.ligfloc.setChecked(True)
+        if '-ligalign'==st[0]:
+            if checkTrue(st[-1]):
+                gui.ligfalign.setChecked(True)
         if '-genall'==st[0]:
             if checkTrue(st[-1]):
                 gui.chkgenall.setChecked(True)
@@ -810,9 +806,17 @@ def loadfrominputfile(gui,fname):
         if '-geometry'==st[0]:
             gui.dcoordg.setCurrentText(st[-1])
         if '-lignum'==st[0]:
-            gui.etlignum.setText(st[-1])
+            gui.etlignum.setCurrentText(st[-1])
+        if '-liggrp'==st[0]:
+            gui.etliggrp.setCurrentText(st[-1])
+        if '-ligctg'==st[0]:
+            gui.etligctg.setCurrentText(st[-1])
+        if '-rkHs'==st[0]:
+            if checkTrue(st[-1]):
+                gui.randkHs.setChecked(True)
         if '-rgen'==st[0]:
             gui.etrgen.setText(st[-1])
+            gui.randomchk.setChecked(True)
         if '-keepHs'==st[0]:
             kHs = st[-1]
         if '-smicat'==st[0]:
@@ -888,7 +892,7 @@ def loadfrominputfile(gui,fname):
         if '-dispersion'==st[0]:
             gui.qctsel.setCurrentText(st[-1])
         if '-qoption'==st[0]:
-            gui.qceditor.setText(gui.qceditor.toPlainText()+'\n'+st[-1])
+            gui.qceditor.setText(gui.qceditor.toPlainText()+st[-1]+'\n')
         if '-charge'==st[0]:
             gui.etqcgch.setText(st[-1])
             gui.etqctch.setText(st[-1])
@@ -913,15 +917,15 @@ def loadfrominputfile(gui,fname):
         if '-ndfunc'==st[0]:
             gui.etqcndfunc.setText(st[-1])
         if '-sysoption'==st[0]:
-            gui.qcgedsys.setText(gui.qcgedsys.toPlainText()+'\n'+st[-1])
+            gui.qcgedsys.setText(gui.qcgedsys.toPlainText()+st[-1]+'\n')
         if '-ctrloption'==st[0]:
-            gui.qcgedctrl.setText(gui.qcgedctrl.toPlainText()+'\n'+st[-1])
+            gui.qcgedctrl.setText(gui.qcgedctrl.toPlainText()+st[-1]+'\n')
         if '-scfoption'==st[0]:
-            gui.qcgedscf.setText(gui.qcgedscf.toPlainText()+'\n'+st[-1])
+            gui.qcgedscf.setText(gui.qcgedscf.toPlainText()+st[-1]+'\n')
         if '-statoption'==st[0]:
-            gui.qcgedstat.setText(gui.qcgedstat.toPlainText()+'\n'+st[-1])
+            gui.qcgedstat.setText(gui.qcgedstat.toPlainText()+st[-1]+'\n')
         if '-remoption'==st[0]:
-            gui.qcQeditor.setText(gui.qcQeditor.toPlainText()+'\n'+st[-1])
+            gui.qcQeditor.setText(gui.qcQeditor.toPlainText()+st[-1]+'\n')
         if '-exchange'==st[0]:
             gui.etqcQex.setText(st[-1])
         if '-correlation'==st[0]:
@@ -948,9 +952,9 @@ def loadfrominputfile(gui,fname):
         if '-modules'==st[0]:
             gui.etjmod.setText(st[-1])
         if '-joption'==st[0]:
-            gui.etjopt.setText(gui.etjopt.toPlainText()+'\n'+st[-1])
+            gui.etjopt.setText(gui.etjopt.toPlainText()+st[-1]+'\n')
         if '-jcommand'==st[0]:
-            gui.jcomm.setText(gui.jcomm.toPlainText()+'\n'+st[-1])
+            gui.jcomm.setText(gui.jcomm.toPlainText()+st[-1]+'\n')
         ### database search options ###
         if '-dbsim'==st[0]:
             gui.etcDBsmi.setText(st[-1])

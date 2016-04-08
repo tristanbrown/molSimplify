@@ -16,43 +16,6 @@ from collections import Counter
 import pybel
 
 #######################################
-### unconstrained random generation ###
-#######################################
-def randomgen(installdir,rundir,args,globs):
-    emsg = False
-    print 'Random generation started..\n\n'
-    # load global variables
-    licores = readdict(installdir+'/Ligands/ligands.dict')
-    # remove empty ligand
-    licores.pop("x", None)
-    # get all combinations of ligands
-    combos = []
-    for i in range(1,8):
-        for combs in itertools.combinations(range(0,len(licores)),i):
-            combos.append(combs)
-    # get a sample of these combinations
-    samps = random.sample(range(0,len(combos)),int(args.rgen[0]))
-    # loop over samples
-    for c in samps:
-        combo = combos[c]
-        args.lig = []
-        args.ligocc = []
-        args.totocc = 0 
-        combol = list(combo)
-        random.shuffle(combol)
-        for cj in combol:
-            rocc = random.randint(1,8-args.totocc+1) # random occupation
-            cats = licores[licores.keys()[cj]][2] # connection atoms
-            trocc = rocc*int(len(cats)) # denticity*occs
-            if args.totocc+trocc <= 8:
-                args.lig.append(licores.keys()[cj])
-                args.ligocc.append(rocc)
-                args.totocc += trocc
-        if len(args.lig) > 0 :
-                emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
-    return args, emsg
-
-#######################################
 ### get subset between list1, list2 ###
 #######################################
 def counterSubset(list1, list2):
@@ -130,6 +93,9 @@ def constrgen(installdir,rundir,args,globs):
         for i,l in enumerate(args.lig):
             ligs0.append(l)
             ligentry,emsg = lig_load(installdir,l,licores) # check ligand
+            # update ligand
+            if ligentry:
+                args.lig[i] = ligentry.name
             if emsg:
                 return False,emsg
             if args.ligocc:
@@ -147,8 +113,18 @@ def constrgen(installdir,rundir,args,globs):
             if args.lignum:
                 args.lignum = str(int(args.lignum) - 1)
             if coord:
-                coord -= int(args.ligocc[i])*len(licores[l][2])
+                coord -= int(args.ligocc[i])*ligentry.denticity
             licores.pop(l, None) # remove from dictionary
+    # check for ligand groups
+    licoresnew = dict()
+    if args.liggrp and 'all'!=args.liggrp.lower():
+        for key in licores.keys():
+            if args.liggrp.lower() in licores[key][3]:
+                if not args.ligctg or args.ligctg.lower()=='all':
+                    licoresnew[key] = licores[key]
+                elif args.ligctg and args.ligctg.lower() in licores[key][3]:
+                    licoresnew[key] = licores[key]
+        licores = licoresnew
     # get a sample of these combinations
     samps = getconstsample(int(args.rgen[0]),args,licores,coord)
     if len(samps)==0:
@@ -174,6 +150,13 @@ def constrgen(installdir,rundir,args,globs):
             rocc = lcount[cj]
             args.lig.append(licores.keys()[cj])
             args.ligocc.append(rocc)
+        # check for keep Hydrogens
+        for iiH in range(len(ligs0),len(args.lig)):
+            opt = 'yes' if args.rkHs else 'no'
+            if len(args.keepHs) > iiH:
+                args.keepHs[iiH] = opt
+            else:
+                args.keepHs.append(opt)
         emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
     return args, emsg
 
@@ -322,6 +305,10 @@ def rungen(installdir,rundir,args,chspfname,globs):
             lig = ''
             for i,l in enumerate(ligands):
                 ligentry,emsg = lig_load(installdir,l,licores)
+                # update ligand
+                if ligentry:
+                    ligands[i] = ligentry.name
+                    args.lig[i] = ligentry.name
                 if emsg:
                     skip = True
                     break
@@ -384,7 +371,11 @@ def rungen(installdir,rundir,args,chspfname,globs):
         elif rootcheck and (not os.path.isdir(rootcheck) or not args.checkdirt) and not skip:
             print rootcheck
             args.checkdirt = True
-            os.mkdir(rootcheck)
+            try:
+                os.mkdir(rootcheck)
+            except:
+                print 'Directory '+rootcheck+' can not be created. Exiting..\n'
+                return
         # check for actual directory
         if os.path.isdir(rootdir) and not args.checkdirb and not skip:
             args.checkdirb = True

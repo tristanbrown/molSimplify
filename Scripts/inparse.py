@@ -239,10 +239,18 @@ def parseinput(args):
                     args.lig = l[1:]
             if (l[0]=='-lignum'):
                 args.lignum = l[1]
+            if (l[0]=='-liggrp'):
+                args.liggrp = l[1]
+            if (l[0]=='-ligctg'):
+                args.ligctg = l[1]
             if (l[0]=='-ligocc'):
                 args.ligocc = l[1:]
-            if (l[0]=='-ligorder'):
-                args.ligorder = checkTrue(l[1])
+            if (l[0]=='-rkHs'):
+                args.rkHs = checkTrue(l[1])
+            if (l[0]=='-ligloc'):
+                args.ligloc = checkTrue(l[1])
+            if (l[0]=='-ligalign'):
+                args.ligalign = checkTrue(l[1])
             if (l[0]=='-replig'):
                 args.replig = checkTrue(l[1])
             if (l[0]=='-genall'):
@@ -272,18 +280,19 @@ def parseinput(args):
                     args.sminame = l[1:]
             if 'smicat' in line:
                 args.smicat = []
-                l = filter(None,re.split('/|\t|&',l))
+                l = line.split(' ',1)[1]
+                l = filter(None,re.split('/|\t|&|\n',l))
                 for ll in l:
                     lloc = []
-                    ll = filter(None,re.split('| |,',ll))
-                    for lll in ll:
+                    l1 = filter(None,re.split(',| ',ll))
+                    for lll in l1:
                         lloc.append(int(lll)-1)
                     args.smicat.append(lloc)
             # parse qc arguments
             if (l[0]=='-qccode'):
                 args.qccode = l[1]
             if (l[0]=='-calccharge'):
-                args.calccharge = l[1]
+                args.calccharge = checkTrue(l[1])
             if (l[0]=='-charge'):
                 args.charge = l[1:]
             if (l[0]=='-spin'):
@@ -454,7 +463,11 @@ def parsecommandline(parser):
     parser.add_argument("-lig","--lig", help="ligand structure name or SMILES with currently available: "+getligs(installdir),action="store_true") #e.g. acetate (in smilesdict)
     parser.add_argument("-ligocc","--ligocc", help="number of corresponding ligands e.g. 2,2,1",action="store_true") # e.g. 1,2,1
     parser.add_argument("-lignum","--lignum", help="number of ligand types e.g. 2",action="store_true") 
-    parser.add_argument("-ligorder","--ligorder", help="force order of ligands in the structure generation yes/True/1 or no/False/0",action="store_true") 
+    parser.add_argument("-liggrp","--liggrp", help="ligand group for random generation",action="store_true") 
+    parser.add_argument("-ligctg","--ligctg", help="ligand category for random generation",action="store_true") 
+    parser.add_argument("-rkHs","--rkHs", help="keep Hydrogens for random generation",action="store_true") 
+    parser.add_argument("-ligloc","--ligloc", help="force location of ligands in the structure generation yes/True/1 or no/False/0",action="store_true") 
+    parser.add_argument("-ligalign","--ligalign", help="smart alignment of ligands in the structure generation yes/True/1 or no/False/0",action="store_true") 
     parser.add_argument("-MLbonds","--MLbonds", help="custom M-L bond length for corresponding ligand in A e.g. 1.4",action="store_true") 
     parser.add_argument("-distort","--distort", help="randomly distort backbone. Ranges from 0 (no distortion) to 100. e.g. 20",action="store_true") 
     parser.add_argument("-langles","--langles", help="custom angles (polar theta, azimuthal phi) for corresponding ligand in degrees separated by '/' e.g. 20/30,10/20",action="store_true") 

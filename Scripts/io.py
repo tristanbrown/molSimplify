@@ -257,7 +257,6 @@ def lig_load(installdir,userligand,licores):
         subligs = [key for key in licores if userligand.lower() in licores[key][3]]
         # randomly select ligand
         userligand = random.choice(subligs)
-    print userligand
     if '~' in userligand:
         homedir = os.path.expanduser("~")
         userligand = userligand.replace('~',homedir)
@@ -279,11 +278,14 @@ def lig_load(installdir,userligand,licores):
             lig.OBmol = lig.getOBmol(flig,'molf')
         elif ('.smi' in flig):
             lig.OBmol = lig.getOBmol(flig,'smif')
-            lig.OBmol.make3D('mmff94',0) # generate 3D coords
+        # generate coordinates if not existing
+        if lig.OBmol.dim==0:
+            lig.OBmol.make3D('mmff94',0) # add hydrogens and coordinates
         lig.cat = [int(l) for l in dbentry[2]]
         lig.denticity = len(dbentry[2])
         lig.ident = dbentry[1]
         lig.charge = lig.OBmol.charge
+        lig.ffopt = dbentry[4]
         if len(dbentry) > 2:
             lig.grps = dbentry[3]
         else:
@@ -295,7 +297,8 @@ def lig_load(installdir,userligand,licores):
             # try and catch error if conversion doesn't work
             try:
                 lig.OBmol = lig.getOBmol(userligand,ftype+'f') # convert from smiles
-                if 'smi' not in userligand:
+                # generate coordinates if not existing
+                if lig.OBmol.dim==0:
                     lig.OBmol.make3D('mmff94',0) # add hydrogens and coordinates
                 lig.charge = lig.OBmol.charge
             except IOError:
@@ -305,6 +308,7 @@ def lig_load(installdir,userligand,licores):
             lig.ident = lig.ident.split('.'+ftype)[0]
         else:
             emsg = 'Ligand file '+userligand+' does not exist. Exiting..\n'
+            print emsg
             return False,emsg
     ### if not, try converting from SMILES
     else:
@@ -324,7 +328,8 @@ def lig_load(installdir,userligand,licores):
             return False,emsg
         lig.cat = [0]
         lig.denticity = 1
-        lig.ident = 'smi'        
+        lig.ident = 'smi'
+    lig.name = userligand
     return lig,emsg
 
 ####################################
