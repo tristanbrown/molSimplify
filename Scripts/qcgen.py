@@ -94,7 +94,7 @@ def tcgen(args,strfiles,method):
                 unrestricted=True
         else:
             jobparams['method'] = 'b3lyp'
-    if (args.runtyp and 'en' in args.runtyp.lower()):
+    if (args.runtyp and 'energy' in args.runtyp.lower()):
         jobparams['run'] = 'energy'
     elif (args.runtyp and 'ts' in args.runtyp.lower()):
         jobparams['run'] = 'ts'

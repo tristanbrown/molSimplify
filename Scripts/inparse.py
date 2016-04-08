@@ -473,10 +473,10 @@ def parsecommandline(parser):
     parser.add_argument("-langles","--langles", help="custom angles (polar theta, azimuthal phi) for corresponding ligand in degrees separated by '/' e.g. 20/30,10/20",action="store_true") 
     parser.add_argument("-pangles","--pangles", help="custom angles (polar theta, azimuthal phi) for corresponding connectino points in degrees separated by '/' e.g. 20/30,10/20",action="store_true") 
     parser.add_argument("-nbind","--bindnum", help="number of binding species copies for random placement",action="store_true") #different geometric arrangements for calculating binding energy
-    parser.add_argument("-rgen","--rgen", help="number of random generated molecules, overwrites lig and ligcorr",action="store_true")
+    parser.add_argument("-rgen","--rgen", help="number of random generated molecules",action="store_true")
     parser.add_argument("-replig","--replig", help="flag for replacing ligand at specified connection point",action="store_true")
     parser.add_argument("-ff","--ff",help="select force field for FF optimization. Available: MMFF94, UFF, GAFF, Ghemical",action="store_true")
-    parser.add_argument("-ffoption","--ffoption",help="select when to perform FF optimization. Options: B(Before),A(After),E(End),BA,BE,AE,ABE",action="store_true")
+    parser.add_argument("-ffoption","--ffoption",help="select when to perform FF optimization. Options: B(Before),A(After),BA",action="store_true")
     parser.add_argument("-keepHs","--keepHs", help="force keep hydrogens. By default ligands are stripped one hydrogen in order to connect to the core",action="store_true") 
     parser.add_argument("-smicat","--smicat", help="connecting atoms corresponding to smiles. Indexing starts at 1 which is the default value as well",action="store_true")
     parser.add_argument("-sminame","--sminame", help="name for smiles species used in the folder naming. e.g. amm",action="store_true") 

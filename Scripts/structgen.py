@@ -580,7 +580,6 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
         for j in range(len(args.MLbonds),len(ligs)):
             MLb.append(False)
         MLb = [MLb[i] for i in indcs] # sort MLbonds list
-    print MLb
     ### sort ligands custom angles ###
     langles = False
     if args.langles:

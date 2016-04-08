@@ -424,6 +424,7 @@ def grabguivars(gui):
             if gui.chch.getState():
                 args['-calccharge'] = 'yes'
             args['-spin'] = gui.etqctspin.text()
+            print gui.qctcalc.currentText()
             args['-runtyp'] = gui.qctcalc.currentText()
             args['-method'] = gui.etqctmethod.text()
             args['-basis'] = gui.etqctbasis.text()

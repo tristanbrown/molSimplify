@@ -153,9 +153,9 @@ def constrgen(installdir,rundir,args,globs):
         # check for keep Hydrogens
         for iiH in range(len(ligs0),len(args.lig)):
             opt = 'yes' if args.rkHs else 'no'
-            if len(args.keepHs) > iiH:
+            if args.keepHs and len(args.keepHs) > iiH:
                 args.keepHs[iiH] = opt
-            else:
+            elif args.keepHs:
                 args.keepHs.append(opt)
         emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
     return args, emsg
