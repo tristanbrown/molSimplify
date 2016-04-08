@@ -103,7 +103,7 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
     lname = re.split(',|\t|&',lname)
     if len(ligs) > 0:
         gui.lig0.setText(ligs[0])
-        if len(ligoccs) > 0:
+        if len(ligoccs) > 0 and ligoccs[0]!='':
             gui.lig0occ.setValue(int(ligoccs[0]))
         if len(lcats) > 0:
             gui.lig0conn.setText(lcats[0])
@@ -120,7 +120,7 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
             gui.lig0nam.setText(lname[0])
     if len(ligs) > 1:
         gui.lig1.setText(ligs[1])
-        if len(ligoccs) > 1:
+        if len(ligoccs) > 1 and ligoccs[1]!='':
             gui.lig1occ.setValue(int(ligoccs[1]))
         if len(lcats) > 1:
             gui.lig1conn.setText(lcats[1])
@@ -147,7 +147,7 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
         gui.lig1add.setDisabled(False)
     if len(ligs) > 2:
         gui.lig2.setText(ligs[2])
-        if len(ligoccs) > 2:
+        if len(ligoccs) > 2 and ligoccs[2]!='':
             gui.lig2occ.setValue(int(ligoccs[2]))
         if len(lcats) > 2:
             gui.lig2conn.setText(lcats[2])
@@ -174,7 +174,7 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
         gui.lig2add.setDisabled(False)
     if len(ligs) > 3:
         gui.lig3.setText(ligs[3])
-        if len(ligoccs) > 3:
+        if len(ligoccs) > 3 and ligoccs[3]!='':
             gui.lig3occ.setValue(int(ligoccs[3]))
         if len(lcats) > 3:
             gui.lig3conn.setText(lcats[3])
@@ -201,7 +201,7 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
         gui.lig3add.setDisabled(False)
     if len(ligs) > 4:
         gui.lig4.setText(ligs[4])
-        if len(ligoccs) > 4:
+        if len(ligoccs) > 4 and ligoccs[4]!='':
             gui.lig4occ.setValue(int(ligoccs[4]))
         if len(lcats) > 4:
             gui.lig4conn.setText(lcats[4])
@@ -228,7 +228,7 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
         gui.lig4add.setDisabled(False)
     if len(ligs) > 5:
         gui.lig5.setText(ligs[5])
-        if len(ligoccs) > 5:
+        if len(ligoccs) > 5 and ligoccs[5]!='':
             gui.lig5occ.setValue(int(ligoccs[5]))
         if len(lcats) > 5:
             gui.lig5conn.setText(lcats[5])
@@ -255,7 +255,7 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
         gui.lig5add.setDisabled(False)
     if len(ligs) > 6:
         gui.lig6.setText(ligs[6])
-        if len(ligoccs) > 6:
+        if len(ligoccs) > 6 and ligoccs[6]!='':
             gui.lig6occ.setValue(int(ligoccs[6]))
         if len(lcats) > 6:
             gui.lig6conn.setText(lcats[6])
@@ -283,8 +283,8 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
         gui.lig6add.setDisabled(False)
     if len(ligs) > 7:
         gui.lig7.setText(ligs[7])
-        if len(ligoccs) > 7:
-            gui.lig7occ.setValue(int(ligoccs[2]))
+        if len(ligoccs) > 7 and ligoccs[7]!='':
+            gui.lig7occ.setValue(int(ligoccs[7]))
         if len(lcats) > 7:
             gui.lig7conn.setText(lcats[7])
         if len(kHs) > 7:
@@ -359,7 +359,7 @@ def grabguivars(gui):
     args['-core'] = gui.etcore.text()
     args['-ccatoms'] = gui.etccat.text()
     ligs,ligoccs,lcats,kHs,MLb,lang,lname=getligands(gui)
-    noligs = len(ligs.split(','))
+    noligs = len(ligs.split(','))-1
     args['-lig'] = ligs
     if len(ligoccs) > noligs:
         args['-ligocc'] = ligoccs

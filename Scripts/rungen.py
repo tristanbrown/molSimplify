@@ -296,10 +296,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
             if (args.ligocc):
                 ligocc = args.ligocc
             else:
-                if len(args.lig)==1 and args.coord:
-                    ligocc.append(args.coord)
-                else:
-                    ligocc.append('1')
+                ligocc = ['1']
             for i in range(len(ligocc),len(ligands)):
                 ligocc.append('1')
             lig = ''

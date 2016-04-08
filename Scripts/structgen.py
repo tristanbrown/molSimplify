@@ -997,9 +997,8 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                             bondl = float(MLb[i]) # check for custom
                     else:
                         bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
-                    MLoptbds.append(bondl)
-                    MLoptbds.append(bondl)
-                    MLoptbds.append(bondl)
+                    for iib in range(02):
+                        MLoptbds.append(bondl)
                     # set correct distance
                     setPdistance(lig3D, lig3D.getAtom(atom0).coords(), m3D.getAtom(0).coords(), bondl)
                 elif (denticity == 4):
@@ -1055,10 +1054,8 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                             bondl = float(MLb[i]) # check for custom
                     else:
                         bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
-                    MLoptbds.append(bondl)
-                    MLoptbds.append(bondl)
-                    MLoptbds.append(bondl)
-                    MLoptbds.append(bondl)
+                    for iib in range(0,4):
+                        MLoptbds.append(bondl)
                 elif (denticity == 5):
                     # connection atoms in backbone
                     batoms = batslist[ligsused]
@@ -1083,7 +1080,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     r1l = mcoords
                     theta,uc = rotation_params(r0c,r1c,r2c) # normal vector to backbone plane
                     theta,ul = rotation_params(r0l,r1l,r2l) # normal vector to ligand plane
-                    theta = 180*arccos(dot(uc,ul)/(norm(uc)*norm(ul)))/pi
+                    theta = vecangle(uc,ul)
                     u = cross(uc,ul)
                     lig3Db = mol3D()
                     lig3Db.copymol3D(lig3D)
@@ -1105,6 +1102,19 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     d1 = distance(lig3D.getAtom(catoms[0]).coords(),m3D.getAtom(batoms[0]).coords())
                     d2 = distance(lig3Db.getAtom(catoms[0]).coords(),m3D.getAtom(batoms[0]).coords())
                     lig3D = lig3D if (d1 < d2)  else lig3Db # pick best one
+                    bondl = getbondlength(args,metal,core3D,lig3D,0,catoms[0],ligand,MLbonds)
+                    # flip if necessary
+                    if len(batslist) > ligsused:
+                        nextatbats = batslist[ligsused]
+                    auxm = mol3D()
+                    if len(nextatbats) > 0:
+                        for at in nextatbats:
+                            auxm.addAtom(m3D.getAtom(at))
+                        if lig3D.overlapcheck(auxm,True): # if overlap flip
+                            urot = vecdiff(m3D.getAtomCoords(batoms[1]),m3D.getAtomCoords(batoms[0]))
+                            lig3D = rotate_around_axis(lig3D,mcoords,urot,180)
+                    for iib in range(0,5):
+                        MLoptbds.append(bondl)
                 elif (denticity == 6):
                     # connection atoms in backbone
                     batoms = batslist[ligsused]
@@ -1120,6 +1130,9 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                         ligc.addAtom(lig3D.getAtom(catoms[i]))
                     # translate metal to the middle of octahedral
                     core3D.translate(vecdiff(ligc.centermass(),mcoords))
+                    bondl = getbondlength(args,metal,core3D,lig3D,0,catoms[0],ligand,MLbonds)
+                    for iib in range(0,6):
+                        MLoptbds.append(bondl)
                 auxm = mol3D()
                 auxm.copymol3D(lig3D)
                 complex3D.append(auxm)
