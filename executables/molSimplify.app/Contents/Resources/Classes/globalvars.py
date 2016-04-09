@@ -50,6 +50,13 @@ class globalvars:
     def __init__(self):
         ###### PROGRAM NAME ######
         self.PROGRAM = 'molSimplify'
+        ###### About message #####
+        s = 'molSimplify v1.0\n\nFreely distributed under the GNU GPL license.\n\n'
+        s += 'Copyright 2016 Kulik Lab @ MIT\n\n'
+        s += 'Developed by: Efthymios Ioannidis (timis@mit.edu)\n\n'
+        s += 'Contributions by:\n\tHeather J. Kulik (hjkulik@mit.edu)\n'
+        s += '\tTerry Gani (terryg@mit.edu)\n'
+        self.about = s
         ###### GET INFORMATION ######
         runfromcmd, Linux, OSX = False, False, False
         ### check if running through commandline ###

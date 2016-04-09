@@ -29,6 +29,20 @@ def norm(u):
         d += (u0*u0)
     d = sqrt(d)
     return d
+    
+#################
+### normalize ###
+#################
+def normalize(u):
+    # INPUT
+    #   - u: n-element list
+    # OUTPUT
+    #   - un: normalized vector
+    d = norm(u)
+    un = []
+    if d > 1.0e-13:
+        un.append(u/d)
+    return un
 
 #########################################
 ### Euclidean distance between points ###
@@ -73,6 +87,25 @@ def checkcolinear(R1,R2,R3):
         return True
     else:
         return False
+        
+#####################################
+### Checks if 4 points are planar ###
+#####################################
+def checkplanar(R1,R2,R3,R4):
+    # INPUT
+    #   - R1: 3-element list representing point 1
+    #   - R2: 3-element list representing point 2
+    #   - R3: 3-element list representing point 3
+    #   - R4: 3-element list representing point 4
+    r31 = vecdiff(R3,R1)
+    r21 = vecdiff(R2,R1)
+    r43 = vecdiff(R4,R3)
+    cr0 = cross(array(r21),array(r43))
+    dd = dot(r31,cr0)
+    if abs(dd) < 1.e-1:
+        return True
+    else:
+        return False
 
 ###############################################
 ### calculates angle between vectors r1, r2 ###
@@ -82,13 +115,35 @@ def vecangle(r1,r2):
     #   - r1: list representing vector r1
     #   - r2: list representing vector r2
     # OUTPUT
-    #   - theta: angle between vectors
+    #   - theta: angle between vectors in degrees
     # angle between r10 and r21
     if(norm(r2)*norm(r1) > 1e-16):
         theta = 180*arccos(dot(r2,r1)/(norm(r2)*norm(r1)))/pi
     else:
         theta = 0.0
     return theta
+
+################################################
+########## gets point in line on a  ############
+############ predefined distance ###############
+################################################
+def getPointu(Rr, dist, u):
+    # INPUT
+    #   - Rr: coordinates of reference point
+    #   - dist: final distance
+    #   - u: direction
+    # OUTPUT
+    #   - P: final point
+    # get float bond length
+    bl = float(dist)
+    # get unit vector through line r = r0 + t*u
+    t = bl/norm(u) # get t as t=bl/norm(r1-r0)
+    # get point
+    P = [0,0,0]
+    P[0] = t*u[0]-Rr[0]
+    P[1] = t*u[1]-Rr[1]
+    P[2] = t*u[2]-Rr[2]
+    return P
 
 ##################################################
 ### gets perpendicular vector to plane r10,r21 ###
@@ -392,8 +447,8 @@ def rotate_around_axis(mol,Rp,u,theta):
 def setPdistance(mol, Rr, Rp, bond):
     # INPUT
     #   - mol: molecule to be manipulated
-    #   - Rr: coordinates of atom 
-    #   - Rp: reference point [x,y,z]
+    #   - Rr: coordinates of atom in molecule
+    #   - Rp: reference point [x,y,z] not in molecule
     #   - bond: final bond length between Rr, Rp
     # OUTPUT
     #   - mol: translated molecule
@@ -402,6 +457,31 @@ def setPdistance(mol, Rr, Rp, bond):
     # get center of mass
     # get unit vector through line r = r0 + t*u
     u = [a-b for a,b in zip(Rr,Rp)]
+    t = bl/norm(u) # get t as t=bl/norm(r1-r0)
+    # get shift for centermass
+    dxyz = [0,0,0]
+    dxyz[0] = Rp[0]+t*u[0]-Rr[0]
+    dxyz[1] = Rp[1]+t*u[1]-Rr[1]
+    dxyz[2] = Rp[2]+t*u[2]-Rr[2]
+    # translate molecule
+    mol.translate(dxyz)
+    return mol
+    
+#########################################################
+########## sets distance of atom in molecule ############
+########## from reference point on axis u ###############
+#########################################################
+def setPdistanceu(mol, Rr, Rp, bond, u):
+    # INPUT
+    #   - mol: molecule to be manipulated
+    #   - Rr: coordinates of atom in molecule
+    #   - Rp: reference point [x,y,z] not in molecule
+    #   - bond: final bond length between Rr, Rp
+    # OUTPUT
+    #   - mol: translated molecule
+    # get float bond length
+    bl = float(bond)
+    # get unit vector through line r = r0 + t*u
     t = bl/norm(u) # get t as t=bl/norm(r1-r0)
     # get shift for centermass
     dxyz = [0,0,0]

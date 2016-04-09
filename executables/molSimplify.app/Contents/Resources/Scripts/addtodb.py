@@ -17,7 +17,7 @@ import pybel, openbabel, random
 ###############################
 ### adds to ligand database ###
 ###############################
-def addtoldb(smimol,sminame,smident,smicat):
+def addtoldb(smimol,sminame,smident,smicat,smigrps,smictg,ffopt):
     #  INPUT
     #   - smimol: SMILES string or molecule file to be added
     #   - sminame: name of ligand for key in dictionary
@@ -30,11 +30,16 @@ def addtoldb(smimol,sminame,smident,smicat):
     licores = readdict(globs.installdir+'/Ligands/ligands.dict')
     # check if ligand exists
     if sminame in licores.keys():
-        emsg = 'Ligand '+sminame+' already existing in ligands database.'
+        emsg = 'Ligand '+sminame+' already existing in ligands database.' 
+        emsg += ' To replace, delete the existing entry first.'
         return emsg
     else:
         # get connection atoms
         ccats = filter(None,re.split(' |,|\t',smicat))
+        # get groups
+        groups = filter(None,re.split(' |,|\t',smigrps))
+        grp = 'all '+' '.join(groups)
+        grp += ' '+smictg
         if smicat=='':
             cats = range(0,int(smident))
         else:
@@ -55,14 +60,14 @@ def addtoldb(smimol,sminame,smident,smicat):
         else:
             shortname = sminame
         # new entry for dictionary
+        snew = sminame+':'+sminame+'.xyz,'+shortname+','+css+','+grp+','+ffopt
         if lig.OBmol:
             # write smiles file in Ligands directory
             lig.OBmol.write('smi',globs.installdir+'/Ligands/'+sminame+'.smi')
-            snew = sminame+':'+sminame+'.smi,'+shortname+','+css
+
         else:
             # write xyz file in Ligands directory
             lig.writexyz(globs.installdir+'/Ligands/'+sminame+'.xyz') # write xyz file
-            snew = sminame+':'+sminame+'.xyz,'+shortname+','+css
         # update dictionary
         f = open(globs.installdir+'/Ligands/ligands.dict','r')
         ss = f.read().splitlines()
@@ -148,6 +153,11 @@ def addtobdb(smimol,sminame):
             return emsg
         bind.convert2mol3D() # convert to mol3D
                 # new entry for dictionary
+                # create shortname
+        if len(sminame) > 5:
+            shortname = sminame[0:3]+sminame[-2:]
+        else:
+            shortname = sminame
         if bind.OBmol:
             # write smiles file in Bind species directory
             bind.OBmol.write('smi',globs.installdir+'/Bind/'+sminame+'.smi')

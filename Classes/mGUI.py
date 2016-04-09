@@ -62,6 +62,12 @@ class mGUI():
         self.sgrid = QStackedLayout()
         self.sgrid.setStackingMode(1)
         self.sgrid.addWidget(self.wmain)
+        ### set manually size of rows/columns
+        self.grid.setRowMinimumHeight(0,15)
+        self.grid.setRowMinimumHeight(2,120)
+        self.grid.setRowMinimumHeight(3,15)
+        self.grid.setRowMinimumHeight(4,50)
+        ####################################
         ### create menubar and callbacks ###
         menubar = self.wmwindow.menuBar()
         menu0 = menubar.addMenu('&File')
@@ -88,10 +94,6 @@ class mGUI():
         helpAction.triggered.connect(self.qshowhelp)
         menu2.addAction(helpAction)
         ### place title top ###
-        self.grid.setRowMinimumHeight(0,15)
-        self.grid.setRowMinimumHeight(2,120)
-        self.grid.setRowMinimumHeight(3,15)
-        self.grid.setRowMinimumHeight(4,50)
         clogo = mQPixmap(globs.installdir+'/icons/logo.png')
         self.grid.addWidget(clogo,1,9,2,18)
         self.txtdev = mQLabel('Developed by Kulik group @ MIT','','c',16)
@@ -1818,7 +1820,9 @@ class mGUI():
         # get parameters
         args = grabguivars(self)
         defaultparams = ['main.py','-i',rdir+'/geninput.inp']
+        self.iWind.hide()
         self.sgrid.setCurrentWidget(self.iWind)
+        self.iWind.show()
         msgBox = QMessageBox()
         if self.randomchk.getState():
             msgBox.setText("Random generation initiated. This process might take some time.")
@@ -1919,7 +1923,7 @@ class mGUI():
                 self.lwclose = mQPushButton('Close',ctip,14)
                 self.lwclose.clicked.connect(self.qcloseligs)
                 self.lgrid.addWidget(self.lwclose,1,0)
-                self.lwindow.show()
+                self.lwindow.showMaximized()
                 center(self.lwindow)
     ### draw ligands
     def viewgeom(self):

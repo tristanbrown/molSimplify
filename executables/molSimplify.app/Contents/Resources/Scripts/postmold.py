@@ -289,7 +289,7 @@ def moldpost(molf,folder,gui,flog):
     # parse each file and get MO information
     for f in molf:
         if gui:
-            gui.mEd.setText('Processing '+f+'\n'+gui.mEd.toPlainText())
+            gui.iWtxt.setText('Processing '+f+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
         flog.write('Processing '+f+'\n')
         parse(folder,f)

@@ -320,7 +320,7 @@ def getcubes(molf,folder,gui,flog):
         flog.write('Processing '+resf+'\n')
         print 'Processing ',resf
         if gui:
-            gui.mEd.setText('Processing '+resf+'\n'+gui.mEd.toPlainText())
+            gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
         #################################################
         ### generate density cube ###
@@ -385,7 +385,7 @@ def getwfnprops(molf,folder,gui,flog):
         print 'Processing ',resf
         flog.write('Processing '+resf+'\n')
         if gui:
-            gui.mEd.setText('Processing '+resd+'\n'+gui.mEd.toPlainText())
+            gui.iWtxt.setText('Processing '+resd+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
         wfndir = folder+'/Wfn_files/'
         outfile1 = wfndir+resd+'-HELP.txt'
@@ -456,7 +456,7 @@ def getcharges(molf,folder,gui,flog):
         print 'Processing ',resd
         flog.write('Processing '+resd+'\n')
         if gui:
-            gui.mEd.setText('Processing '+resf+'\n'+gui.mEd.toPlainText())
+            gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
         # Run multiwfn 
         if not glob.glob(outfile1):
@@ -554,7 +554,7 @@ def deloc(molf,folder,gui,flog):
         print 'Processing  '+resd+' and writing output to '+outfile
         flog.write('Processing  '+resd+'\n')
         if gui:
-            gui.mEd.setText('Processing '+resd+'\n'+gui.mEd.toPlainText())
+            gui.iWtxt.setText('Processing '+resd+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
         # get coordinates of metal
         f = open(resf,'r')

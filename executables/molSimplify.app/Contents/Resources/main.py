@@ -43,22 +43,37 @@ if __name__ == '__main__':
             print "\nGUI not supported since PyQt5 can not be loaded. Please use commandline version.\n"
             gui = False
     ####################################
-    if  gui and '-i' not in args and '-h' not in args:
-        ### create main application
-        app = QApplication(sys.argv) # main application
-        gui = mGUI(app) # main GUI class
-        sys.exit(app.exec_())
-    ### if input file is specified run without GUI ###
-    elif '-i' in args:
-        gui = False
-        # run from commandline
-        emsg = startgen(sys.argv,False,gui)
     ### print help ###
-    else:
-        gui = False
+    if '-h' in args or '-H' in args:
         # print help
         parser = argparse.ArgumentParser()
         args = parsecommandline(parser)
         parser.print_help()
         exit()
-    
+    ### run with gui ###
+    elif gui and len(args)==0:
+        ### create main application
+        app = QApplication(sys.argv) # main application
+        gui = mGUI(app) # main GUI class
+        # execute gui
+        app.exec_()
+    ### if input file is specified run without GUI ###
+    elif '-i' in args:
+        gui = False
+        # run from commandline
+        emsg = startgen(sys.argv,False,gui)
+    ### grab from commandline arguments ###
+    else:
+        gui = False
+        infile = parseCLI(filter(None,args))
+        args = ['main.py','-i',infile]
+        emsg = startgen(args,False,gui)
+        
+        
+        
+        
+        
+        
+        
+        
+        

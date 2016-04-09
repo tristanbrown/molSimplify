@@ -152,7 +152,7 @@ def constrgen(installdir,rundir,args,globs):
             args.ligocc.append(rocc)
         # check for keep Hydrogens
         for iiH in range(len(ligs0),len(args.lig)):
-            opt = 'yes' if args.rkHs else 'no'
+            opt = True if args.rkHs else False
             if args.keepHs and len(args.keepHs) > iiH:
                 args.keepHs[iiH] = opt
             elif args.keepHs:

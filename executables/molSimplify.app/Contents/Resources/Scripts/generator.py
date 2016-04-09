@@ -144,6 +144,7 @@ def startgen(argv,flag,gui):
             args.core = cc
             emsg = multigenruns(installdir,rundir,args,globs)
             if emsg:
+                print emsg
                 del args
                 return emsg
     ss =  "\n**************************************************************"
