@@ -1836,8 +1836,6 @@ class mGUI():
             QMessageBox.information(self.wmain,'Done','Structure generation terminated successfully!')
         else:
             QMessageBox.warning(self.wmain,'Problem',emsg)
-        self.sgrid.setCurrentWidget(self.iWind)
-        self.iWind.show()
     ### draw ligands
     def drawligs(self):
         ### collects all the info and passes it to molSimplify ###
@@ -1881,6 +1879,9 @@ class mGUI():
             fcount = 0
             while glob.glob(rdir+'/ligs'+str(fcount)+'.png'):
                 fcount += 1
+            # get current dir
+            cwd = os.getcwd()
+            os.chdir(rdir) # change to working dir
             outputf  = 'ligs.smi'
             locf = 'ligs'+str(fcount)
             outbase = rdir+'/'+locf
@@ -1898,6 +1899,7 @@ class mGUI():
                 os.remove(outputf)
             else:
                 mQDialogErr('Error','Image could not be generated\n.')
+                os.chdir(cwd)
                 return
             ####################
             ### draw ligands ###
@@ -1925,8 +1927,10 @@ class mGUI():
                 self.lwclose = mQPushButton('Close',ctip,14)
                 self.lwclose.clicked.connect(self.qcloseligs)
                 self.lgrid.addWidget(self.lwclose,1,0)
-                self.lwindow.showMaximized()
+                self.lwindow.show()
                 center(self.lwindow)
+            # change back
+            os.chdir(cwd)
     ### draw ligands
     def viewgeom(self):
         globs = globalvars()
@@ -1991,6 +1995,9 @@ class mGUI():
             fcount = 0
             while glob.glob(rdir+'/ligs'+str(fcount)+'.png'):
                 fcount += 1
+            # get cwd
+            cwd = os.getcwd()
+            os.chdir(rdir) # change to working dir
             outputf  = 'ligs.smi'
             locf = 'ligs'+str(fcount)
             outbase = rdir+'/'+locf
@@ -2008,6 +2015,7 @@ class mGUI():
                 os.remove(outputf)
             else:
                 mQDialogInf('Error','Image could not be generated\n.')
+                os.chdir(cwd)
                 return
             ####################
             ### draw ligands ###
@@ -2034,8 +2042,9 @@ class mGUI():
                 self.lwclose = mQPushButton('Close',ctip,14)
                 self.lwclose.clicked.connect(self.qcloseligs)
                 self.lgrid.addWidget(self.lwclose,1,0)
-                self.lwindow.showMaximized()
+                self.lwindow.show()
                 center(self.lwindow)
+            os.chdir(cwd)
     ### enable random input
     def enablerandom(self):
         if self.randomchk.isChecked():

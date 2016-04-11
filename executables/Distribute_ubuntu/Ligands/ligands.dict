@@ -1,5 +1,4 @@
 # ligand name, ligand structure file, abbreviation (unique), connection atoms, groups, force field (BA:always,B:before only,A:after only,N:no)
-acetate:acetate.xyz,acete,2 3,all anions build,BA
 acetonitrile:acetonitrile.mol,actnt,1,build small,N
 amine:amine.mol,ami,0,functionalize small,N
 ammonia:ammonia.mol,ammo,0,build small,N
