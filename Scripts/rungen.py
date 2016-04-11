@@ -157,6 +157,8 @@ def constrgen(installdir,rundir,args,globs):
                 args.keepHs[iiH] = opt
             elif args.keepHs:
                 args.keepHs.append(opt)
+            else:
+                args.keepHs = [opt]
         emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
     return args, emsg
 
@@ -275,6 +277,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
     if emsg:
         return emsg
     mname = cc.ident
+    print mname
     globs.nosmiles = 0 # reset smiles ligands for each run
     # check for specified ligands/functionalization
     ligocc = []

@@ -185,8 +185,8 @@ def core_load(installdir,usercore,mcores):
     emsg = False
     core = mol3D() # initialize core molecule
     ### check if core exists in dictionary
-    if usercore in mcores:
-        dbentry = mcores[usercore]
+    if usercore.lower() in mcores:
+        dbentry = mcores[usercore.lower()]
         # load core mol file (with hydrogens)
         fcore = installdir+'Cores/'+dbentry[0]
         # check if core xyz/mol file exists
@@ -203,7 +203,7 @@ def core_load(installdir,usercore,mcores):
             core.OBmol.make3D('mmff94',0) # generate 3D coords
         core.cat = [int(l) for l in filter(None,dbentry[1])]
         core.denticity = dbentry[2]
-        core.ident = dbentry[0].split('.')[0]
+        core.ident = usercore
     ### load from file
     elif ('.mol' in usercore or '.xyz' in usercore or '.smi' in usercore):
         if glob.glob(usercore):

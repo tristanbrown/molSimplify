@@ -1836,6 +1836,8 @@ class mGUI():
             QMessageBox.information(self.wmain,'Done','Structure generation terminated successfully!')
         else:
             QMessageBox.warning(self.wmain,'Problem',emsg)
+        self.sgrid.setCurrentWidget(self.iWind)
+        self.iWind.show()
     ### draw ligands
     def drawligs(self):
         ### collects all the info and passes it to molSimplify ###
