@@ -153,22 +153,6 @@ def getsmident(args,indsmi):
         return 1
 
 ##############################################
-### modifies backbone according to langles ###
-##############################################
-def modifybackbonel(backb, langles):
-    # INPUT
-    #   - backb: list with points comprising the backbone
-    #   - langles: angles for distorting backbone points corresponding to ligands (pairs of theta/phi)
-    # OUTPUT
-    #   - backb: list with modified points comprising the backbone
-    for i,ll in enumerate(langles):
-        if ll:
-            theta = float(ll.split('/')[0])/180.0
-            phi = float(ll.split('/')[-1])/180.0
-            backb[i+1] = PointTranslateSph(backb[0],backb[i+1],[distance(backb[0],backb[i+1]),theta,phi])
-    return backb
-    
-##############################################
 ### modifies backbone according to pangles ###
 ##############################################
 def modifybackbonep(backb, pangles):
@@ -178,9 +162,10 @@ def modifybackbonep(backb, pangles):
     # OUTPUT
     #   - backb: list with modified points comprising the backbone
     for i,ll in enumerate(pangles):
-        theta = float(ll.split('/')[0])/180.0
-        phi = float(ll.split('/')[-1])/180.0
-        backb[i+1] = PointTranslateSph(backb[0],backb[i+1],[distance(backb[0],backb[i+1]),theta,phi])
+        if ll:
+            theta = pi*float(ll.split('/')[0])/180.0
+            phi = pi*float(ll.split('/')[-1])/180.0
+            backb[i+1] = PointTranslateSph(backb[0],backb[i+1],[distance(backb[0],backb[i+1]),theta,phi])
     return backb
 
 ##################################
@@ -528,12 +513,11 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     bbcombsdict = getbackbcombs()
     metal = core.getAtom(0).sym # metal symbol
     occs0 = []      # occurrences of each ligand
+    cats0 = []      # connection atoms for ligands
     dentl = []      # denticity of ligands
     toccs = 0       # total occurrence count (number of ligands)
     octa = False    # flag for forced octahedral structures like porphyrines
-    catsmi = []     # SMILES ligands connection atoms
     smilesligs = 0  # count how many smiles strings
-    issmiles = []   # index of SMILES ligands
     connected = []  # indices in core3D of ligand atoms connected to metal
     frozenats = []  # atoms to be frozen in optimization
     freezeangles = False # custom angles imposed
@@ -542,13 +526,16 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     MLbonds = loaddata(installdir+'/Data/ML.dat')
     ### calculate occurrences, denticities etc for all ligands ###
     for i,ligname in enumerate(ligs):
-        # if not in cores -> smiles
+        # if not in cores -> smiles/file
         if ligname not in licores.keys():
-            dent_i = getsmident(args,smilesligs)
-            issmiles.append(smilesligs)
+            if args.smicat and len(args.smicat) >= i and args.smicat[i]:
+                cats0.append(args.smicat[i])
+            else:
+                cats0.append([1])
+            dent_i = len(cats0[-1])
             smilesligs += 1
         else:
-            issmiles.append('-')
+            cats0.append(False)
         # otherwise get denticity from ligands dictionary
             dent_i = int(len(licores[ligname][2]))
         # get occurrence for each ligand if specified (default 1)
@@ -565,7 +552,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     ligands = [ligs[i] for i in indcs]  # sort ligands list
     occs = [occs0[i] for i in indcs]    # sort occurrences list
     dents = [dentl[i] for i in indcs]   # sort denticities list
-    issmi = [issmiles[i] for i in indcs]# sort issmiles list
+    tcats = [cats0[i] for i in indcs]# sort connections list
     # sort keepHs list ###
     keepHs = False
     if args.keepHs:
@@ -581,12 +568,12 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
             MLb.append(False)
         MLb = [MLb[i] for i in indcs] # sort MLbonds list
     ### sort ligands custom angles ###
-    langles = False
-    if args.langles:
-        langles = []
-        for j in range(len(args.langles),len(ligs)):
-            langles.append(False)
-        langles = [args.langles[i] for i in indcs] # sort custom langles list
+    pangles = False
+    if args.pangles:
+        pangles = []
+        for j in range(len(args.pangles),len(ligs)):
+            pangles.append(False)
+        pangles = [args.pangles[i] for i in indcs] # sort custom langles list
     ### geometry information ###
     coord = toccs # complex coordination
     # check for coordination
@@ -607,12 +594,11 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     if args.geometry and args.geometry in cclist:
         geom = args.geometry
     elif args.geometry:
+        emsg = "Requested geometry not available."+"Defaulting to "+coordbasef[coord-1][0]
         if args.gui:
-            emsg = "Requested geometry not available."+"Defaulting to "+coordbasef[coord-1][0]
             qqb = mQDialogWarn('Warning',emsg)
             qqb.setParent(args.gui.wmain)
-        print "WARNING: requested geometry not available. Select one from: "
-        getgeoms()
+        print emsg
         print "Defaulting to "+coordbasef[coord-1][0]
     else:
         if len(coordbasef) <= coord-1:
@@ -635,8 +621,6 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
     # distort if requested
     if args.pangles:
         corexyz = modifybackbonep(corexyz,args.pangles) # point distortion
-    elif args.langles:
-        corexyz = modifybackbonel(corexyz,langles) # ligand distortion
     if args.distort:
         corexyz = distortbackbone(corexyz,args.distort) # random distortion
     coord = len(corexyz)-1 # get coordination
@@ -703,8 +687,8 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 if emsg:
                     return False,emsg
                 # if SMILES string
-                if ligand not in licores.keys():
-                    lig.cat = getsmilescat(args,issmi[i])
+                if not lig.cat and tcats[i]:
+                    lig.cat = tcats[i]
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if 'B' in lig.ffopt:
@@ -1185,7 +1169,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
     toccs = 0       # total occurrence count (number of ligands)
     catsmi = []     # SMILES ligands connection atoms
     smilesligs = 0  # count how many smiles strings
-    issmiles = []   # index of SMILES ligands
+    cats0 = []
     dentl = []      # denticity of ligands
     connected = []  # indices in core3D of ligand atoms connected to metal
     frozenats = []  # list of frozen atoms for optimization
@@ -1193,13 +1177,16 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
     MLbonds = loaddata(installdir+'/Data/ML.dat')
     ### calculate occurrences, denticities etc for all ligands ###
     for i,ligname in enumerate(ligs):
-        # if not in cores -> smiles
+        # if not in cores -> smiles/file
         if ligname not in licores.keys():
-            dent_i = getsmident(args,smilesligs)
-            issmiles.append(smilesligs)
+            if args.smicat and len(args.smicat) >= i and args.smicat[i]:
+                cats0.append(args.smicat[i])
+            else:
+                cats0.append([1])
+            dent_i = len(cats0[-1])
             smilesligs += 1
         else:
-            issmiles.append('-')
+            cats0.append(False)
         # otherwise get denticity from ligands dictionary
             dent_i = int(len(licores[ligname][2]))
         # get occurrence for each ligand if specified (default 1)
@@ -1220,12 +1207,11 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
         del dentl[ii]
         del ligands[ii]
         del occs[ii]
-        del issmi[ii]
     ### sort by descending denticity (needed for adjacent connection atoms) ###
     indcs = smartreorderligs(args,ligs,dentl,licores)
     ligands = [ligs[i] for i in indcs]  # sort ligands list
     occs = [occs0[i] for i in indcs]    # sort occurrences list
-    issmi = [issmiles[i] for i in indcs]# sort issmiles list
+    tcats = [cats0[i] for i in indcs]# sort issmiles list
     # sort keepHs list ###
     keepHs = False
     if args.keepHs:
@@ -1346,8 +1332,8 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 if emsg:
                     return False,emsg
                 # if SMILES string
-                if ligand not in licores.keys():
-                    lig.cat = getsmilescat(args,issmi[i])
+                if not lig.cat and tcats[i]:
+                    lig.cat = tcats[i]
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if 'B' in lig.ffopt:

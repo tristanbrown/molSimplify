@@ -228,12 +228,13 @@ def nbopost(resfiles,folder,gui,flog):
     headern += "----------------------------------------------------------------------------------------------------------------------------------------\n"
     textnbo = []
     for numi,resf in enumerate(resfiles):
+        resfp = os.path.relpath(resf,folder)
         resd = resf.rsplit('/',1)[0]
-        resfold = resd.split('/',1)[-1]
-        print 'Processing ',resf
-        flog.write('Processing '+resf+'\n')
+        resfold = os.path.relpath(resd,folder)
+        print 'Processing ',resfp
+        flog.write('Processing '+resfp+'\n')
         if gui:
-            gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
+            gui.iWtxt.setText('Processing '+resfp+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
         with open(resf) as f:
             s = f.read()
@@ -270,12 +271,13 @@ def terapost(resfiles,folder,gui,flog):
     resf = []
     text = []
     for numi,resf in enumerate(resfiles):
+        resfp = os.path.relpath(resf,folder)
         resd = resf.rsplit('/',1)[0]
-        resfold = resd.split('/',1)[-1]
-        print 'Processing ',resf
-        flog.write('Processing '+resf+'\n')
+        resfold = os.path.relpath(resd,folder)
+        print 'Processing ',resfp
+        flog.write('Processing '+resfp+'\n')
         if gui:
-            gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
+            gui.iWtxt.setText('Processing '+resfp+'\n'+gui.iWtxt.toPlainText())
         with open(resf) as f:
             s = f.read()
             f.close()
@@ -355,13 +357,14 @@ def gampost(resfiles,folder,gui,flog):
     flog.write('################## Calculating results summary ##################\n\n')
     for numi,resf in enumerate(resfiles):
         error = False
+        resfp = os.path.relpath(resf,folder)
         resd = resf.rsplit('/',1)[0]
-        resfold = resd.split('/',2)
+        resfold = os.path.relpath(resd,folder)
         if gui:
-            gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
+            gui.iWtxt.setText('Processing '+resfp+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
-        print 'Processing '+resf
-        flog.write('Processing '+resf+'\n')
+        print 'Processing '+resfp
+        flog.write('Processing '+resfp+'\n')
         if len(resfold)>1:
             resfold = resfold[-2]
         else:
@@ -435,7 +438,7 @@ def gampost(resfiles,folder,gui,flog):
                 tm = 'NOT DONE'
             # construct string record of results
             if not error:
-                tt = resf.ljust(50)+method.ljust(9)+apgga.ljust(8)+aplda.ljust(8)
+                tt = resfold.ljust(50)+method.ljust(9)+apgga.ljust(8)+aplda.ljust(8)
                 tt += optim.ljust(9)+conv.ljust(9)+nosteps.ljust(8)+ssq.ljust(9)+spin.ljust(8)
                 tt += tcharge.ljust(6)+"{:10.6f}".format(float(en)).ljust(14)+tm+'\n'
             else:

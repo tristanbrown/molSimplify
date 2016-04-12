@@ -185,7 +185,7 @@ def core_load(installdir,usercore,mcores):
     emsg = False
     core = mol3D() # initialize core molecule
     ### check if core exists in dictionary
-    if usercore.lower() in mcores:
+    if usercore.lower() in mcores.keys():
         dbentry = mcores[usercore.lower()]
         # load core mol file (with hydrogens)
         fcore = installdir+'Cores/'+dbentry[0]
@@ -263,7 +263,7 @@ def lig_load(installdir,userligand,licores):
     emsg = False
     lig = mol3D() # initialize ligand molecule
     ### check if ligand exists in dictionary
-    if userligand in licores:
+    if userligand in licores.keys():
         dbentry = licores[userligand]
         # load lig mol file (with hydrogens)
         flig = installdir+'Ligands/'+dbentry[0]
@@ -326,8 +326,6 @@ def lig_load(installdir,userligand,licores):
             emsg += "\nAnd available groups are: %s\n" % getligroups(licores)
             print emsg
             return False,emsg
-        lig.cat = [0]
-        lig.denticity = 1
         lig.ident = 'smi'
     lig.name = userligand
     return lig,emsg
@@ -344,7 +342,7 @@ def bind_load(installdir,userbind,bindcores):
     bind = mol3D() # initialize binding molecule
     bsmi = False # flag for smiles
     ### check if binding molecule exists in dictionary
-    if userbind in bindcores:
+    if userbind in bindcores.keys():
         # load bind mol file (with hydrogens)
         fbind = installdir+'Bind/'+bindcores[userbind][0]
         # check if bind xyz/mol file exists

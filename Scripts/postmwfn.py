@@ -380,6 +380,7 @@ def getwfnprops(molf,folder,gui,flog):
     for numi,resf in enumerate(molf):
         resd = os.path.relpath(resf,folder)
         resd = resd.split('.molden')[0]
+        resdp = resd
         resd = resd.replace('/','_')
         #################################################
         print 'Processing ',resf
@@ -416,7 +417,7 @@ def getwfnprops(molf,folder,gui,flog):
         sr = []
         for i,ss in enumerate(svars):
             sr.append("{:10.5f}".format(ss))
-        txt.append(resd.ljust(50)+"{:10.3f}".format(HELPpop).ljust(10)+' ('+"{:4.2f}".format(HELPper)+'%)'+sr[0].ljust(10)+sr[1].ljust(10)+sr[2].ljust(10)+sr[3].ljust(10)+sr[4].ljust(11)+sr[5].ljust(10)+'\n')
+        txt.append(resdp.ljust(50)+"{:10.3f}".format(HELPpop).ljust(10)+' ('+"{:4.2f}".format(HELPper)+'%)'+sr[0].ljust(10)+sr[1].ljust(10)+sr[2].ljust(10)+sr[3].ljust(10)+sr[4].ljust(11)+sr[5].ljust(10)+'\n')
     text=sorted(txt)
     f = open(folder+'/wfnprops.txt','w')
     f.write(header+''.join(text))
@@ -436,6 +437,7 @@ def getcharges(molf,folder,gui,flog):
     for numi,resf in enumerate(molf):
         resd = os.path.relpath(resf,folder)
         resd = resd.split('.molden')[0]
+        resdp = resd
         resd = resd.replace('/','_')
         # get metal index in molden file
         f = open(resf,'r')
@@ -453,8 +455,8 @@ def getcharges(molf,folder,gui,flog):
                     break
         #################################################
         outfile1 = folder+'/Charge_files/'+resd+'-chH.txt'
-        print 'Processing ',resd
-        flog.write('Processing '+resd+'\n')
+        print 'Processing ',resdp
+        flog.write('Processing '+resdp+'\n')
         if gui:
             gui.iWtxt.setText('Processing '+resf+'\n'+gui.iWtxt.toPlainText())
             gui.app.processEvents()
@@ -520,7 +522,7 @@ def getcharges(molf,folder,gui,flog):
             mulll = mullt.split(None)
             if len(mulll) > 2:
                 mull = "{:5.3f}".format(float(mulll[-1]))
-        txt.append(resd.ljust(60)+hirsch.ljust(10)+vdd.ljust(10)+mull.ljust(10)+'\n')
+        txt.append(resdp.ljust(60)+hirsch.ljust(10)+vdd.ljust(10)+mull.ljust(10)+'\n')
     text=sorted(txt)
     f = open(folder+'/charges.txt','w')
     f.write(header+''.join(text))

@@ -259,10 +259,6 @@ def parseinput(args):
                 args.MLbonds = l[1:]
             if (l[0]=='-distort'):
                 args.distort = l[1]
-            if (l[0]=='-langles'):
-                args.langles = l[1:]
-            if (l[0]=='-pangles'):
-                args.pangles = l[1:]
             if (l[0]=='-rgen'):
                 args.rgen = l[1:]
             if (l[0]=='-keepHs'):
@@ -278,16 +274,24 @@ def parseinput(args):
                     args.sminame.append(l[1:])
                 else:
                     args.sminame = l[1:]
-            if 'smicat' in line:
+            if '-smicat' in line:
                 args.smicat = []
-                l = line.split(' ',1)[1]
-                l = filter(None,re.split('/|\t|&|\n',l))
+                l = line.split('smicat',1)[1]
+                l = l.replace(' ','')
+                l = re.split('/|\t|&|\n',l)
                 for ll in l:
                     lloc = []
                     l1 = filter(None,re.split(',| ',ll))
                     for lll in l1:
                         lloc.append(int(lll)-1)
                     args.smicat.append(lloc)
+            if '-pangles' in line:
+                args.pangles = []
+                l = filter(None,line.split('pangles',1)[1])
+                l = l.replace(' ','')
+                l = re.split(',|\t|&|\n',l)
+                for ll in l:
+                    args.pangles.append(ll) if ll!='' else args.pangles.append(False)
             # parse qc arguments
             if (l[0]=='-qccode'):
                 args.qccode = l[1]

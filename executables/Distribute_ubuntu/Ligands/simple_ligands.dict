@@ -1,15 +1,15 @@
 # simple ligands dictionary
 Br-:[Br-]
 Cl-:[Cl-]
-CN:[C-]#[N]
-CO:[C-]#[O+]
+CN:cyanide
+CO:carbonyl
 CO3:C(=O)([O-])[O-]
 F-:[F-]
 H2O:O
 hydroxide:[O-]
 NCS:[N-]=C=S
-NH3:N
+NH3:ammonia
 O:[O--]
-OH:[O-]
-SCN:S=C=[N-]
+OH:hydroxyl
+SCN:thiocyanate
 

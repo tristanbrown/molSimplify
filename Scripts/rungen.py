@@ -112,6 +112,12 @@ def constrgen(installdir,rundir,args,globs):
             ligocc0.append(args.ligocc[i])
             if args.lignum:
                 args.lignum = str(int(args.lignum) - 1)
+            # check for smiles
+            if not ligentry.denticity:
+                if args.smicat and len(args.smicat) >= i and args.smicat[i]:
+                    ligentry.denticity = len(args.smicat[i])
+                else:
+                    ligentry.denticity = 1
             if coord:
                 coord -= int(args.ligocc[i])*ligentry.denticity
             licores.pop(l, None) # remove from dictionary
@@ -277,7 +283,6 @@ def rungen(installdir,rundir,args,chspfname,globs):
     if emsg:
         return emsg
     mname = cc.ident
-    print mname
     globs.nosmiles = 0 # reset smiles ligands for each run
     # check for specified ligands/functionalization
     ligocc = []

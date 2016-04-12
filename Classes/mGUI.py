@@ -606,7 +606,7 @@ class mGUI():
         self.grid.addWidget(self.rtchbind,10,36,1,1)
         self.grid.addWidget(self.etchbind,10,37,1,1)
         # min/max distance
-        ctip = 'Specify placing minimum/maximum distance (in A) and/or axial/equatorial orientation'
+        ctip = 'Specify placing minimum/maximum distance (in A)'
         self.rtplace = mQLabel('Distance:',ctip,'Cr',12)
         ctip = 'Minimum distance between the two molecules. 0 corresponds the marginally non-overlapping configuration'
         self.etplacemin = mQLineEdit('',ctip,'l',12)
@@ -644,6 +644,7 @@ class mGUI():
         qcav = ['','axial','equatorial']
         self.dmolp = mQComboBox(qcav,ctip,12)
         self.dmolp.setDisabled(True)
+        self.dmolp.currentIndexChanged.connect(self.checkaxial)
         self.grid.addWidget(self.dmolp,12,37,1,1)
         # input file generation
         ctip = 'Generate input files'
@@ -1546,6 +1547,15 @@ class mGUI():
             self.lig7ML.setDisabled(False)
             self.lig7an.setDisabled(False)
             self.lig7nam.setDisabled(False)
+    def checkaxial(self):
+        if self.dmolp.currentIndex() > 0:
+            self.etplacephi.setText('')
+            self.etplacephi.setDisabled(True)
+            self.etplacetheta.setText('')
+            self.etplacetheta.setDisabled(True)
+        else:
+            self.etplacephi.setDisabled(False)
+            self.etplacetheta.setDisabled(False)
     ##############################
     ### Local Database window ####
     ##############################
@@ -1817,6 +1827,10 @@ class mGUI():
                 emsg = 'Directory '+rdir+' could not be created. Check your input.\n'
                 QMessageBox.critical(self.wmain,'Problem',emsg)
                 return
+        # check for extra molecule
+        if self.chkM.getState() and self.etbind.text()=='':
+            emsg = 'You checked the extra molecule box but specified\nno extra molecule. No extra molecule will be generated.\n'
+            QMessageBox.warning(self.wmain,'Warning',emsg)
         # get parameters
         args = grabguivars(self)
         defaultparams = ['main.py','-i',rdir+'/geninput.inp']
@@ -1863,8 +1877,11 @@ class mGUI():
                     liglist.append(l)
             globs = globalvars()
             licores = readdict(globs.installdir+'/Ligands/ligands.dict')
+            simpleligs = readdict(globs.installdir+'/Ligands/simple_ligands.dict')
             ligs = []
             for l in liglist:
+                if l in simpleligs.keys():
+                    l = simpleligs[l][0]
                 if isinstance(l,unicode):
                     ll = unicodedata.normalize('NFKD',l).encode('ascii','ignore')
                 else:
@@ -2155,7 +2172,9 @@ class mGUI():
             self.rtbsmi.setDisabled(False)
             self.etbsmi.setDisabled(False)
             self.rtnbind.setDisabled(False)
-            self.etnbind.setDisabled(False)    
+            self.etnbind.setDisabled(False)
+            if self.etnbind.text()=='':
+                self.etnbind.setText('1')
             self.rtplace.setDisabled(False)
             self.etplacemin.setDisabled(False)
             self.etplacemax.setDisabled(False)
