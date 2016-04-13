@@ -39,7 +39,9 @@ class mol3D:
         self.natoms = 0 
         self.mass = 0 
         self.size = 0
-        self.charge = 0 
+        self.charge = 0
+        self.ffopt = 'BA'
+        self.name = '' # name of molecule
         self.OBmol = False      # holder for babel molecule
         self.cat = []        # connection atoms
         self.denticity = 0   # denticity
@@ -49,7 +51,7 @@ class mol3D:
     #######################################
     ### adds a new atom to the molecule ###
     #######################################
-    def addatom(self,atom):
+    def addAtom(self,atom):
         # INPUT
         #   - atom: atom3D to be added
         self.atoms.append(atom)
@@ -134,7 +136,7 @@ class mol3D:
             # get atomic symbol
             sym = elem[atom.atomicnum-1]
             # add atom to molecule
-            self.addatom(atom3D(sym,[pos[0],pos[1],pos[2]]))
+            self.addAtom(atom3D(sym,[pos[0],pos[1],pos[2]]))
     
     ###################################
     ### combines 2 molecules in one ###
@@ -147,7 +149,7 @@ class mol3D:
         cmol = self 
         '''combines 2 molecules in self'''
         for atom in mol.atoms:
-            cmol.addatom(atom)
+            cmol.addAtom(atom)
         return cmol
         
     ############################################################
@@ -183,7 +185,7 @@ class mol3D:
         #   - mol0: molecule (mol3D) to be copied
         # copy atoms
         for atom0 in mol0.atoms:
-            self.addatom(atom3D(atom0.sym,atom0.coords()))
+            self.addAtom(atom3D(atom0.sym,atom0.coords()))
         # copy other attributes
         self.cat = mol0.cat
         self.charge = mol0.charge
@@ -252,6 +254,22 @@ class mol3D:
                 if atom.atno > maxaw:
                     mm = i
         return mm
+    
+    ###############################
+    ### finds metal in molecule ###
+    ###############################
+    def findMetal(self):
+        # OUTPUT
+        #   - mm: indices of all metals in the molecule
+        mm = False
+        mindist = 1000
+        cm = self.centermass()
+        for i,atom in enumerate(self.atoms):
+            if atom.ismetal():
+                if distance(atom.coords(),cm) < mindist:
+                    mindist = distance(atom.coords(),cm)
+                    mm = i
+        return mm
         
     #########################################
     ### finds atoms by symbol in molecule ###
@@ -277,8 +295,8 @@ class mol3D:
         # OUTPUT
         #   - subm: indices of all atoms in submolecule
         subm = []
-        conatoms = self.getBondedAtoms(atom0) # connected atoms to atom0
-        conatoms.append(atom0) 
+        conatoms = [atom0]
+        conatoms += self.getBondedAtoms(atom0) # connected atoms to atom0
         if atomN in conatoms:
             conatoms.remove(atomN)  # check for atomN and remove
         subm += conatoms # add to submolecule
@@ -314,6 +332,16 @@ class mol3D:
         # OUTPUT
         #   number of atoms in molecule
         return self.atoms
+
+    ############################################
+    ### returns coordinates of atom by index ###
+    ############################################
+    def getAtomCoords(self,idx):
+        # INPUT
+        #   - idx: index of atom in molecule
+        # OUTPUT
+        #   coordinates
+        return self.atoms[idx].coords()
         
     #######################################################
     ### returns list of bonded atoms to a specific atom ###
@@ -358,13 +386,14 @@ class mol3D:
         #   - u: direction to search
         # OUTPUT
         #   - d: distance of atom
-        cm = self.centermass()
         dd = 1000.0
+        atomc = [0.0,0.0,0.0]
         for atom in self.atoms:
             d0 = distance(atom.coords(),uP)
             if d0 < dd:
                 dd = d0
-        return dd
+                atomc = atom.coords()
+        return distance(self.centermass(),atomc)
         
     ####################################
     ### gets hydrogens from molecule ###
@@ -460,7 +489,7 @@ class mol3D:
                     return self.centermass()
         maux = mol3D()
         for at in ats:
-            maux.addatom(self.getAtom(at))
+            maux.addAtom(self.getAtom(at))
         if maux.natoms==0:
             return self.centermass()
         else:
@@ -654,7 +683,7 @@ class mol3D:
             l = filter(None,line.split(None))
             if len(l) > 3:
                 atom = atom3D(l[0],[float(l[1]),float(l[2]),float(l[3])])
-                self.addatom(atom)
+                self.addAtom(atom)
             
     ################################################
     ### calculate the RMSD between two molecules ###

@@ -16,42 +16,6 @@ from collections import Counter
 import pybel
 
 #######################################
-### unconstrained random generation ###
-#######################################
-def randomgen(installdir,rundir,args,globs):
-    emsg = False
-    print 'Random generation started..\n\n'
-    # load global variables
-    licores = readdict(installdir+'/Ligands/ligands.dict')
-    # remove empty ligand
-    licores.pop("x", None)
-    # get all combinations of ligands
-    combos = []
-    for i in range(1,8):
-        for combs in itertools.combinations(range(0,len(licores)),i):
-            combos.append(combs)
-    # get a sample of these combinations
-    samps = random.sample(range(0,len(combos)),int(args.rgen[0]))
-    # loop over samples
-    for c in samps:
-        combo = combos[c]
-        args.lig = []
-        args.ligocc = []
-        args.totocc = 0 
-        combol = list(combo)
-        random.shuffle(combol)
-        for cj in combol:
-            rocc = random.randint(1,7-args.totocc+1)
-            trocc = rocc*int(len(licores[licores.keys()[cj]][1:]))
-            if args.totocc+trocc <= 7:
-                args.lig.append(licores.keys()[cj])
-                args.ligocc.append(rocc)
-                args.totocc += trocc
-        if len(args.lig) > 0 :
-                emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
-    return args, emsg
-
-#######################################
 ### get subset between list1, list2 ###
 #######################################
 def counterSubset(list1, list2):
@@ -81,8 +45,8 @@ def getconstsample(no_rgen,args,licores,coord):
         totdent = 0
         dents =[]
         for l in combo:
-            totdent += int(len(licores[licores.keys()[l]][2:]))
-            dents.append(int(len(licores[licores.keys()[l]][2:])))
+            totdent += int(len(licores[licores.keys()[l]][2]))
+            dents.append(int(len(licores[licores.keys()[l]][2])))
         # check for multiple multidentate ligands
         dsorted = sorted(dents)
         if not coord or (coord and totdent == coord):
@@ -129,6 +93,9 @@ def constrgen(installdir,rundir,args,globs):
         for i,l in enumerate(args.lig):
             ligs0.append(l)
             ligentry,emsg = lig_load(installdir,l,licores) # check ligand
+            # update ligand
+            if ligentry:
+                args.lig[i] = ligentry.name
             if emsg:
                 return False,emsg
             if args.ligocc:
@@ -145,20 +112,37 @@ def constrgen(installdir,rundir,args,globs):
             ligocc0.append(args.ligocc[i])
             if args.lignum:
                 args.lignum = str(int(args.lignum) - 1)
+            # check for smiles
+            if not ligentry.denticity:
+                if args.smicat and len(args.smicat) >= i and args.smicat[i]:
+                    ligentry.denticity = len(args.smicat[i])
+                else:
+                    ligentry.denticity = 1
             if coord:
-                coord -= int(args.ligocc[i])*len(licores[l][2:])
+                coord -= int(args.ligocc[i])*ligentry.denticity
             licores.pop(l, None) # remove from dictionary
+    # check for ligand groups
+    licoresnew = dict()
+    if args.liggrp and 'all'!=args.liggrp.lower():
+        for key in licores.keys():
+            if args.liggrp.lower() in licores[key][3]:
+                if not args.ligctg or args.ligctg.lower()=='all':
+                    licoresnew[key] = licores[key]
+                elif args.ligctg and args.ligctg.lower() in licores[key][3]:
+                    licoresnew[key] = licores[key]
+        licores = licoresnew
     # get a sample of these combinations
     samps = getconstsample(int(args.rgen[0]),args,licores,coord)
     if len(samps)==0:
         if coord==0:
             args.lig = [a for a in ligs0]
-            args.ligocc = [a for a in ligocc0]
+            args.ligocc = [int(a) for a in ligocc0]
             emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
         else:
             if args.gui:
-                from Classes.mWidgets import qBoxError
-                qqb = qBoxError(args.gui.mainWindow,'Error','No suitable ligand sets were found for random generation. Exiting...')
+                from Classes.mWidgets import mQDialogErr
+                qqb = mQDialogErr('Error','No suitable ligand sets were found for random generation. Exiting...')
+                qqb.setParent(args.gui.wmain)
             else:
                 emsg = 'No suitable ligand sets were found for random generation. Exiting...'
                 print 'No suitable ligand sets were found for random generation. Exiting...\n\n'
@@ -166,12 +150,21 @@ def constrgen(installdir,rundir,args,globs):
     # loop over samples
     for combo in samps:
         args.lig = [a for a in ligs0]
-        args.ligocc = [a for a in ligocc0]
+        args.ligocc = [int(a) for a in ligocc0]
         for cj in set(combo):
             lcount = Counter(combo)
             rocc = lcount[cj]
             args.lig.append(licores.keys()[cj])
             args.ligocc.append(rocc)
+        # check for keep Hydrogens
+        for iiH in range(len(ligs0),len(args.lig)):
+            opt = True if args.rkHs else False
+            if args.keepHs and len(args.keepHs) > iiH:
+                args.keepHs[iiH] = opt
+            elif args.keepHs:
+                args.keepHs.append(opt)
+            else:
+                args.keepHs = [opt]
         emsg = rungen(installdir,rundir,args,False,globs) # run structure generation
     return args, emsg
 
@@ -278,8 +271,8 @@ def checkmultilig(ligs):
 def rungen(installdir,rundir,args,chspfname,globs):
     try:
         from Classes.mWidgets import qBoxFolder
-        from Classes.mWidgets import qBoxInfo
-        from Classes.mWidgets import qBoxError
+        from Classes.mWidgets import mQDialogInf
+        from Classes.mWidgets import mQDialogErr
     except ImportError:
         args.gui = False
     emsg = False
@@ -311,15 +304,16 @@ def rungen(installdir,rundir,args,chspfname,globs):
             if (args.ligocc):
                 ligocc = args.ligocc
             else:
-                if len(args.lig)==1 and args.coord:
-                    ligocc.append(args.coord)
-                else:
-                    ligocc.append('1')
+                ligocc = ['1']
             for i in range(len(ligocc),len(ligands)):
                 ligocc.append('1')
             lig = ''
             for i,l in enumerate(ligands):
                 ligentry,emsg = lig_load(installdir,l,licores)
+                # update ligand
+                if ligentry:
+                    ligands[i] = ligentry.name
+                    args.lig[i] = ligentry.name
                 if emsg:
                     skip = True
                     break
@@ -363,7 +357,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
                 else:
                     flagdir = 'replace'
             else:
-                qqb = qBoxFolder(args.gui.mainWindow,'Folder exists','Directory '+rootcheck+' already exists. What do you want to do?')
+                qqb = qBoxFolder(args.gui.wmain,'Folder exists','Directory '+rootcheck+' already exists. What do you want to do?')
                 flagdir = qqb.getaction()
             # replace existing directory
             if (flagdir=='replace'):
@@ -382,7 +376,11 @@ def rungen(installdir,rundir,args,chspfname,globs):
         elif rootcheck and (not os.path.isdir(rootcheck) or not args.checkdirt) and not skip:
             print rootcheck
             args.checkdirt = True
-            os.mkdir(rootcheck)
+            try:
+                os.mkdir(rootcheck)
+            except:
+                print 'Directory '+rootcheck+' can not be created. Exiting..\n'
+                return
         # check for actual directory
         if os.path.isdir(rootdir) and not args.checkdirb and not skip:
             args.checkdirb = True
@@ -395,7 +393,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
                 else:
                     flagdir = 'replace'
             else:
-                qqb = qBoxFolder(args.gui.mainWindow,'Folder exists','Directory '+rootdir+' already exists. What do you want to do?')
+                qqb = qBoxFolder(args.gui.wmain,'Folder exists','Directory '+rootdir+' already exists. What do you want to do?')
                 flagdir = qqb.getaction()
             # replace existing directory
             if (flagdir=='replace'):
@@ -418,8 +416,41 @@ def rungen(installdir,rundir,args,chspfname,globs):
         ############ GENERATION ############
         ####################################
         if not skip:
-            # generate xyz files
-            strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+            # check for generate all
+            if args.genall:
+                tstrfiles = []
+                # generate xyz with FF and trained ML
+                args.ff = 'mmff94'
+                args.ffoption = 'ba'
+                args.MLbonds = False
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+                for strf in strfiles:
+                    tstrfiles.append(strf+'FFML')
+                    os.rename(strf+'.xyz',strf+'FFML.xyz')
+                # generate xyz with FF and covalent
+                args.MLbonds = ['c' for i in range(0,10)]
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+                for strf in strfiles:
+                    tstrfiles.append(strf+'FFc')
+                    os.rename(strf+'.xyz',strf+'FFc.xyz')
+                args.ff = False
+                args.ffoption = False
+                args.MLbonds = False
+                # generate xyz without FF and trained ML
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+                for strf in strfiles:
+                    tstrfiles.append(strf+'ML')
+                    os.rename(strf+'.xyz',strf+'ML.xyz')
+                args.MLbonds = ['c' for i in range(0,10)]
+                # generate xyz without FF and covalent ML
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
+                for strf in strfiles:
+                    tstrfiles.append(strf+'c')
+                    os.rename(strf+'.xyz',strf+'c.xyz')
+                strfiles = tstrfiles
+            else:
+                # generate xyz files
+                strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
             # generate QC input files
             if args.qccode and not emsg:
                 if args.charge and (isinstance(args.charge, list)):
@@ -447,7 +478,8 @@ def rungen(installdir,rundir,args,chspfname,globs):
                     print 'SGE jobscripts generated!'
         elif not emsg:
             if args.gui:
-                qq = qBoxInfo(args.gui.mainWindow,'Folder skipped','Folder '+rootdir+' was skipped.')
+                qq = mQDialogInf('Folder skipped','Folder '+rootdir+' was skipped.')
+                qq.setParent(args.gui.wmain)
             else:
                 print 'Folder '+rootdir+' was skipped..\n'
     return emsg    

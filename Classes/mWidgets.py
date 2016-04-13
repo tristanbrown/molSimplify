@@ -1,148 +1,84 @@
 # Written by Tim Ioannidis for HJK Group
 # Dpt of Chemical Engineering, MIT
 
-##################################################
-########### Defines class of window  #############
-##################################################
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5 import QtCore
 from Classes.globalvars import *
+from Scripts.io import *
 import os, imghdr, struct
 
-##################################################
-########### Defines class of window  #############
-##################################################
+####################################################
+########### Defines auxiliary classes  #############
+############## for building the GUI  ###############
+####################################################
 
 def getscreensize():
     screenShape = QDesktopWidget().screenGeometry()
     return [screenShape.width(),screenShape.height()]
-
-class mWindow(QMainWindow):
-    ### constructor of window ###
-    def __init__(self,w=0.5,h=0.5):
-        super(mWindow,self).__init__()
-        globs = globalvars()
-        self.resize(w,h)
-        self.setWindowTitle(globs.PROGRAM)
-        self.setWindowIcon(QIcon(globs.installdir+'/icons/pythonlogo.png'))
-        ### change background color
-        p = QPalette()
-        p.setColor(QPalette.Background,QtCore.Qt.white)
-        self.setPalette(p)
-    ### get geometry of window ###
-    def getGeometry(self):
-        geom = self.frameGeometry()
-        return [geom.x(),geom.y(),geom.width(),geom.height()]
-    ### maximize window in current screen ###
-    def maximize():
-        self.showMaximized()
-    ### resize window in either fractional or absolute size ###
-    def resize(self,w,h):
-        [scW,scH] = getscreensize() # get screen size
-        # check for fractional coords
-        if (w <= 1.0):
-            marginW = 0.5*(1.0-w)*scW # margin in pixels
-            w = w*scW # width in pixels
-        else:
-            marginW = 0.5*(scW-w)
-        if (h <= 1.0):
-            marginH = 0.5*(1.0-h)*scH # margin in pixels
-            h = h*scH # height in pixels
-        else:
-            marginH = 0.5*(scH-h)
-        self.setGeometry(marginW,marginH,w,h)
-    ### define action for exiting, pop-up dialog
-    def qexitM(self):
-        choice = QMessageBox.question(self,'Exit','Are you sure you want to quit?',
-                QMessageBox.Yes, QMessageBox.No)
-        if choice == QMessageBox.Yes:
-            sys.exit()
-        else:
-            pass
-        
-class mWgen(QMainWindow):
-    ### constructor of window ###
-    def __init__(self,w=0.5,h=0.5,txt=''):
-        super(mWgen,self).__init__()
-        globs = globalvars()
-        self.resize(w,h)
-        self.setWindowTitle(txt)
-        self.setWindowIcon(QIcon(globs.installdir+'/icons/pythonlogo.png'))
-        ### change background color
-        p = QPalette()
-        p.setColor(QPalette.Background,QtCore.Qt.white)
-        self.setPalette(p)
-    ### resize window in either fractional or absolute size ###
-    def resize(self,w,h):
-        [scW,scH] = getscreensize() # get screen size
-        # check for fractional coords
-        if (w <= 1.0):
-            marginW = 0.5*(1.0-w)*scW # margin in pixels
-            w = w*scW # width in pixels
-        else:
-            marginW = 0.5*(scW-w)
-        if (h <= 1.0):
-            marginH = 0.5*(1.0-h)*scH # margin in pixels
-            h = h*scH # height in pixels
-        else:
-            marginH = 0.5*(scH-h)
-        self.setGeometry(marginW,marginH,w,h)
-    ### get geometry of window ###
-    def getGeometry(self):
-        geom = self.frameGeometry()
-        return [geom.x(),geom.y(),geom.width(),geom.height()]
-    ### define action for exiting, pop-up dialog
-    def qexitM(self):
-        self.hide()
     
+######################################
+#### Center main widget on screen ####
+######################################
+def center(self):
+    frameGm = self.frameGeometry()
+    screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+    centerPoint = QApplication.desktop().screenGeometry(screen).center()
+    frameGm.moveCenter(centerPoint)
+    self.move(frameGm.topLeft())
+    
+#########################
+#### Relative resize ####
+#########################
+def relresize(self,parent,scale):
+    parentgeom = parent.frameGeometry()
+    width = parentgeom.width()*scale
+    height = parentgeom.height()*scale
+    xmarg = 0.5*(1.0-scale)*parentgeom.width()
+    ymarg = 0.5*(1.0-scale)*parentgeom.height()
+    self.setGeometry(xmarg,ymarg,width,height)
 
-class mButton(QPushButton):
-    # constructor needs window, marginW, marginH and Font size
-    # margins and scale are fractional 
-    def __init__(self,window,mW,mH,tW,tH,txt,ctip,fontsize):
-        super(mButton,self).__init__()
-        wgeom = window.getGeometry()
-        self.setParent(window)
-        # check for fractional coords
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        tW = tW*wgeom[2]
-        tH = tH*wgeom[3]
+###########################
+#### Main Window class ####
+###########################
+class mQMainWindow(QMainWindow):
+    def __init__(self):
+        super(mQMainWindow,self).__init__()
+    def closeEvent(self,event):
+        sys.exit()
+
+##########################
+#### Pushbutton class ####
+##########################
+class mQPushButton(QPushButton):
+    def __init__(self,txt,ctip,fontsize):
+        super(mQPushButton,self).__init__()
         self.setText(txt)
         self.setToolTip(ctip)
-        self.setGeometry(marginW,marginH,tW,tH)
         f = QFont("Helvetica",fontsize)
         self.setFont(f)
-        self.setMouseTracking(True)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        #self.setMouseTracking(True)
         self.show()
-    def settxtfont(self,f):
-        self.setFont(f)
-    def enterEvent(self,event):
-        self.setStyleSheet("background-color:#F3BEAC;")
-    def leaveEvent(self,event):
-        self.setStyleSheet("background-color:;")
+    #def enterEvent(self,event):
+    #    self.setStyleSheet("background-color:#F3BEAC;")
+    #def leaveEvent(self,event):
+    #    self.setStyleSheet("background-color:;")
 
-class mCheck(QCheckBox):
+########################
+#### Checkbox class ####
+########################
+class mQCheckBox(QCheckBox):
     # margins and scale are fractional 
-    def __init__(self,window,mW,mH,tW,tH,txt,ctip,fontsize):
-        super(mCheck,self).__init__()
-        wgeom = window.getGeometry()
-        self.setParent(window)
+    def __init__(self,txt,ctip,fontsize):
+        super(mQCheckBox,self).__init__()
         self.state = False
-        # check for fractional coords
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        tW = tW*wgeom[2]
-        tH = tH*wgeom[3]
         self.setText(txt)
-        self.setGeometry(marginW,marginH,tW,tH)
         f = QFont("Helvetica",fontsize)
         self.stateChanged.connect(self.changestate)
         self.setFont(f)
         self.setToolTip(ctip)
-        self.show()
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
     def changestate(self):
         if self.isChecked():
             self.state = False
@@ -153,46 +89,37 @@ class mCheck(QCheckBox):
             return 1
         else:
             return 0
-
-class mDbox(QComboBox):
+            
+############################
+#### Dropdown box class ####
+############################
+class mQComboBox(QComboBox):
     # margins and scale are fractional 
-    def __init__(self,window,mW,mH,tW,tH,txt,ctip,fontsize):
-        super(mDbox,self).__init__()
-        wgeom = window.getGeometry()
-        self.setParent(window)
+    def __init__(self,txt,ctip,fontsize):
+        super(mQComboBox,self).__init__()
         self.state = 0
         for t in txt:
             self.addItem(t)
-        # check for fractional coords
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        tW = tW*wgeom[2]
-        tH = tH*wgeom[3]
-        self.setGeometry(marginW,marginH,tW,tH)
         f = QFont("Helvetica",fontsize)
         self.setToolTip(ctip)
         self.setFont(f)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
     def getState(self):
         return self.currentIndex()
     def getText(self):
         return self.currentText()
 
-class mSlider(QSlider):
+######################
+#### Slider class ####
+######################
+class mQSlider(QSlider):
     # margins and scale are fractional 
-    def __init__(self,window,mW,mH,tW,tH,ctip):
-        super(mSlider,self).__init__()
-        wgeom = window.getGeometry()
-        self.setParent(window)
+    def __init__(self,ctip):
+        super(mQSlider,self).__init__()
         self.setOrientation(Qt.Horizontal)
         self.setRange(0,100)
         self.setValue(0)
-        # check for fractional coords
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        tW = tW*wgeom[2]
-        tH = tH*wgeom[3]
-        self.setGeometry(marginW,marginH,tW,tH)
-        
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 
 class qBoxFolder(QDialog):
     # constructor needs window, marginW, marginH and Font size
@@ -217,13 +144,13 @@ class qBoxFolder(QDialog):
             return 'keep'
         else:
             return False
-            
-class qBoxInfo(QDialog):
-    # constructor needs window, marginW, marginH and Font size
-    # margins and scale are fractional 
-    def __init__(self,window,toptxt,txt):
-        super(qBoxInfo,self).__init__()
-        self.setParent(window)
+        
+############################
+#### Pop up boxes class ####
+############################
+class mQDialogInf(QDialog):
+    def __init__(self,toptxt,txt):
+        super(mQDialogInf,self).__init__()
         self.msgBox = QMessageBox()
         self.msgBox.setIcon(QMessageBox.Information)
         self.msgBox.setWindowTitle(toptxt)
@@ -231,12 +158,9 @@ class qBoxInfo(QDialog):
         self.msgBox.addButton(QPushButton('OK'), QMessageBox.YesRole)
         self.msgBox.exec_()
 
-class qBoxError(QDialog):
-    # constructor needs window, marginW, marginH and Font size
-    # margins and scale are fractional 
-    def __init__(self,window,toptxt,txt):
-        super(qBoxError,self).__init__()
-        self.setParent(window)
+class mQDialogErr(QDialog):
+    def __init__(self,toptxt,txt):
+        super(mQDialogErr,self).__init__()
         self.msgBox = QMessageBox()
         self.msgBox.setIcon(QMessageBox.Critical)
         self.msgBox.setWindowTitle(toptxt)
@@ -244,32 +168,110 @@ class qBoxError(QDialog):
         self.msgBox.addButton(QPushButton('OK'), QMessageBox.YesRole)
         self.msgBox.exec_()
 
-class qBoxWarning(QDialog):
-    # constructor needs window, marginW, marginH and Font size
-    # margins and scale are fractional 
-    def __init__(self,window,toptxt,txt):
-        super(qBoxWarning,self).__init__()
-        self.setParent(window)
+class mQDialogWarn(QDialog):
+    def __init__(self,toptxt,txt):
+        super(mQDialogWarn,self).__init__()
         self.msgBox = QMessageBox()
         self.msgBox.setIcon(QMessageBox.Warning)
         self.msgBox.setWindowTitle(toptxt)
         self.msgBox.setText(txt)
         self.msgBox.addButton(QPushButton('OK'), QMessageBox.YesRole)
         self.msgBox.exec_()
-
-
-class mRtext(QLabel):
-    # constructor needs window, marginW, marginH and Font size
-    # margins and scale are fractional 
-    def __init__(self,window,mW,mH,tW,tH,txt,ctip,fontsize,fontype,align):
-        super(mRtext,self).__init__()
-        wgeom = window.getGeometry()
-        self.setParent(window)
-        # define margins
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        tW = tW*wgeom[2]
-        tH = tH*wgeom[3]
+###################################
+#### Defines class QMessageBox ####
+###################################
+class mQMessageBox(QMessageBox):
+    def __init__(self,title,text,typ,autoclose):
+        super(mQMessageBox,self).__init__()
+        self.setText(text)
+        if 'w' in typ.lower():
+            self.setIcon(QMessageBox.Warning)
+        elif 'e' in typ.lower():
+            self.setIcon(QMessageBox.Critical)
+        else:
+            self.setIcon(QMessageBox.Information)
+        self.addButton(QPushButton('OK'), QMessageBox.YesRole)
+        self.autoclose = autoclose
+        self.show()
+    def showEvent(self,event):
+        if self.autoclose:
+            self.hide()
+            
+######################
+#### Editor class ####
+######################
+class mQTextEdit(QTextEdit):
+    def __init__(self,txt,align,fontsize):
+        super(mQTextEdit,self).__init__()
+        self.setText(txt)
+        if align in 'Ll':
+            self.setAlignment(Qt.AlignLeft)
+        elif align in 'Rr':
+            self.setAlignment(Qt.AlignRight)
+        else:
+            self.setAlignment(Qt.AlignCenter)
+        f = QFont("Helvetica",fontsize)
+        self.setFont(f)
+        self.show()
+        
+############################
+#### Static texts class ####
+############################
+class mQLabel(QLabel):
+    # constructor needs text, tip, alignment, fontsize
+    def __init__(self,txt,ctip,align,fontsize):
+        super(mQLabel,self).__init__()
+        self.setText(txt) # set text
+        # alignment
+        if align in 'Ll':
+            self.setAlignment(Qt.AlignLeft)
+        if align in 'Rr':
+            self.setAlignment(Qt.AlignRight)
+        if align in 'C':
+            self.setAlignment(Qt.AlignVCenter)
+        if align in 'c':
+            self.setAlignment(Qt.AlignHCenter)
+        f = QFont("Helvetica",fontsize)
+        self.setFont(f)
+        self.setToolTip(ctip)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self.setWordWrap(True)
+    def resize2Event(self, event):
+        super(mQLabel, self).resizeEvent(event)
+        if not self.text():
+            return
+        #--- fetch current parameters ----
+        f = self.font()
+        cr = self.contentsRect()
+        #--- iterate to find the font size that fits the contentsRect ---
+        dw = event.size().width() - event.oldSize().width()   # width change
+        dh = event.size().height() - event.oldSize().height() # height change
+        fs = max(f.pixelSize(), 1)        
+        while True:
+            f.setPixelSize(fs)
+            br = QFontMetrics(f).boundingRect(self.text())
+            if dw >= 0 and dh >= 0: # label is expanding
+                if br.height() <= cr.height() and br.width() <= cr.width():
+                    fs += 1
+                else:
+                    f.setPixelSize(max(fs - 1, 1)) # backtrack
+                    break                    
+            else: # label is shrinking
+                if br.height() > cr.height() or br.width() > cr.width():
+                    fs -= 1
+                else:
+                    break
+            if fs < 1: break
+        #--- update font size ---          
+        self.setFont(f) 
+        
+##########################
+#### Edit texts class ####
+##########################
+class mQLineEdit(QLineEdit):
+    # constructor needs text, tip, alignment, fontsize
+    def __init__(self,txt,ctip,align,fontsize):
+        super(mQLineEdit,self).__init__()
         self.setText(txt) # set text
         # alignment
         if align in 'Ll':
@@ -278,85 +280,51 @@ class mRtext(QLabel):
             self.setAlignment(Qt.AlignRight)
         else:
             self.setAlignment(Qt.AlignCenter)
-        self.setGeometry(marginW,marginH,tW,tH)
-        if fontype[0] in 'Bb':
-            f = QFont("Helvetica",fontsize,QFont.Bold)
-        elif fontype[0] in 'Ii':
-            f = QFont("Helvetica",fontsize,QFont.Italic)
-        else:
-            f = QFont("Helvetica",fontsize)
+        f = QFont("Helvetica",fontsize)
         self.setFont(f)
         self.setToolTip(ctip)
-        self.show()
-    def settxtfont(self,f):
-        self.setFont(f)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self.setCursorPosition(0)
 
-class mEtext(QLineEdit):
-    # constructor needs window, marginW, marginH and Font size
-    # margins and scale are fractional 
-    def __init__(self,window,mW,mH,tW,tH,txt,ctip,fontsize,fontype,align):
-        super(mEtext,self).__init__()
-        wgeom = window.getGeometry()
-        self.setParent(window)
-        # check for fractional coords
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        tW = tW*wgeom[2]
-        tH = tH*wgeom[3]
-        self.setText(txt)
-        self.setGeometry(marginW,marginH,tW,tH)
+##########################
+#### Edit texts class ####
+##########################
+class mQLineEditL(QLineEdit):
+    # constructor needs text, tip, alignment, fontsize
+    def __init__(self,txt,ctip,align,fontsize):
+        super(mQLineEditL,self).__init__()
+        self.setText(txt) # set text
+        # alignment
         if align in 'Ll':
             self.setAlignment(Qt.AlignLeft)
         elif align in 'Rr':
             self.setAlignment(Qt.AlignRight)
         else:
             self.setAlignment(Qt.AlignCenter)
-        self.setGeometry(marginW,marginH,tW,tH)
-        if fontype[0] in 'Bb':
-            f = QFont("Helvetica",fontsize,QFont.Bold)
-        elif fontype[0] in 'Ii':
-            f = QFont("Helvetica",fontsize,QFont.Italic)
-        else:
-            f = QFont("Helvetica",fontsize)
+        f = QFont("Helvetica",fontsize)
         self.setFont(f)
         self.setToolTip(ctip)
-        self.show()
-    def settxtfont(self,f):
-        self.setFont(f)
-        
-class mEdtext(QTextEdit):
-    # constructor needs window, marginW, marginH and Font size
-    # margins and scale are fractional 
-    def __init__(self,window,mW,mH,tW,tH,txt,fontsize,fontype,align):
-        super(mEdtext,self).__init__()
-        wgeom = window.getGeometry()
-        self.setParent(window)
-        # check for fractional coords
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        tW = tW*wgeom[2]
-        tH = tH*wgeom[3]
-        self.setText(txt)
-        self.setGeometry(marginW,marginH,tW,tH)
-        if align in 'Ll':
-            self.setAlignment(Qt.AlignLeft)
-        elif align in 'Rr':
-            self.setAlignment(Qt.AlignRight)
-        else:
-            self.setAlignment(Qt.AlignCenter)
-        self.setGeometry(marginW,marginH,tW,tH)
-        if fontype[0] in 'Bb':
-            f = QFont("Helvetica",fontsize,QFont.Bold)
-        elif fontype[0] in 'Ii':
-            f = QFont("Helvetica",fontsize,QFont.Italic)
-        else:
-            f = QFont("Helvetica",fontsize)
-        self.setFont(f)
-        self.show()
-    def settxtfont(self,f):
-        self.setFont(f)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self.setCursorPosition(0)
+    def focusOutEvent(self,event):
+        globs = globalvars()
+        #licores = readdict(globs.installdir+'/Ligands/ligands.dict')
 
+########################
+#### Spin box class ####
+########################
+class mQSpinBox(QSpinBox):
+    # constructor needs text, tip, alignment, fontsize
+    def __init__(self,ctip):
+        super(mQSpinBox,self).__init__()
+        self.setMinimum(0) # set minimum
+        self.setValue(1)
+        self.setToolTip(ctip)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 
+###########################
+#### Get size of image ####
+###########################
 def get_image_size(fname):
     '''Determine the image type of fhandle and return its size.
     from draco'''
@@ -392,83 +360,17 @@ def get_image_size(fname):
             return
         return width, height
 
-
-class mPic(QLabel):
-    # constructor needs window, picture path, marginW, marginH and scale
-    # margins and scale are fractional 
-    def __init__(self,window,picpath,mW,mH,sc):
-        super(mPic,self).__init__()
-        self = QLabel(window)
-        # get picture size
-        [pw,ph] = get_image_size(picpath)
-        wgeom = window.getGeometry()
-        # rescale image        
-        initR = float(ph)/float(pw)
-        pw = wgeom[2]*sc
-        ph = int(initR*pw)
-        # check for fractional coords
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        pixmap = QPixmap(picpath)
-        pixmap = pixmap.scaledToHeight(ph)
-        self.setGeometry(marginW,marginH,pw,ph)
-        self.setPixmap(pixmap)
-        self.show()
-
-class mPic2(QLabel):
-    # constructor needs window, picture path, marginW, marginH and scale
-    # margins and scale are fractional 
-    def __init__(self,window,picpath,mW,mH,W,H):
-        super(mPic2,self).__init__()
-        self = QLabel(window)
-        # get picture size
-        [pw,ph] = get_image_size(picpath)
-        wgeom = window.getGeometry()
-        # rescale image        
-        initR = float(ph)/float(pw)
-        wgR = float(wgeom[3])/float(wgeom[2])
-        if wgR < initR : 
-            rsc = float(wgeom[3])/float(ph)
-        else:
-            rsc = float(wgeom[2])/float(pw)
-        [pw,ph] = [rsc*pw,rsc*ph]
-        # check for fractional coords
-        marginW =  mW*wgeom[2]
-        marginH =  mH*wgeom[3]
-        pixmap = QPixmap(picpath)
-        pixmap = pixmap.scaled(pw,ph)
-        self.setGeometry(marginW,marginH,pw,ph)
-        self.setPixmap(pixmap)
-        self.show()
-        
-
-class mMenubar(QMainWindow):
-    # margins and scale are fractional 
-    def __init__(self,window,gui):
-        super(mMenubar,self).__init__()
-        self = window.menuBar()
-        self.setParent(window)
-        self.filemenup = self.addMenu('')
-        self.filemenu0 = self.addMenu('&File')
-        self.filemenu1 = self.addMenu('&Load')
-        self.filemenu2 = self.addMenu('&Help')
-        exitAction = QAction('&Exit',window)
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(window.qexitM)
-        self.filemenu0.addAction(exitAction)
-        saveAction = QAction('&Save As..',window)
-        saveAction.setShortcut('Ctrl+S')
-        saveAction.setStatusTip('Save current input settings')
-        saveAction.triggered.connect(gui.qdumpS)
-        self.filemenu0.addAction(saveAction)
-        loadAction = QAction('&Load',window)
-        loadAction.setShortcut('Ctrl+O')
-        loadAction.setStatusTip('Load input file')
-        loadAction.triggered.connect(gui.qloadM)
-        self.filemenu1.addAction(loadAction)
-        helpAction = QAction('&Help',window)
-        helpAction.setShortcut('Ctrl+H')
-        helpAction.setStatusTip('Show input options')
-        helpAction.triggered.connect(gui.qhelpM)
-
+######################
+#### Pixmap class ####
+######################
+class mQPixmap(QLabel):
+    def __init__(self,picpath):
+        super(mQPixmap,self).__init__()
+        self.pixmap = QPixmap(picpath)
+        self.setPixmap(self.pixmap)
+        self.setScaledContents(True)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+    def resizeEvent(self,event):
+        w = self.width()
+        h = self.height()
+        self.setPixmap(self.pixmap.scaled(w,h,Qt.KeepAspectRatio,Qt.SmoothTransformation))
