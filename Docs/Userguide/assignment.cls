@@ -27,6 +27,7 @@
 \RequirePackage{etoolbox}
 \RequirePackage{hyperref}
 \RequirePackage{subfigure}
+\RequirePackage{tabularx}
 \RequirePackage{multirow}
 \RequirePackage{verbatim}
 \RequirePackage{latexsym}
