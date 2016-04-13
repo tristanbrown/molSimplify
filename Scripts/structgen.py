@@ -318,7 +318,10 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
         obmol = mol.OBmol.OBMol
         forcefield.Setup(obmol,constr)
         ### force field optimize structure
-        forcefield.ConjugateGradients(1000)
+        if obmol.NumAtoms() > 15:
+            forcefield.ConjugateGradients(2500)
+        else:
+            forcefield.ConjugateGradients(1000)
         forcefield.GetCoordinates(obmol)
         mol.OBmol = pybel.Molecule(obmol)
         # reset atomic number to metal
@@ -337,7 +340,10 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
         obmol = mol.OBmol.OBMol # we don't have coordinates yet, but we have OBmol
         forcefield.Setup(obmol,constr)
         ### force field optimize structure
-        forcefield.ConjugateGradients(1000)
+        if obmol.NumAtoms() > 15:
+            forcefield.ConjugateGradients(2500)
+        else:
+            forcefield.ConjugateGradients(1000)
         forcefield.GetCoordinates(obmol)
         mol.OBmol = pybel.Molecule(obmol)
         mol.convert2mol3D()
@@ -981,7 +987,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                             bondl = float(MLb[i]) # check for custom
                     else:
                         bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
-                    for iib in range(02):
+                    for iib in range(0,3):
                         MLoptbds.append(bondl)
                     # set correct distance
                     setPdistance(lig3D, lig3D.getAtom(atom0).coords(), m3D.getAtom(0).coords(), bondl)

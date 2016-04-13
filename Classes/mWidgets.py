@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from Classes.globalvars import *
+from Scripts.io import *
 import os, imghdr, struct
 
 ####################################################
@@ -25,7 +26,6 @@ def center(self):
     centerPoint = QApplication.desktop().screenGeometry(screen).center()
     frameGm.moveCenter(centerPoint)
     self.move(frameGm.topLeft())
-    
     
 #########################
 #### Relative resize ####
@@ -285,7 +285,31 @@ class mQLineEdit(QLineEdit):
         self.setToolTip(ctip)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.setCursorPosition(0)
-        
+
+##########################
+#### Edit texts class ####
+##########################
+class mQLineEditL(QLineEdit):
+    # constructor needs text, tip, alignment, fontsize
+    def __init__(self,txt,ctip,align,fontsize):
+        super(mQLineEditL,self).__init__()
+        self.setText(txt) # set text
+        # alignment
+        if align in 'Ll':
+            self.setAlignment(Qt.AlignLeft)
+        elif align in 'Rr':
+            self.setAlignment(Qt.AlignRight)
+        else:
+            self.setAlignment(Qt.AlignCenter)
+        f = QFont("Helvetica",fontsize)
+        self.setFont(f)
+        self.setToolTip(ctip)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self.setCursorPosition(0)
+    def focusOutEvent(self,event):
+        globs = globalvars()
+        #licores = readdict(globs.installdir+'/Ligands/ligands.dict')
+
 ########################
 #### Spin box class ####
 ########################
@@ -293,7 +317,8 @@ class mQSpinBox(QSpinBox):
     # constructor needs text, tip, alignment, fontsize
     def __init__(self,ctip):
         super(mQSpinBox,self).__init__()
-        self.setMinimum(1) # set minimum
+        self.setMinimum(0) # set minimum
+        self.setValue(1)
         self.setToolTip(ctip)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 

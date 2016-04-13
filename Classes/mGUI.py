@@ -64,7 +64,7 @@ class mGUI():
         self.sgrid.addWidget(self.wmain)
         ### set manually size of rows/columns
         self.grid.setRowMinimumHeight(0,15)
-        self.grid.setRowMinimumHeight(2,120)
+        self.grid.setRowMinimumHeight(2,90)
         self.grid.setRowMinimumHeight(3,15)
         self.grid.setRowMinimumHeight(4,50)
         ####################################
@@ -95,9 +95,9 @@ class mGUI():
         menu2.addAction(helpAction)
         ### place title top ###
         clogo = mQPixmap(globs.installdir+'/icons/logo.png')
-        self.grid.addWidget(clogo,1,9,2,18)
+        self.grid.addWidget(clogo,2,8,1,10)
         self.txtdev = mQLabel('Developed by Kulik group @ MIT','','c',16)
-        self.grid.addWidget(self.txtdev,19,9,2,18)
+        self.grid.addWidget(self.txtdev,19,8,2,10)
         ###################################################
         ###################################################
         ########## STRUCTURE GENERATION INPUTS ############
@@ -139,17 +139,17 @@ class mGUI():
         self.dcoordg = mQComboBox('','',12)
         self.dcoordg.setCurrentIndex(0)
         self.matchgeomcoord()
-        self.grid.addWidget(self.dcoordg,8,5,1,3)
+        self.grid.addWidget(self.dcoordg,8,5,1,2)
         # add new coordination
         ctip = 'Add geometry'
-        self.butaddg = mQPushButton('Add geometry',ctip,12)
+        self.butaddg = mQPushButton('Add\ngeometry',ctip,12)
         self.butaddg.clicked.connect(self.addgeom)
-        self.grid.addWidget(self.butaddg,8,8,1,2)
+        self.grid.addWidget(self.butaddg,8,7,1,2)
         # add new coordination
         ctip = 'View geometry with atom labels'
-        self.butvg = mQPushButton('View geometry',ctip,12)
+        self.butvg = mQPushButton('View\ngeometry',ctip,12)
         self.butvg.clicked.connect(self.viewgeom)
-        self.grid.addWidget(self.butvg,8,10,1,1)
+        self.grid.addWidget(self.butvg,8,9,1,2)
         #############################################
         ################## LIGANDS ##################
         ### ligands tables ###
@@ -170,9 +170,9 @@ class mGUI():
         ctip6 = 'Name of ligand'
         self.nameligh = mQLabel('Name',ctip6,'c',12) # name of ligand header
         ctip7 = 'Force ligand order and disable smart reordering'
-        self.ligfloc = mQCheckBox('Force\nlocation',ctip7,12) 
+        self.ligfloc = mQCheckBox('Force location',ctip7,12) 
         ctip8 = 'Ligand smart alignment. Aligns first the bulky ligands.'
-        self.ligfalign = mQCheckBox('Smart\nalignment',ctip8,12) 
+        self.ligfalign = mQCheckBox('Smart alignment',ctip8,12) 
         self.ligfalign.setChecked(True)
         # add to layout
         self.grid.setColumnMinimumWidth(0,150)
@@ -183,16 +183,16 @@ class mGUI():
         self.grid.addWidget(self.MLbondsh,9,7,1,2)
         self.grid.addWidget(self.canglesh,9,9,1,1)
         self.grid.addWidget(self.nameligh,9,10,1,1)
-        self.grid.addWidget(self.ligfalign,8,13,1,1)
-        self.grid.addWidget(self.ligfloc,9,13,1,1)
+        self.grid.addWidget(self.ligfalign,13,15,1,2)
+        self.grid.addWidget(self.ligfloc,13,17,1,2)
         ## ligands ##
-        self.lig0 = mQLineEdit('',ctip0,'l',12)
-        self.lig1 = mQLineEdit('',ctip0,'l',12)
-        self.lig2 = mQLineEdit('',ctip0,'l',12)
-        self.lig3 = mQLineEdit('',ctip0,'l',12)
-        self.lig4 = mQLineEdit('',ctip0,'l',12)
-        self.lig5 = mQLineEdit('',ctip0,'l',12)
-        self.lig6 = mQLineEdit('',ctip0,'l',12)
+        self.lig0 = mQLineEditL('',ctip0,'l',12)
+        self.lig1 = mQLineEditL('',ctip0,'l',12)
+        self.lig2 = mQLineEditL('',ctip0,'l',12)
+        self.lig3 = mQLineEditL('',ctip0,'l',12)
+        self.lig4 = mQLineEditL('',ctip0,'l',12)
+        self.lig5 = mQLineEditL('',ctip0,'l',12)
+        self.lig6 = mQLineEditL('',ctip0,'l',12)
         self.lig7 = mQLineEdit('',ctip0,'l',12)
         # disable
         self.lig1.setDisabled(True)
@@ -427,23 +427,28 @@ class mGUI():
         ##################################################
         ##################################################
         self.txtgp = mQLabel('General parameters','','c',20)
-        self.grid.addWidget(self.txtgp,4,21,2,9)
+        self.grid.addWidget(self.txtgp,4,13,2,8)
         # random generation
         ctip = 'Enable random generation.'
         self.randomchk = mQCheckBox('Random generation',ctip,12)
         self.randomchk.stateChanged.connect(self.enablerandom)
-        self.grid.addWidget(self.randomchk,7,23,1,2)
+        self.grid.addWidget(self.randomchk,7,15,1,2)
         # charge calculation
         ctip = 'Calculate charge based on ox state and ligands'
-        self.chch = mQCheckBox('Calculate charge',ctip,12)
+        self.chch = mQCheckBox('Calculate\ncharge',ctip,12)
         self.chch.setDisabled(True)
-        self.grid.addWidget(self.chch,7,25,1,2)
+        self.grid.addWidget(self.chch,7,17,1,1)
+        # keep Hs
+        ctip = 'Keep hydrogens for random generation.'
+        self.randkHs = mQCheckBox('Keep\nHs',ctip,12)
+        self.grid.addWidget(self.randkHs,7,18,1,1)
+        self.randkHs.setDisabled(True)
         # number of random generated structures
         ctip = 'Number of structures to be randomly generated.'
         self.rtrgen = mQLabel('Structures:',ctip,'Cr',12)
         self.etrgen = mQLineEdit('',ctip,'l',12)
-        self.grid.addWidget(self.rtrgen,8,23,1,1)
-        self.grid.addWidget(self.etrgen,8,24,1,1)
+        self.grid.addWidget(self.rtrgen,8,15,1,1)
+        self.grid.addWidget(self.etrgen,8,16,1,1)
         self.rtrgen.setDisabled(True)
         self.etrgen.setDisabled(True)
         # number of different ligands to use
@@ -451,33 +456,28 @@ class mGUI():
         self.rtlignum = mQLabel('Different\nligands:',ctip,'Cr',12)
         qcav = ['1','2','3','4','5','6','7','8','9','10']
         self.etlignum = mQComboBox(qcav,ctip,12)
-        self.grid.addWidget(self.rtlignum,8,25,1,1)
-        self.grid.addWidget(self.etlignum,8,26,1,1)
+        self.grid.addWidget(self.rtlignum,8,17,1,1)
+        self.grid.addWidget(self.etlignum,8,18,1,1)
         self.rtlignum.setDisabled(True)
         self.etlignum.setDisabled(True)
-        # keep Hs
-        ctip = 'Keep hydrogens for random generation.'
-        self.randkHs = mQCheckBox('Keep Hs',ctip,12)
-        self.grid.addWidget(self.randkHs,8,27,1,1)
-        self.randkHs.setDisabled(True)
         # group of different ligands
         ctip = 'For random generation: select random ligands from group.'
         self.rtliggrp = mQLabel('Ligand\ngroup:',ctip,'Cr',12)
         qcav0 = getligroups(readdict(globs.installdir+'/Ligands/ligands.dict'))
         qcav = filter(None,qcav0.split(' '))
         self.etliggrp = mQComboBox(qcav,ctip,12)
-        self.grid.addWidget(self.rtliggrp,9,23,1,1)
-        self.grid.addWidget(self.etliggrp,9,24,1,1)
+        self.grid.addWidget(self.rtliggrp,9,15,1,1)
+        self.grid.addWidget(self.etliggrp,9,16,1,1)
         self.rtliggrp.setDisabled(True)
         self.etliggrp.setDisabled(True)
         # ligand category
         ctip = 'For random generation: select random ligands from category.\nOptions are all'
-        ctip += '"build" for building complexes, "functinoalize" for functionalizing'
+        ctip += '"build" for building complexes, "functionalize" for functionalizing'
         self.rtligctg = mQLabel('Ligand\ncategory:',ctip,'Cr',12)
         qcav = ['all','build','functionalize']
         self.etligctg = mQComboBox(qcav,ctip,12)
-        self.grid.addWidget(self.rtligctg,9,25,1,1)
-        self.grid.addWidget(self.etligctg,9,26,1,2)
+        self.grid.addWidget(self.rtligctg,9,17,1,1)
+        self.grid.addWidget(self.etligctg,9,18,1,1)
         self.rtligctg.setDisabled(True)
         self.etligctg.setDisabled(True)
         # oxidation state
@@ -486,74 +486,74 @@ class mGUI():
         qcav = ['0','I','II','III','IV','V','VI','VII','VIII']
         self.doxs = mQComboBox(qcav,ctip,12)
         self.doxs.setCurrentIndex(0)
-        self.grid.addWidget(self.roxstate,10,23,1,1)
-        self.grid.addWidget(self.doxs,10,24,1,1)
+        self.grid.addWidget(self.roxstate,10,15,1,1)
+        self.grid.addWidget(self.doxs,10,16,1,1)
         # spin state
         ctip = 'System spin multiplicity'
         self.rspstate = mQLabel('Spin:',ctip,'Cr',12)
         qcav = ['1','2','3','4','5','6','7','8','9','10']
         self.dspin = mQComboBox(qcav,ctip,12)
         self.dspin.setCurrentIndex(0)
-        self.grid.addWidget(self.rspstate,10,26,1,1)
-        self.grid.addWidget(self.dspin,10,27,1,1)
+        self.grid.addWidget(self.rspstate,10,17,1,1)
+        self.grid.addWidget(self.dspin,10,18,1,1)
         # force field optimization
         ctip = 'Perform Force Field optimization'
         self.chkFF = mQCheckBox('FF optimize',ctip,12)
         self.chkFF.stateChanged.connect(self.enableffinput)
-        self.grid.addWidget(self.chkFF,11,23,1,2)
+        self.grid.addWidget(self.chkFF,11,15,1,1)
         # generate all
         ctip = 'Generate structure with and without optimization.'
-        self.chkgenall = mQCheckBox('Generate all',ctip,12)
+        self.chkgenall = mQCheckBox('Generate\nall',ctip,12)
         self.chkgenall.stateChanged.connect(self.disableffinput)
-        self.grid.addWidget(self.chkgenall,12,23,1,2)
+        self.grid.addWidget(self.chkgenall,12,15,1,1)
         # perform optimization
         ctip = 'Select Force Field'
         qcav = ['MMFF94','UFF','gchemical','GAFF']
         self.dff = mQComboBox(qcav,ctip,12)
         self.dff.setCurrentIndex(0)
         self.dff.setDisabled(True)
-        self.grid.addWidget(self.dff,11,25,1,3)
+        self.grid.addWidget(self.dff,11,16,1,1)
         # optimize before or after
         ctip = 'Optimize before or after building the structure'
         qcav = ['Before','After','Before & After']
         self.dffba = mQComboBox(qcav,ctip,12)
         self.dffba.setDisabled(True)
         self.dffba.setCurrentIndex(2)
-        self.grid.addWidget(self.dffba,12,25,1,3)
+        self.grid.addWidget(self.dffba,11,17,1,2)
         # create distortion slider
         ctip = 'Percent random distortion from default coordination geometry.'
         self.distper = mQLabel('Distort:0%',ctip,'Cr',12)
         self.sdist = mQSlider(ctip)
         self.sdist.valueChanged.connect(self.sliderChanged)
-        self.grid.addWidget(self.distper,13,24,1,2)
-        self.grid.addWidget(self.sdist,13,26,1,2)
+        self.grid.addWidget(self.distper,12,17,1,1)
+        self.grid.addWidget(self.sdist,12,18,1,1)
         ### jobs dir ###
         ctip = 'Top directory for job folders.'
         self.rtrdir = mQLabel('Jobs dir:',ctip,'Cr',12)
-        self.grid.addWidget(self.rtrdir,14,23,1,1)
+        self.grid.addWidget(self.rtrdir,14,15,1,1)
         self.etrdir = mQLineEdit(globs.rundir,ctip,'l',12)
-        self.grid.addWidget(self.etrdir,14,24,1,2)
+        self.grid.addWidget(self.etrdir,14,16,1,2)
         # button for browsing rundir
         ctip = 'Browse running directory.'
         self.butpbrdir = mQPushButton('Browse..',ctip,12)
         self.butpbrdir.clicked.connect(self.dirload)
-        self.grid.addWidget(self.butpbrdir,14,26,1,2)
+        self.grid.addWidget(self.butpbrdir,14,18,1,1)
         # suffix
         ctip = 'Suffix for job directories.'
         self.rtsuff = mQLabel('Suffix:',ctip,'Cr',12)
         self.etsuff = mQLineEdit('',ctip,'l',12)
-        self.grid.addWidget(self.rtsuff,15,23,1,1)
-        self.grid.addWidget(self.etsuff,15,24,1,2)
+        self.grid.addWidget(self.rtsuff,15,15,1,1)
+        self.grid.addWidget(self.etsuff,15,16,1,2)
         # structure generation
         ctip = 'Generate structures'
         self.butGen = mQPushButton('Generate',ctip,18)
         self.butGen.clicked.connect(self.runGUI)
-        self.grid.addWidget(self.butGen,17,23,2,2)
+        self.grid.addWidget(self.butGen,17,15,2,2)
         # post-processing setup
         ctip = 'Setup post-processing'
         self.butPost = mQPushButton('Post-process',ctip,16)
         self.butPost.clicked.connect(self.setupp)
-        self.grid.addWidget(self.butPost,17,26,2,2)
+        self.grid.addWidget(self.butPost,17,17,2,2)
         ###################################################
         ###################################################
         ########### ADDITIONAL MOLECULE INPUTS ############
@@ -562,49 +562,49 @@ class mGUI():
         ### generate edit texts for additional molecule
         self.txtamol = mQLabel('Additional molecule','','c',20)
         self.txtamol.setDisabled(True)
-        self.grid.addWidget(self.txtamol,4,34,2,5)
+        self.grid.addWidget(self.txtamol,4,19,2,5)
         # additional molecule
         ctip = 'Place additional molecule'
         self.chkM = mQCheckBox('Extra molecule',ctip,12)
         self.chkM.stateChanged.connect(self.enableemol)
-        self.grid.addWidget(self.chkM,7,35,1,3)
+        self.grid.addWidget(self.chkM,7,20,1,3)
         # name of binding species
         ctip = 'Binding species'
         self.rtbind = mQLabel('Molecule:',ctip,'Cr',12)
         self.etbind = mQLineEdit('',ctip,'l',12)
         self.rtbind.setDisabled(True)
         self.etbind.setDisabled(True)
-        self.grid.addWidget(self.rtbind,8,34,1,1)
-        self.grid.addWidget(self.etbind,8,35,1,2)
+        self.grid.addWidget(self.rtbind,8,20,1,1)
+        self.grid.addWidget(self.etbind,8,21,1,2)
         # name of binding molecule from SMILES
         ctip = 'Name of binding molecule using SMILES'
         self.rtbsmi = mQLabel('Name:',ctip,'Cr',12)
         self.etbsmi = mQLineEdit('',ctip,'l',12)
         self.rtbsmi.setDisabled(True)
         self.etbsmi.setDisabled(True)
-        self.grid.addWidget(self.rtbsmi,9,34,1,1)
-        self.grid.addWidget(self.etbsmi,9,35,1,1)
+        self.grid.addWidget(self.rtbsmi,9,20,1,1)
+        self.grid.addWidget(self.etbsmi,9,21,1,2)
         # separate in xyz file
         ctip = 'Separate molecules in xyz or input file with ------'
         self.chsep = mQCheckBox('separate',ctip,12)
         self.chsep.setDisabled(True)    
-        self.grid.addWidget(self.chsep,9,36,1,2)
+        self.grid.addWidget(self.chsep,9,23,1,2)
         # number of binding conformations to generate
         ctip = 'Number of different conformations to be generated'
         self.rtnbind = mQLabel('Conformations:',ctip,'Cr',12)
         self.etnbind = mQLineEdit('',ctip,'l',12)
         self.rtnbind.setDisabled(True)
         self.etnbind.setDisabled(True)
-        self.grid.addWidget(self.rtnbind,10,34,1,1)
-        self.grid.addWidget(self.etnbind,10,35,1,1)
+        self.grid.addWidget(self.rtnbind,10,20,1,1)
+        self.grid.addWidget(self.etnbind,10,21,1,1)
         # charge of binding species
         ctip = 'Charge of binding species'
         self.rtchbind = mQLabel('Charge:',ctip,'Cr',12)
         self.etchbind = mQLineEdit('',ctip,'l',12)
         self.rtchbind.setDisabled(True)
         self.etchbind.setDisabled(True)
-        self.grid.addWidget(self.rtchbind,10,36,1,1)
-        self.grid.addWidget(self.etchbind,10,37,1,1)
+        self.grid.addWidget(self.rtchbind,10,22,1,1)
+        self.grid.addWidget(self.etchbind,10,23,1,1)
         # min/max distance
         ctip = 'Specify placing minimum/maximum distance (in A)'
         self.rtplace = mQLabel('Distance:',ctip,'Cr',12)
@@ -615,17 +615,17 @@ class mGUI():
         self.rtplace.setDisabled(True)
         self.etplacemin.setDisabled(True)
         self.etplacemax.setDisabled(True)
-        self.grid.addWidget(self.rtplace,11,34,1,1)
-        self.grid.addWidget(self.etplacemin,11,35,1,1)
-        self.grid.addWidget(self.etplacemax,11,36,1,1)
+        self.grid.addWidget(self.rtplace,11,20,1,1)
+        self.grid.addWidget(self.etplacemin,11,21,1,1)
+        self.grid.addWidget(self.etplacemax,11,22,1,1)
         # mask for atom/center of mass reference
         ctip = 'Reference atoms in extra molecules to be used for placement(e.g. 1,2 or 1-6 or COM or Fe) Default COM (center mass)'
         #self.rtmaskbind = mQLabel('Reference:',ctip,'r',14)
         self.etmaskbind = mQLineEdit('COM',ctip,'l',12)
         #self.rtmaskbind.setDisabled(True)
         self.etmaskbind.setDisabled(True)
-        #self.grid.addWidget(self.rtmaskbind,11,37,1,1)
-        self.grid.addWidget(self.etmaskbind,11,37,1,1)
+        #self.grid.addWidget(self.rtmaskbind,11,23,1,1)
+        self.grid.addWidget(self.etmaskbind,11,23,1,1)
         # angle/orientation
         ctip = 'Specify placement type or angle. Angle overwrites placement.'
         self.rtplacea = mQLabel('Angle:',ctip,'Cr',12)
@@ -636,26 +636,26 @@ class mGUI():
         self.rtplacea.setDisabled(True)
         self.etplacephi.setDisabled(True)
         self.etplacetheta.setDisabled(True)
-        self.grid.addWidget(self.rtplacea,12,34,1,1)
-        self.grid.addWidget(self.etplacephi,12,35,1,1)
-        self.grid.addWidget(self.etplacetheta,12,36,1,1)
+        self.grid.addWidget(self.rtplacea,12,20,1,1)
+        self.grid.addWidget(self.etplacephi,12,21,1,1)
+        self.grid.addWidget(self.etplacetheta,12,22,1,1)
         # placement of extr molecule
         ctip = 'Orientation for placing additional molecule'
         qcav = ['','axial','equatorial']
         self.dmolp = mQComboBox(qcav,ctip,12)
         self.dmolp.setDisabled(True)
         self.dmolp.currentIndexChanged.connect(self.checkaxial)
-        self.grid.addWidget(self.dmolp,12,37,1,1)
+        self.grid.addWidget(self.dmolp,12,23,1,1)
         # input file generation
         ctip = 'Generate input files'
         self.chkI = mQCheckBox('Input files',ctip,12)
         self.chkI.stateChanged.connect(self.enableqeinput)
-        self.grid.addWidget(self.chkI,13,34,1,2)
+        self.grid.addWidget(self.chkI,13,20,1,2)
         # jobscript generation
         ctip = 'Generate jobscripts'
         self.chkJ = mQCheckBox('Jobscripts',ctip,12)
         self.chkJ.stateChanged.connect(self.enablejinput)
-        self.grid.addWidget(self.chkJ,13,36,1,2)
+        self.grid.addWidget(self.chkJ,13,22,1,2)
         # input for QC calculation
         ctip = 'Enter input for Quantum Chemistry calculations'
         self.butQc = mQPushButton('Enter QC input',ctip,12)
@@ -665,8 +665,8 @@ class mGUI():
         qcav = ['TeraChem','GAMESS','QChem']
         self.qcode = mQComboBox(qcav,ctip,12)
         self.qcode.setDisabled(True)
-        self.grid.addWidget(self.butQc,14,34,1,2)
-        self.grid.addWidget(self.qcode,15,34,1,2)
+        self.grid.addWidget(self.butQc,14,20,1,2)
+        self.grid.addWidget(self.qcode,15,20,1,2)
         # input for jobscripts
         ctip = 'Enter input for jobscript files'
         self.butJob = mQPushButton('Enter job input',ctip,12)
@@ -676,13 +676,13 @@ class mGUI():
         qcav = ['SGE','SLURM']
         self.scheduler = mQComboBox(qcav,ctip,12)
         self.scheduler.setDisabled(True)
-        self.grid.addWidget(self.butJob,14,36,1,2)
-        self.grid.addWidget(self.scheduler,15,36,1,2)
+        self.grid.addWidget(self.butJob,14,22,1,2)
+        self.grid.addWidget(self.scheduler,15,22,1,2)
         # quit button
         ctip = 'Quit program'
         self.butQ = mQPushButton('Quit',ctip,14)
         self.butQ.clicked.connect(self.qexit)
-        self.grid.addWidget(self.butQ,17,37,1,1)
+        self.grid.addWidget(self.butQ,17,23,1,1)
         ################################################
         ################################################
         ################################################
