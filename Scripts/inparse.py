@@ -176,6 +176,8 @@ def parseinput(args):
         if '-lig' not in line and '-core' not in line and '-bind' not in line:
             line = line.split('#')[0] # remove comments
         li = line.strip()
+        li = li.replace('\n','')
+        line = line.replace('\n','')
         if not li.startswith("#") and len(li)>0: # remove comments/empty lines
             l = li.split('\n')[0] # remove newlines
             l = filter(None,re.split(' |,|\t|&',l))
@@ -278,7 +280,8 @@ def parseinput(args):
                 args.smicat = []
                 l = line.split('smicat',1)[1]
                 l = l.replace(' ','')
-                l = re.split('/|\t|&|\n',l)
+                l = re.split('/|\t|&',l)
+                print l
                 for ll in l:
                     lloc = []
                     l1 = filter(None,re.split(',| ',ll))

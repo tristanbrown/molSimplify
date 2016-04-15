@@ -880,7 +880,7 @@ class mGUI():
         #######################################
         self.qcQWindow = QWidget() # TC QC window
         self.qcQgrid = QGridLayout()
-        self.qctWindow.setWindowTitle('QChem Input')
+        self.qcQWindow.setWindowTitle('QChem Input')
         self.sgrid.addWidget(self.qcQWindow) # add to stacked grid
         self.qcQWindow.setPalette(p) # set background color
         self.qcQWindow.setLayout(self.qcQgrid) # set layout
