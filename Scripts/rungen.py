@@ -237,11 +237,10 @@ def checkmultilig(ligs):
     # loop over ligands
     for i,lig in enumerate(ligs):
         connatoms = []
-        if ('.' in lig):
+        if ('.smi' in lig or '.xyz' in lig or '.mol' in lig):
             lsuf = lig.split('.')[-1]
             if '~' in lig:
                 lig = lig.replace('~',os.path.expanduser("~"))
-            if 'smi' in lsuf or 'xyz' in lsuf or 'mol' in lsuf:
                 # read molecule
                 if glob.glob(lig):
                     moll = list(pybel.readfile(lsuf,lig))

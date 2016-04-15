@@ -179,8 +179,7 @@ def parseinput(args):
         li = li.replace('\n','')
         line = line.replace('\n','')
         if not li.startswith("#") and len(li)>0: # remove comments/empty lines
-            l = li.split('\n')[0] # remove newlines
-            l = filter(None,re.split(' |,|\t|&',l))
+            l = filter(None,re.split(' |,|\t|&',li))
             # parse general arguments
             if (l[0]=='-core'):
                 args.core = [ll for ll in l[1:]]
@@ -229,16 +228,8 @@ def parseinput(args):
                 args.geometry = l[1].lower()
             # parse ligands
             if (l[0]=='-lig'):
-                l = filter(None,re.split(' |,|\t',line[:-1]))
-                # discard comments
-                for ilig,llig in enumerate(l):
-                    if llig=='#':
-                        l=l[:ilig]
-                        break
-                if args.lig:
-                    args.lig.append(l[1:])
-                else:
-                    args.lig = l[1:]
+                ll = line.split('-lig')[-1]
+                args.lig = filter(None,re.split(' |,|\t',ll))
             if (l[0]=='-lignum'):
                 args.lignum = l[1]
             if (l[0]=='-liggrp'):
@@ -281,7 +272,6 @@ def parseinput(args):
                 l = line.split('smicat',1)[1]
                 l = l.replace(' ','')
                 l = re.split('/|\t|&',l)
-                print l
                 for ll in l:
                     lloc = []
                     l1 = filter(None,re.split(',| ',ll))
