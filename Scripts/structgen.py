@@ -702,7 +702,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     lig.cat = tcats[i]
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
-                    if 'B' in lig.ffopt:
+                    if 'b' in lig.ffopt.lower():
                         lig = ffopt(args.ff,lig,lig.cat,0,frozenats,freezeangles,MLoptbds)
                 ###############################
                 lig3D = lig # change name
