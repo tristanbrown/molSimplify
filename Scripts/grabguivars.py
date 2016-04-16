@@ -760,6 +760,8 @@ def loadfrominputfile(gui,fname):
     s = f.read()
     s = filter(None,s.splitlines())
     f.close()
+    # re-initialize GUI
+    #gui.initGUI(gui.app)
     db = False
     ligs,ligoccs,lcats,kHs,MLb,lang,lname='','','','','','',''
     # reset edit boxes

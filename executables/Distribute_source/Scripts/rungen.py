@@ -232,12 +232,15 @@ def multigenruns(installdir,rundir,args,globs):
 #########################################################
 def checkmultilig(ligs):
     mligs = []
-    connatoms = []
+    tcats = []
+    multidx = -1
     # loop over ligands
     for i,lig in enumerate(ligs):
-        if ('.' in lig):
+        connatoms = []
+        if ('.smi' in lig or '.xyz' in lig or '.mol' in lig):
             lsuf = lig.split('.')[-1]
-            if len(lsuf) == 3:
+            if '~' in lig:
+                lig = lig.replace('~',os.path.expanduser("~"))
                 # read molecule
                 if glob.glob(lig):
                     moll = list(pybel.readfile(lsuf,lig))
@@ -248,12 +251,19 @@ def checkmultilig(ligs):
                         sf = filter(None,ss.split(' '))
                         if len(sf) > 0:
                             connatoms.append(sf[-1])
+                            multidx = i
+                        else:
+                            connatoms.append(False)
                     f.close()
-                    mligs.append(mols)
+                    if len(mols) > 1:
+                        mligs.append(mols)
+                    else:
+                        mligs.append([lig])
                 else:
                     mligs.append([lig])
         else:
             mligs.append([lig])
+        tcats.append(connatoms)
     ligandslist = list(itertools.product(*mligs))
     # convert tuple to list
     llist = []
@@ -263,7 +273,7 @@ def checkmultilig(ligs):
             for l1 in l0:
                 loclist.append(l1)
             llist.append(loclist)
-    return llist,connatoms
+    return llist,tcats,multidx
 
 ##############################################
 ### normal structure generation of complex ###
@@ -289,16 +299,26 @@ def rungen(installdir,rundir,args,chspfname,globs):
     # check for files specified for multiple ligands
     mligs,catoms = [False],[False]
     if args.lig:
-        mligs,catoms = checkmultilig(args.lig)
+        mligs,catoms,multidx = checkmultilig(args.lig)
+    # save initial
+    smicat0 = [ss for ss in args.smicat] if args.smicat else False    
     # loop over ligands
     for mcount, mlig in enumerate(mligs):
+        args.smicat = [ss for ss in smicat0] if smicat0 else False
         args.checkdir, skip = False, False # initialize flags
         if len(mligs) > 0 and mligs[0]:
             args.lig = mlig # get combination
-            if catoms and len(catoms) > mcount:
-                sscat = filter(None,catoms[mcount].split(','))
-                if len(sscat) > 1:
-                    args.smicat = [int(scat)-1 for scat in sscat]
+            if multidx!=-1:
+                if catoms[multidx][mcount]:
+                    ssatoms = catoms[multidx][mcount].split(',')
+                    lloc = [int(scat)-1 for scat in ssatoms]
+                    # append connection atoms if specified in smiles
+                    if args.smicat and len(args.smicat) > 0:
+                        for i in range(len(args.smicat),multidx):
+                            args.smicat.append([])
+                    else:
+                        args.smicat = [lloc]
+                    args.smicat[multidx] = lloc
         if (args.lig):
             ligands = args.lig
             if (args.ligocc):

@@ -11,7 +11,7 @@ from io import *
 from Classes.globalvars import *
 # import std modules
 import os, sys, subprocess, re, unicodedata
-import pybel, openbabel, random
+import pybel, openbabel, random, shutil
 
 
 ###############################
@@ -49,6 +49,8 @@ def addtoldb(smimol,sminame,smident,smicat,smigrps,smictg,ffopt):
         # convert to unicode
         smimol = unicodedata.normalize('NFKD',smimol).encode('ascii','ignore')
         sminame = unicodedata.normalize('NFKD',sminame).encode('ascii','ignore')
+        if '~' in smimol:
+            smimol = smimol.replace('~',os.expanduser('~'))
         # convert ligand from smiles/file
         lig,emsg = lig_load(globs.installdir+'/',smimol,licores)
         if emsg:
@@ -60,11 +62,16 @@ def addtoldb(smimol,sminame,smident,smicat,smigrps,smictg,ffopt):
         else:
             shortname = sminame
         # new entry for dictionary
-        snew = sminame+':'+sminame+'.xyz,'+shortname+','+css+','+grp+','+ffopt
-        if lig.OBmol:
+        if '.mol' in smimol:
+            shutil.copy2(smimol,globs.installdir+'/Ligands/'+sminame+'.mol')
+            snew = sminame+':'+sminame+'.mol,'+shortname+','+css+','+grp+','+ffopt
+        elif '.xyz' in smimol:
+            shutil.copy2(smimol,globs.installdir+'/Ligands/'+sminame+'.xyz')
+            snew = sminame+':'+sminame+'.xyz,'+shortname+','+css+','+grp+','+ffopt
+        elif lig.OBmol:
             # write smiles file in Ligands directory
             lig.OBmol.write('smi',globs.installdir+'/Ligands/'+sminame+'.smi')
-
+            snew = sminame+':'+sminame+'.smi,'+shortname+','+css+','+grp+','+ffopt
         else:
             # write xyz file in Ligands directory
             lig.writexyz(globs.installdir+'/Ligands/'+sminame+'.xyz') # write xyz file
@@ -106,15 +113,25 @@ def addtocdb(smimol,sminame,smicat):
         css = ' '.join(cs)
         # convert to unicode
         smimol = unicodedata.normalize('NFKD',smimol).encode('ascii','ignore')
+        if '~' in smimol:
+            smimol = smimol.replace('~',os.expanduser('~'))
         # convert ligand from smiles/file
         core,emsg = core_load(globs.installdir+'/',smimol,mcores)
         if emsg:
             return emsg
         core.convert2mol3D() # convert to mol3D
         # write xyz file in Cores directory
-        core.writexyz(globs.installdir+'/Cores/'+sminame+'.xyz') # write xyz file
         # new entry for dictionary
-        snew = sminame+':'+sminame+'.xyz,'+css+','+'1'
+        if '.mol' in smimol:
+            shutil.copy2(smimol,globs.installdir+'/Cores/'+sminame+'.mol')
+            snew = sminame+':'+sminame+'.mol,'+css+','+'1'
+        elif '.xyz' in smimol:
+            shutil.copy2(smimol,globs.installdir+'/Cores/'+sminame+'.xyz')
+            snew = sminame+':'+sminame+'.xyz,'+css+','+'1'
+        else:
+            core.writexyz(globs.installdir+'/Cores/'+sminame+'.xyz') # write xyz file
+            # new entry for dictionary
+            snew = sminame+':'+sminame+'.xyz,'+css+','+'1'
         # update dictionary
         f = open(globs.installdir+'/Cores/cores.dict','r')
         ss = f.read().splitlines()
@@ -137,7 +154,7 @@ def addtobdb(smimol,sminame):
     #   - sminame: name of binding species for key in dictionary
     globs = globalvars()
     bindcores = readdict(globs.installdir+'/Bind/bind.dict')
-        # check if binding species exists
+    # check if binding species exists
     if sminame in bindcores.keys():
         emsg = 'Molecule '+sminame+' already existing in binding species database.'
         return emsg
@@ -145,10 +162,10 @@ def addtobdb(smimol,sminame):
         # convert to unicode
         smimol = unicodedata.normalize('NFKD',smimol).encode('ascii','ignore')
         sminame = unicodedata.normalize('NFKD',sminame).encode('ascii','ignore')
+        if '~' in smimol:
+            smimol = smimol.replace('~',os.expanduser('~'))
         # convert ligand from smiles/file
         bind,bsmi,emsg = bind_load(globs.installdir+'/',smimol,bindcores)
-        # new entry for dictionary
-        snew = sminame+':'+sminame+'.xyz'
         if emsg:
             return emsg
         bind.convert2mol3D() # convert to mol3D
@@ -158,7 +175,13 @@ def addtobdb(smimol,sminame):
             shortname = sminame[0:3]+sminame[-2:]
         else:
             shortname = sminame
-        if bind.OBmol:
+        if '.mol' in smimol:
+            shutil.copy2(smimol,globs.installdir+'/Bind/'+sminame+'.mol')
+            snew = sminame+':'+sminame+'.mol,'+shortname+','+css
+        elif '.xyz' in smimol:
+            shutil.copy2(smimol,globs.installdir+'/Bind/'+sminame+'.xyz')
+            snew = sminame+':'+sminame+'.xyz,'+shortname+','+css
+        elif bind.OBmol:
             # write smiles file in Bind species directory
             bind.OBmol.write('smi',globs.installdir+'/Bind/'+sminame+'.smi')
             snew = sminame+':'+sminame+'.smi,'+shortname+','+css
@@ -184,7 +207,7 @@ def addtobdb(smimol,sminame):
 ############################
 def removefromDB(sminame,ropt):
     #  INPUT
-    #   - sminame: name of ligand for key in dictionary
+    #   - sminame: name of molecule for key in dictionary
     #  OUTPUT
     #   - emsg: error messages
     emsg = False

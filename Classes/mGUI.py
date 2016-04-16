@@ -23,7 +23,6 @@ class mGUI():
         # build gui
         self.app = app
         self.initGUI(app)
-
     ### builds the gui
     def initGUI(self,app):
         '''
@@ -1967,7 +1966,7 @@ class mGUI():
             self.lwclose.clicked.connect(self.qcloseligs)
             self.lgrid.addWidget(self.lwclose,1,0)
             self.lwindow.setWindowTitle('Geometry:'+self.dcoordg.currentText())
-            self.lwindow.show()
+            self.lwindow.showMaximized()
             center(self.lwindow)
         else:
             mQDialogWarn('Warning','No file '+gfname+' exists..')

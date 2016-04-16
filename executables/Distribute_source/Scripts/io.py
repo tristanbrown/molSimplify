@@ -278,18 +278,18 @@ def lig_load(installdir,userligand,licores):
             lig.OBmol = lig.getOBmol(flig,'molf')
         elif ('.smi' in flig):
             lig.OBmol = lig.getOBmol(flig,'smif')
-        # generate coordinates if not existing
-        if lig.OBmol.dim==0:
+            # generate coordinates if not existing
             lig.OBmol.make3D('mmff94',0) # add hydrogens and coordinates
         lig.cat = [int(l) for l in dbentry[2]]
         lig.denticity = len(dbentry[2])
         lig.ident = dbentry[1]
         lig.charge = lig.OBmol.charge
-        lig.ffopt = dbentry[4]
         if len(dbentry) > 2:
             lig.grps = dbentry[3]
         else:
             lig.grps = []
+        if len(dbentry) > 3:
+            lig.ffopt = dbentry[4][0]
         ### load from file
     elif ('.mol' in userligand or '.xyz' in userligand or '.smi' in userligand or '.sdf' in userligand):
         if glob.glob(userligand):
@@ -364,7 +364,8 @@ def bind_load(installdir,userbind,bindcores):
             # try and catch error if conversion doesn't work
             try:
                 bind.OBmol = bind.getOBmol(userbind,ftype+'f') # convert from file
-                bind.OBmol.make3D('mmff94',0) # add hydrogens and coordinates
+                if bind.OBmol.dim==0:
+                    bind.OBmol.make3D('mmff94',0) # add hydrogens and coordinates
                 bind.charge = bind.OBmol.charge
             except IOError:
                 emsg = 'Failed converting file ' +userbind+' to molecule..Check your file.\n'

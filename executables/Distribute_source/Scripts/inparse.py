@@ -176,13 +176,14 @@ def parseinput(args):
         if '-lig' not in line and '-core' not in line and '-bind' not in line:
             line = line.split('#')[0] # remove comments
         li = line.strip()
+        li = li.replace('\n','')
+        line = line.replace('\n','')
         if not li.startswith("#") and len(li)>0: # remove comments/empty lines
-            l = li.split('\n')[0] # remove newlines
-            l = filter(None,re.split(' |,|\t|&',l))
+            l = filter(None,re.split(' |,|\t|&',li))
             # parse general arguments
-            if (l[0]=='-core'):
+            if (l[0]=='-core' and len(l[1:]) > 0):
                 args.core = [ll for ll in l[1:]]
-            if (l[0]=='-ccatoms'):
+            if (l[0]=='-ccatoms' and len(l[1:]) > 0):
                 args.ccatoms = [int(ll)-1 for ll in l[1:]]
             if (l[0]=='-rundir'):
                 args.rundir = line.split("#")[0].strip('\n')
@@ -193,7 +194,7 @@ def parseinput(args):
             if (l[0]=='-suff'):
                 args.suff = l[1].strip('\n')
             ### parse structure generation arguments ###
-            if (l[0]=='-bind'):
+            if (l[0]=='-bind' and len(l[1:]) > 0):
                 l = filter(None,re.split(' |,|\t',line[:-1]))
                 # discard comments
                 for ibind,lbind in enumerate(l):
@@ -201,49 +202,41 @@ def parseinput(args):
                         l=l[:ibind]
                         break
                 args.bind = l[1]
-            if (l[0]=='-nbind'):
+            if (l[0]=='-nbind' and len(l[1:]) > 0):
                 args.bindnum = l[1]
-            if (l[0]=='-bcharge'):  # parse charge for binding species
+            if (l[0]=='-bcharge' and len(l[1:]) > 0):  # parse charge for binding species
                 args.bcharge = l[1]
-            if (l[0]=='-btheta'):
+            if (l[0]=='-btheta' and len(l[1:]) > 0):
                 args.btheta = l[1]
-            if (l[0]=='-bphi'):
+            if (l[0]=='-bphi' and len(l[1:]) > 0):
                 args.bphi = l[1]
-            if (l[0]=='-bsep'):
+            if (l[0]=='-bsep' and len(l[1:]) > 0):
                 args.bsep = l[1]
-            if (l[0]=='-bref'):
+            if (l[0]=='-bref' and len(l[1:]) > 0):
                 args.bref = l[1:]
-            if (l[0]=='-nambsmi'):
+            if (l[0]=='-nambsmi' and len(l[1:]) > 0):
                 args.nambsmi = l[1]
-            if (l[0]=='-maxd'):
+            if (l[0]=='-maxd' and len(l[1:]) > 0):
                 args.maxd = l[1]
-            if (l[0]=='-mind'):
+            if (l[0]=='-mind' and len(l[1:]) > 0):
                 args.mind = l[1]
-            if (l[0]=='-oxstate'):
+            if (l[0]=='-oxstate' and len(l[1:]) > 0):
                 args.oxstate = l[1]
-            if (l[0]=='-coord'):
+            if (l[0]=='-coord' and len(l[1:]) > 0):
                 args.coord = l[1]
-            if (l[0]=='-geometry'):
+            if (l[0]=='-geometry' and len(l[1:]) > 0):
                 args.geometry = l[1].lower()
             # parse ligands
             if (l[0]=='-lig'):
-                l = filter(None,re.split(' |,|\t',line[:-1]))
-                # discard comments
-                for ilig,llig in enumerate(l):
-                    if llig=='#':
-                        l=l[:ilig]
-                        break
-                if args.lig:
-                    args.lig.append(l[1:])
-                else:
-                    args.lig = l[1:]
-            if (l[0]=='-lignum'):
+                ll = line.split('-lig')[-1]
+                args.lig = filter(None,re.split(' |,|\t',ll))
+            if (l[0]=='-lignum' and len(l[1:]) > 0):
                 args.lignum = l[1]
-            if (l[0]=='-liggrp'):
+            if (l[0]=='-liggrp' and len(l[1:]) > 0):
                 args.liggrp = l[1]
-            if (l[0]=='-ligctg'):
+            if (l[0]=='-ligctg' and len(l[1:]) > 0):
                 args.ligctg = l[1]
-            if (l[0]=='-ligocc'):
+            if (l[0]=='-ligocc' and len(l[1:]) > 0):
                 args.ligocc = l[1:]
             if (l[0]=='-rkHs'):
                 args.rkHs = checkTrue(l[1])
@@ -255,21 +248,21 @@ def parseinput(args):
                 args.replig = checkTrue(l[1])
             if (l[0]=='-genall'):
                 args.genall = checkTrue(l[1])
-            if (l[0]=='-MLbonds'):
+            if (l[0]=='-MLbonds' and len(l[1:]) > 0):
                 args.MLbonds = l[1:]
-            if (l[0]=='-distort'):
+            if (l[0]=='-distort' and len(l[1:]) > 0):
                 args.distort = l[1]
-            if (l[0]=='-rgen'):
+            if (l[0]=='-rgen' and len(l[1:]) > 0):
                 args.rgen = l[1:]
-            if (l[0]=='-keepHs'):
+            if (l[0]=='-keepHs' and len(l[1:]) > 0):
                 args.keepHs = l[1:]
             if (l[0]=='-ff'):
                 args.ff = l[1].lower()
-            if (l[0]=='-ffoption'):
+            if (l[0]=='-ffoption' and len(l[1:]) > 0):
                 args.ffoption = l[1:]
-            if (l[0]=='-place'):
+            if (l[0]=='-place' and len(l[1:]) > 0):
                 args.place = l[1]
-            if (l[0]=='-sminame'):
+            if (l[0]=='-sminame' and len(l[1:]) > 0):
                 if args.sminame:
                     args.sminame.append(l[1:])
                 else:
@@ -278,7 +271,7 @@ def parseinput(args):
                 args.smicat = []
                 l = line.split('smicat',1)[1]
                 l = l.replace(' ','')
-                l = re.split('/|\t|&|\n',l)
+                l = re.split('/|\t|&',l)
                 for ll in l:
                     lloc = []
                     l1 = filter(None,re.split(',| ',ll))
@@ -293,17 +286,17 @@ def parseinput(args):
                 for ll in l:
                     args.pangles.append(ll) if ll!='' else args.pangles.append(False)
             # parse qc arguments
-            if (l[0]=='-qccode'):
+            if (l[0]=='-qccode' and len(l[1:]) > 0):
                 args.qccode = l[1]
             if (l[0]=='-calccharge'):
                 args.calccharge = checkTrue(l[1])
-            if (l[0]=='-charge'):
+            if (l[0]=='-charge' and len(l[1:]) > 0):
                 args.charge = l[1:]
-            if (l[0]=='-spin'):
+            if (l[0]=='-spin' and len(l[1:]) > 0):
                 args.spin = l[1:]
-            if (l[0]=='-runtyp'):
+            if (l[0]=='-runtyp' and len(l[1:]) > 0):
                 args.runtyp = l[1]
-            if (l[0]=='-method'):
+            if (l[0]=='-method' and len(l[1:]) > 0):
                 args.method = l[1:]
             # parse terachem arguments
             if (l[0]=='-basis'):

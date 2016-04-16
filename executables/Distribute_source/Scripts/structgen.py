@@ -318,10 +318,10 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
         obmol = mol.OBmol.OBMol
         forcefield.Setup(obmol,constr)
         ### force field optimize structure
-        if obmol.NumAtoms() > 15:
-            forcefield.ConjugateGradients(2500)
+        if obmol.NumHvyAtoms() > 10:
+            forcefield.ConjugateGradients(3000)
         else:
-            forcefield.ConjugateGradients(1000)
+            forcefield.ConjugateGradients(2000)
         forcefield.GetCoordinates(obmol)
         mol.OBmol = pybel.Molecule(obmol)
         # reset atomic number to metal
@@ -337,13 +337,15 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
             constr.AddAtomConstraint(catom+1) # indexing babel
         ### set up forcefield
         forcefield = openbabel.OBForceField.FindForceField(ff)
-        obmol = mol.OBmol.OBMol # we don't have coordinates yet, but we have OBmol
+        if len(connected) < 2:
+            mol.OBmol.make3D('mmff94',1000) # add hydrogens and coordinates
+        obmol = mol.OBmol.OBMol # convert to OBmol
         forcefield.Setup(obmol,constr)
         ### force field optimize structure
-        if obmol.NumAtoms() > 15:
-            forcefield.ConjugateGradients(2500)
+        if obmol.NumHvyAtoms() > 10:
+            forcefield.ConjugateGradients(3000)
         else:
-            forcefield.ConjugateGradients(1000)
+            forcefield.ConjugateGradients(2000)
         forcefield.GetCoordinates(obmol)
         mol.OBmol = pybel.Molecule(obmol)
         mol.convert2mol3D()
@@ -392,7 +394,10 @@ def ffoptd(ff,mol,connected,ccatoms,frozenats,nligats):
     obmol = mol.OBmol.OBMol
     forcefield.Setup(obmol,constr)
     ### force field optimize structure
-    forcefield.ConjugateGradients(2000)
+    if obmol.NumHvyAtoms() > 10:
+        forcefield.ConjugateGradients(4000)
+    else:
+        forcefield.ConjugateGradients(2000)
     forcefield.GetCoordinates(obmol)
     mol.OBmol = pybel.Molecule(obmol)
     # reset atomic number to metal
@@ -697,7 +702,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     lig.cat = tcats[i]
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
-                    if 'B' in lig.ffopt:
+                    if 'b' in lig.ffopt.lower():
                         lig = ffopt(args.ff,lig,lig.cat,0,frozenats,freezeangles,MLoptbds)
                 ###############################
                 lig3D = lig # change name

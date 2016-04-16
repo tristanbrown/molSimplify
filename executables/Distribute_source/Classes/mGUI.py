@@ -23,7 +23,6 @@ class mGUI():
         # build gui
         self.app = app
         self.initGUI(app)
-
     ### builds the gui
     def initGUI(self,app):
         '''
@@ -880,7 +879,7 @@ class mGUI():
         #######################################
         self.qcQWindow = QWidget() # TC QC window
         self.qcQgrid = QGridLayout()
-        self.qctWindow.setWindowTitle('QChem Input')
+        self.qcQWindow.setWindowTitle('QChem Input')
         self.sgrid.addWidget(self.qcQWindow) # add to stacked grid
         self.qcQWindow.setPalette(p) # set background color
         self.qcQWindow.setLayout(self.qcQgrid) # set layout
@@ -1967,7 +1966,7 @@ class mGUI():
             self.lwclose.clicked.connect(self.qcloseligs)
             self.lgrid.addWidget(self.lwclose,1,0)
             self.lwindow.setWindowTitle('Geometry:'+self.dcoordg.currentText())
-            self.lwindow.show()
+            self.lwindow.showMaximized()
             center(self.lwindow)
         else:
             mQDialogWarn('Warning','No file '+gfname+' exists..')

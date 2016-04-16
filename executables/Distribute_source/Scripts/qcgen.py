@@ -145,6 +145,7 @@ def tcgen(args,strfiles,method):
         jobparams['coordinates'] = coordfs[i]
         for keys in jobparams.keys():
             output.write('%s %s\n' %(keys,jobparams[keys]))
+        output.write('end\n')
         output.close()
     return jobdirs
 
