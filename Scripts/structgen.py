@@ -851,46 +851,26 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     r21n = [a-b for a,b in zip(m3D.getAtom(batoms[1]).coords(),r1)]
                     theta = 180*arccos(dot(r21,r21n)/(norm(r21)*norm(r21n)))/pi
                     u = cross(r21,r21n)
-                    rrot = r1
                     lig3Db = mol3D()
                     lig3Db.copymol3D(lig3D)
                     # rotate around axis and get both images
-                    lig3D = rotate_around_axis(lig3D,rrot,u,theta)
-                    lig3Db = rotate_around_axis(lig3Db,rrot,u,theta-180)
+                    lig3D = rotate_around_axis(lig3D,r1,u,theta)
+                    lig3Db = rotate_around_axis(lig3Db,r1,u,theta-180)
                     d1 = distance(lig3D.getAtom(catoms[1]).coords(),m3D.getAtom(batoms[1]).coords())
                     d2 = distance(lig3Db.getAtom(catoms[1]).coords(),m3D.getAtom(batoms[1]).coords())
                     lig3D = lig3D if (d1 < d2)  else lig3Db # pick best one
-                    # align center of mass
-                    rm = [0.5*(a+b) for a,b in zip(lig3D.getAtom(catoms[1]).coords(),r1)]
-                    theta,u = rotation_params(r0,rm,lig3D.centermass())
-                    lig3Db = mol3D()
-                    lig3Db.copymol3D(lig3D)
-                    # rotate around axis and get both images
-                    lig3D = rotate_around_axis(lig3D,rm,u,theta)
-                    lig3Db = rotate_around_axis(lig3Db,rm,u,theta-180)
-                    d1 = lig3D.mindist(core3D)
-                    d2 = lig3Db.mindist(core3D)
-                    lig3D = lig3D if (d1 > d2)  else lig3Db # pick best one
-                    # rotate around mid axis to get best positioning
-                    rb = vecdiff(m3D.getAtom(batoms[0]).coords(),m3D.getAtom(batoms[1]).coords())
-                    rl = vecdiff(lig3D.getAtom(catoms[0]).coords(),lig3D.getAtom(catoms[1]).coords())
-                    theta = 180*arccos(dot(rb,rl)/(norm(rb)*norm(rl)))/pi
-                    urot = vecdiff(lig3D.centermass(),mcoords)
-                    # rotate around axis and get both images
-                    lig3D = rotate_around_axis(lig3D,rm,urot,-theta)
                     # correct plane
                     r0b = m3D.getAtom(batoms[0]).coords()
                     r1b = m3D.getAtom(batoms[1]).coords()
                     r0l = lig3D.getAtom(catoms[0]).coords()
                     r1l = lig3D.getAtom(catoms[1]).coords()
+                    rm = lig3D.centermass()
+                    urot = vecdiff(r1l,r0l)
                     theta,ub = rotation_params(mcoords,r0b,r1b)
-                    theta,ul = rotation_params(mcoords,r0l,r1l)
-                    theta = 180*arccos(dot(ub,ul)/(norm(ub)*norm(ul)))/pi
-                    # rotate around axis and get both images
-                    lig3D = rotate_around_axis(lig3D,rm,urot,theta)
-                    r21 = vecdiff(r1,mcoords)
-                    r21n = vecdiff(rm,mcoords)
-                    costhb = dot(r21,r21n)/(norm(r21)*norm(r21n))+0.026
+                    theta,ul = rotation_params(rm,r0l,r1l)
+                    theta = 180.0-180*arccos(dot(ub,ul)/(norm(ub)*norm(ul)))/pi
+                    # rotate around axis 
+                    lig3D = rotate_around_axis(lig3D,r1,urot,-theta)
                     # get distance from bonds table or vdw radii
                     if MLb and MLb[i]:
                         if 'c' in MLb[i].lower():
@@ -901,16 +881,16 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                         bondl = getbondlength(args,metal,core3D,lig3D,0,atom0,ligand,MLbonds)
                     MLoptbds.append(bondl)
                     MLoptbds.append(bondl)
-                    dbtotranslate = bondl*costhb + distance(rm,lig3D.centermass())
-                    lig3D=setcmdistance(lig3D, mcoords, dbtotranslate)
-                    # fix ML bond length
-                    r0,r1 = lig3D.getAtomCoords(catoms[0]),lig3D.getAtomCoords(catoms[1])
-                    loccm = [0.5*(r0[ii]+r1[ii]) for ii in range(0,3)]
-                    r01,r02 = vecdiff(r0,mcoords),vecdiff(r1,mcoords)
-                    theta = vecangle(loccm,r01)
-                    cmdist0 = norm(vecdiff(loccm,mcoords))
-                    dcmfin = bondl*cos(theta*pi/180.0)
-                    lig3D = setPdistance(lig3D,loccm,mcoords,dcmfin)
+                    lig3D = setPdistance(lig3D, r1, r0, bondl)
+                    # fix ML bond length and distort angle if needed
+                    rtarget = getPointu(mcoords, bondl, vecdiff(r1b,mcoords)) # get second point target
+                    dr = vecdiff(rtarget,lig3D.getAtom(catoms[1]).coords())
+                    # distort ligand in nsteps steps
+                    nsteps = 10 
+                    ddr = [di/nsteps for di in dr]
+                    for ii in range(0,10):
+                        lig3D.getAtom(catoms[1]).translate(ddr)
+                        lig3D = ffopt('mmff94',lig3D,[],1,[catoms[0],catoms[1]],False,[])
                 elif (denticity == 3):
                     # connection atoms in backbone
                     batoms = batslist[ligsused]
