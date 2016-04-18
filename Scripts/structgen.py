@@ -859,6 +859,12 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     d1 = distance(lig3D.getAtom(catoms[1]).coords(),m3D.getAtom(batoms[1]).coords())
                     d2 = distance(lig3Db.getAtom(catoms[1]).coords(),m3D.getAtom(batoms[1]).coords())
                     lig3D = lig3D if (d1 < d2)  else lig3Db # pick best one
+                    # flip if overlap
+                    r0l = lig3D.getAtom(catoms[0]).coords()
+                    r1l = lig3D.getAtom(catoms[1]).coords()
+                    md = min(distance(r0l,mcoords),distance(r1l,mcoords))
+                    if lig3D.mindist(core3D) < md:
+                        lig3D = rotate_around_axis(lig3D,r0l,vecdiff(r1l,r0l),180.0)
                     # correct plane
                     r0b = m3D.getAtom(batoms[0]).coords()
                     r1b = m3D.getAtom(batoms[1]).coords()
@@ -868,9 +874,21 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     urot = vecdiff(r1l,r0l)
                     theta,ub = rotation_params(mcoords,r0b,r1b)
                     theta,ul = rotation_params(rm,r0l,r1l)
-                    theta = 180.0-180*arccos(dot(ub,ul)/(norm(ub)*norm(ul)))/pi
+                    theta = 180*arccos(dot(ub,ul)/(norm(ub)*norm(ul)))/pi-180.0
                     # rotate around axis 
-                    lig3D = rotate_around_axis(lig3D,r1,urot,-theta)
+                    lig3Db = mol3D()
+                    lig3Db.copymol3D(lig3D)
+                    lig3D = rotate_around_axis(lig3D,r1,urot,theta)
+                    lig3Db = rotate_around_axis(lig3Db,r1,urot,-theta)
+                    # select best
+                    rm0,rm1 = lig3D.centermass(),lig3Db.centermass()
+                    theta,ul0 = rotation_params(rm0,r0l,r1l)
+                    theta,ul1 = rotation_params(rm1,r0l,r1l)
+                    th0 = 180*arccos(dot(ub,ul0)/(norm(ub)*norm(ul0)))/pi
+                    th0 = min(abs(th0),abs(180-th0))
+                    th1 = 180*arccos(dot(ub,ul1)/(norm(ub)*norm(ul1)))/pi
+                    th1 = min(abs(th1),abs(180-th1))
+                    lig3D = lig3D if th0 < th1 else lig3Db
                     # get distance from bonds table or vdw radii
                     if MLb and MLb[i]:
                         if 'c' in MLb[i].lower():
@@ -891,6 +909,10 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     for ii in range(0,10):
                         lig3D.getAtom(catoms[1]).translate(ddr)
                         lig3D = ffopt('mmff94',lig3D,[],1,[catoms[0],catoms[1]],False,[])
+                    # freeze local geometry
+                    lats = lig3D.getBondedAtoms(catoms[0])+lig3D.getBondedAtoms(catoms[1])
+                    for lat in list(set(lats)):
+                        frozenats.append(lat+core3D.natoms)
                 elif (denticity == 3):
                     # connection atoms in backbone
                     batoms = batslist[ligsused]
@@ -1111,7 +1133,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 auxm = mol3D()
                 auxm.copymol3D(lig3D)
                 complex3D.append(auxm)
-                if 'A' not in lig.ffopt:
+                if 'a' not in lig.ffopt.lower():
                     for latdix in range(0,lig3D.natoms):
                         frozenats.append(latdix+core3D.natoms)
                 # combine molecules

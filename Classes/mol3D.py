@@ -655,7 +655,24 @@ class mol3D:
                         print "#############################################################"
                     break
         return overlap
-        
+
+    ################################################
+    ### checks for overlap with another molecule ###
+    ###         with increased tolerance         ###
+    ################################################
+    def overlapcheckh(self,mol):
+        # INPUT
+        #   - mol: second molecule
+        #   - silence: flag for printing warning
+        # OUTPUT
+        #   - overlap: flag for overlap (True if there is overlap)
+        overlap = False
+        for atom1 in mol.atoms:
+            for atom0 in self.atoms:
+                if (distance(atom1.coords(),atom0.coords()) < 1.0):
+                    overlap = True
+                    break
+        return overlap
     #############################
     ### print xyz coordinates ###
     #############################
