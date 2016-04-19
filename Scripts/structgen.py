@@ -916,7 +916,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                         ens.append(enl)
                         lig3D.getAtom(catoms[1]).translate(ddr)
                         # check fo cutoff
-                        if ens[-1] - ens[0] > 10.0:
+                        if ens[-1] - ens[0] > 5.0:
                             # fix ML bond length get optimum guess
                             r0,r1 = lig3D.getAtomCoords(catoms[0]),lig3D.getAtomCoords(catoms[1])
                             r01 = distance(r0,r1)
