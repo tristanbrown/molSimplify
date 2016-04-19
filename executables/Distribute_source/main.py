@@ -55,7 +55,7 @@ if __name__ == '__main__':
         ### create main application
         app = QApplication(sys.argv) # main application
         gui = mGUI(app) # main GUI class
-        # execute gui
+        app.processEvents()
         app.exec_()
     ### if input file is specified run without GUI ###
     elif '-i' in args:

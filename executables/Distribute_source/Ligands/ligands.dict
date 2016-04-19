@@ -1,5 +1,7 @@
 # ligand name, ligand structure file, abbreviation (unique), connection atoms, groups, force field (BA:always,B:before only,A:after only,N:no)
 acetonitrile:acetonitrile.mol,actnt,1,build small,N
+acac:acac.mol,acac,0 5,build functionalize bidentate,BA
+acetylacetone:acac.mol,acac,0 5,build functionalize bidentate,BA
 amine:amine.mol,ami,0,functionalize small,N
 ammonia:ammonia.mol,ammo,0,build small,N
 benzene:benzene.mol,bnz,4,build small organic,BA
@@ -24,8 +26,10 @@ methanal:methanal.mol,metha,0,functionalize small,N
 methyl:methyl.mol,meth,0,functionalize small,N
 nitro:nitro.mol,nit,1,build functionalize small,N
 nitroso:nitroso.mol,nits,0,build functionalize small,N
-oxalate:oxalate.smi,oxate,1 5,build bidentate,BA
+oxalate:oxalate.mol,oxate,1 4,build bidentate,BA
 oxygen:oxygen.mol,oxd,0,build small,N
+phen:phen.mol,phen,9 12,build bidentate,BA
+phenanthroline:phen.mol,bip,9 12,build bidentate,BA
 porphyrin:porphyrin.mol,prph,0 1 2 3,build tetradentate,A
 pph3:PPh3.mol,pph,2,build bulky big,BA
 pyr:pyridine.mol,pyrd,3,build organic,BA

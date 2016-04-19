@@ -26,7 +26,7 @@ methanal:methanal.mol,metha,0,functionalize small,N
 methyl:methyl.mol,meth,0,functionalize small,N
 nitro:nitro.mol,nit,1,build functionalize small,N
 nitroso:nitroso.mol,nits,0,build functionalize small,N
-oxalate:oxalate.mol,oxate,1 5,build bidentate,BA
+oxalate:oxalate.mol,oxate,1 4,build bidentate,BA
 oxygen:oxygen.mol,oxd,0,build small,N
 phen:phen.mol,phen,9 12,build bidentate,BA
 phenanthroline:phen.mol,bip,9 12,build bidentate,BA

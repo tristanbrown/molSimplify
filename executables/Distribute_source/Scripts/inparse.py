@@ -40,7 +40,23 @@ def checkTrue(arg):
     else:
         return False
                 
-            
+########################################
+########## check for number  ###########
+########################################
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+    try:
+        import unicodedata
+        unicodedata.numeric(s)
+        return True
+    except (TypeError, ValueError):
+        pass
+    return False
+
 ###########################################
 ########## consolidate lists  #############
 ###########################################
@@ -142,13 +158,16 @@ def cleaninput(args):
         a = False
         e = False
         opts = args.ffoption
-        args.ffoption = ''
-        for op in opts:
-            op = op.strip(' ')
-            if op[0].lower()=='b':
-                args.ffoption += 'b'
-            if op[0].lower()=='a':
-                args.ffoption += 'a'
+        if 'ba' in opts[0].lower():
+            args.ffoption = 'ba'
+        else:
+            args.ffoption = ''
+            for op in opts:
+                op = op.strip(' ')
+                if op[0].lower()=='b':
+                    args.ffoption += 'b'
+                if op[0].lower()=='a':
+                    args.ffoption += 'a'
     elif args.ff:
         args.ffoption = 'ba'
 

@@ -405,6 +405,11 @@ class mGUI():
         self.grid.addWidget(self.lig5add,15,13,1,1)
         self.grid.addWidget(self.lig6add,16,13,1,1)
         #############################################
+        ## List molecules  ##
+        ctip = 'Generate 2D ligand representation.'
+        self.butList = mQPushButton('List molecules',ctip,12)
+        self.butList.clicked.connect(self.listmols)
+        self.grid.addWidget(self.butList,18,0,1,2)
         ## Draw ligand button ##
         ctip = 'Generate 2D ligand representation.'
         self.butDrl = mQPushButton('Draw ligands',ctip,12)
@@ -1426,8 +1431,6 @@ class mGUI():
         # resize other windows
         relresize(self.iWind,self.wmwindow,0.7)
         relresize(self.iWtxt,self.iWind,1.0)
-        app.processEvents()
-        app.exec_()
     '''
     #############################
     ### Callbacks for buttons ###
@@ -1849,6 +1852,16 @@ class mGUI():
             QMessageBox.information(self.wmain,'Done','Structure generation terminated successfully!')
         else:
             QMessageBox.warning(self.wmain,'Problem',emsg)
+    ### list molecules
+    def listmols(self):
+        globs = globalvars()
+        coreslist = getcores(globs.installdir+'/')
+        liglist = getligs(globs.installdir+'/')
+        bindlist = getbinds(globs.installdir+'/')
+        msg = 'Available cores in the database:\n'+coreslist
+        msg += '\n\nAvailable ligands in the database:\n'+liglist
+        msg += '\n\nAvailable extra molecules in the database:\n'+bindlist+'\n'
+        QMessageBox.information(self.wmain,'List of molecules',msg)
     ### draw ligands
     def drawligs(self):
         ### collects all the info and passes it to molSimplify ###
@@ -1898,17 +1911,17 @@ class mGUI():
             # get current dir
             cwd = os.getcwd()
             os.chdir(rdir) # change to working dir
-            outputf  = 'ligs.smi'
+            outputf  = 'ligs.sdf'
             locf = 'ligs'+str(fcount)
             outbase = rdir+'/'+locf
-            outf = pybel.Outputfile("smi",outputf,overwrite=True)
+            outf = pybel.Outputfile("sdf",outputf,overwrite=True)
             for mol in ligs:
                 outf.write(mol)
             # convert to svg
             if globs.osx:
-                cmd = "/usr/local/bin/obabel -ismi "+outputf+" -O "+locf+".svg -xC -xi"
+                cmd = "/usr/local/bin/obabel -isdf "+outputf+" -O "+locf+".svg -xC -xi"
             else:
-                cmd = "obabel -ismi "+outputf+" -O "+locf+".svg -xC -xi"
+                cmd = "obabel -sdf "+outputf+" -O "+locf+".svg -xC -xi"
             t = mybash(cmd)
             print t
             if glob.glob(outputf):
@@ -1921,9 +1934,9 @@ class mGUI():
             ### draw ligands ###
             ####################
             if globs.osx:
-                cmd = '/usr/local/bin/convert -density 1200 '+locf+'.svg '+locf+'.png'
+                cmd = '/usr/local/bin/convert -density 1500 '+locf+'.svg '+locf+'.png'
             else:
-                cmd = 'convert -density 1200 '+locf+'.svg '+locf+'.png'
+                cmd = 'convert -density 1500 '+locf+'.svg '+locf+'.png'
             s = mybash(cmd)
             print s
             if not glob.glob(locf+'.png') :
@@ -1944,6 +1957,7 @@ class mGUI():
                 self.lwclose.clicked.connect(self.qcloseligs)
                 self.lgrid.addWidget(self.lwclose,1,0)
                 self.lwindow.show()
+                self.lwindow.setWindowState(Qt.WindowMaximized)
                 center(self.lwindow)
             # change back
             os.chdir(cwd)

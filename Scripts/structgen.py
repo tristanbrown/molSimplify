@@ -323,6 +323,7 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
         else:
             forcefield.ConjugateGradients(2000)
         forcefield.GetCoordinates(obmol)
+        en = forcefield.Energy()
         mol.OBmol = pybel.Molecule(obmol)
         # reset atomic number to metal
         for i,iiat in enumerate(indmtls):
@@ -347,10 +348,11 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
         else:
             forcefield.ConjugateGradients(2000)
         forcefield.GetCoordinates(obmol)
+        en = forcefield.Energy()
         mol.OBmol = pybel.Molecule(obmol)
         mol.convert2mol3D()
         del forcefield, constr, obmol
-    return mol
+    return mol,en
     
 ################################################
 ### FORCE FIELD OPTIMIZATION for custom cores ##
@@ -399,13 +401,14 @@ def ffoptd(ff,mol,connected,ccatoms,frozenats,nligats):
     else:
         forcefield.ConjugateGradients(2000)
     forcefield.GetCoordinates(obmol)
+    en = forcefield.Energy()
     mol.OBmol = pybel.Molecule(obmol)
     # reset atomic number to metal
     for i,iiat in enumerate(indmtls):
         mol.OBmol.atoms[iiat].OBAtom.SetAtomicNum(mtlsnums[i])
     mol.convert2mol3D()
     del forcefield, constr, obmol
-    return mol
+    return mol,en
 
 #####################################################
 ####### Uses force field to estimate optimum ########
@@ -703,7 +706,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if 'b' in lig.ffopt.lower():
-                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,freezeangles,MLoptbds)
+                        lig,enl = ffopt(args.ff,lig,lig.cat,0,frozenats,freezeangles,MLoptbds)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -904,11 +907,25 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     rtarget = getPointu(mcoords, bondl, vecdiff(r1b,mcoords)) # get second point target
                     dr = vecdiff(rtarget,lig3D.getAtom(catoms[1]).coords())
                     # distort ligand in nsteps steps
-                    nsteps = 10 
+                    nsteps = 15 
                     ddr = [di/nsteps for di in dr]
-                    for ii in range(0,10):
+                    ens =[]
+                    cutoff = 5.0 # kcal/mol
+                    for ii in range(0,nsteps):
+                        lig3D,enl = ffopt('mmff94',lig3D,[],1,[catoms[0],catoms[1]],False,[])
+                        ens.append(enl)
                         lig3D.getAtom(catoms[1]).translate(ddr)
-                        lig3D = ffopt('mmff94',lig3D,[],1,[catoms[0],catoms[1]],False,[])
+                        # check fo cutoff
+                        if ens[-1] - ens[0] > 10.0:
+                            # fix ML bond length get optimum guess
+                            r0,r1 = lig3D.getAtomCoords(catoms[0]),lig3D.getAtomCoords(catoms[1])
+                            r01 = distance(r0,r1)
+                            theta1 = 180*arccos(0.5*r01/bondl)/pi
+                            theta2 = vecangle(vecdiff(r1,r0),vecdiff(mcoords,r0))
+                            dtheta = theta2-theta1
+                            theta,urot = rotation_params(mcoords,r0,r1)
+                            lig3D = rotate_around_axis(lig3D,r0,urot,-dtheta) # rotate so that it matches bond
+                            break
                     # freeze local geometry
                     lats = lig3D.getBondedAtoms(catoms[0])+lig3D.getBondedAtoms(catoms[1])
                     for lat in list(set(lats)):
@@ -1142,12 +1159,12 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     core3D.charge += lig3D.charge
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffopt(args.ff,core3D,connected,1,frozenats,freezeangles,MLoptbds)
+                    core3D,enc = ffopt(args.ff,core3D,connected,1,frozenats,freezeangles,MLoptbds)
             totlig += denticity
             ligsused += 1
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffopt(args.ff,core3D,connected,2,frozenats,freezeangles,MLoptbds)
+        core3D,enc = ffopt(args.ff,core3D,connected,2,frozenats,freezeangles,MLoptbds)
     ###############################
     return core3D,complex3D,emsg
 
@@ -1350,7 +1367,7 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 # perform FF optimization if requested
                 if args.ff and 'b' in args.ffoption:
                     if 'B' in lig.ffopt:
-                        lig = ffopt(args.ff,lig,lig.cat,0,frozenats,False,False)
+                        lig,enl = ffopt(args.ff,lig,lig.cat,0,frozenats,False,False)
                 ###############################
                 lig3D = lig # change name
                 # convert to mol3D
@@ -1486,11 +1503,11 @@ def customcore(args,core,ligs,ligoc,installdir,licores,globs):
                 nligats = lig3D.natoms
                 # perform FF optimization if requested
                 if args.ff and 'a' in args.ffoption:
-                    core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats,nligats)
+                    core3D,enc = ffoptd(args.ff,core3D,connected,ccatoms,frozenats,nligats)
             totlig += 1
     # perform FF optimization if requested
     if args.ff and 'a' in args.ffoption:
-        core3D = ffoptd(args.ff,core3D,connected,ccatoms,frozenats,nligats)
+        core3D,enc = ffoptd(args.ff,core3D,connected,ccatoms,frozenats,nligats)
     return core3D,emsg
 
 ##########################################
