@@ -111,7 +111,8 @@ class mGUI():
         f = QFont("Helvetica",14,75)
         self.rtcore.setFont(f)
         self.grid.addWidget(self.rtcore,7,2,1,1)
-        self.etcore = mQLineEdit('',ctip,'l',12)
+        cores = list(sorted(readdict(globs.installdir+'/Cores/cores.dict')))
+        self.etcore = mQLineEditL('',ctip,'l',12,cores)
         self.grid.addWidget(self.etcore,7,3,1,3)
         ### Connection atoms for core ###
         ctip = 'Specify connection atoms for core if using SMILES or custom cores (default: 1)'
@@ -185,246 +186,78 @@ class mGUI():
         self.grid.addWidget(self.ligfalign,13,15,1,2)
         self.grid.addWidget(self.ligfloc,13,17,1,2)
         ## ligands ##
-        self.lig0 = mQLineEditL('',ctip0,'l',12)
-        self.lig1 = mQLineEditL('',ctip0,'l',12)
-        self.lig2 = mQLineEditL('',ctip0,'l',12)
-        self.lig3 = mQLineEditL('',ctip0,'l',12)
-        self.lig4 = mQLineEditL('',ctip0,'l',12)
-        self.lig5 = mQLineEditL('',ctip0,'l',12)
-        self.lig6 = mQLineEditL('',ctip0,'l',12)
-        self.lig7 = mQLineEdit('',ctip0,'l',12)
-        # disable
-        self.lig1.setDisabled(True)
-        self.lig2.setDisabled(True)
-        self.lig3.setDisabled(True)
-        self.lig4.setDisabled(True)
-        self.lig5.setDisabled(True)
-        self.lig6.setDisabled(True)
-        self.lig7.setDisabled(True)
-        # add to layout
-        self.grid.addWidget(self.lig0,10,0,1,2)
-        self.grid.addWidget(self.lig1,11,0,1,2)
-        self.grid.addWidget(self.lig2,12,0,1,2)
-        self.grid.addWidget(self.lig3,13,0,1,2)
-        self.grid.addWidget(self.lig4,14,0,1,2)
-        self.grid.addWidget(self.lig5,15,0,1,2)
-        self.grid.addWidget(self.lig6,16,0,1,2)
-        self.grid.addWidget(self.lig7,17,0,1,2)
-        ## occurrences ##
-        self.lig0occ = mQSpinBox(ctip1)
-        self.lig1occ = mQSpinBox(ctip1)
-        self.lig2occ = mQSpinBox(ctip1)
-        self.lig3occ = mQSpinBox(ctip1)
-        self.lig4occ = mQSpinBox(ctip1)
-        self.lig5occ = mQSpinBox(ctip1)
-        self.lig6occ = mQSpinBox(ctip1)
-        self.lig7occ = mQSpinBox(ctip1)
-        # disable
-        self.lig1occ.setDisabled(True)
-        self.lig2occ.setDisabled(True)
-        self.lig3occ.setDisabled(True)
-        self.lig4occ.setDisabled(True)
-        self.lig5occ.setDisabled(True)
-        self.lig6occ.setDisabled(True)
-        self.lig7occ.setDisabled(True)
-        # add to layout
-        self.grid.addWidget(self.lig0occ,10,2,1,2)
-        self.grid.addWidget(self.lig1occ,11,2,1,2)
-        self.grid.addWidget(self.lig2occ,12,2,1,2)
-        self.grid.addWidget(self.lig3occ,13,2,1,2)
-        self.grid.addWidget(self.lig4occ,14,2,1,2)
-        self.grid.addWidget(self.lig5occ,15,2,1,2)
-        self.grid.addWidget(self.lig6occ,16,2,1,2)
-        self.grid.addWidget(self.lig7occ,17,2,1,2)
-        ## connections ##
-        self.lig0conn = mQLineEdit('',ctip2,'l',12)
-        self.lig1conn = mQLineEdit('',ctip2,'l',12)
-        self.lig2conn = mQLineEdit('',ctip2,'l',12)
-        self.lig3conn = mQLineEdit('',ctip2,'l',12)
-        self.lig4conn = mQLineEdit('',ctip2,'l',12)
-        self.lig5conn = mQLineEdit('',ctip2,'l',12)
-        self.lig6conn = mQLineEdit('',ctip2,'l',12)
-        self.lig7conn = mQLineEdit('',ctip2,'l',12)
-        # disable
-        self.lig1conn.setDisabled(True)
-        self.lig2conn.setDisabled(True)
-        self.lig3conn.setDisabled(True)
-        self.lig4conn.setDisabled(True)
-        self.lig5conn.setDisabled(True)
-        self.lig6conn.setDisabled(True)
-        self.lig7conn.setDisabled(True)
-        # add to layout
-        self.grid.addWidget(self.lig0conn,10,4,1,2)
-        self.grid.addWidget(self.lig1conn,11,4,1,2)
-        self.grid.addWidget(self.lig2conn,12,4,1,2)
-        self.grid.addWidget(self.lig3conn,13,4,1,2)
-        self.grid.addWidget(self.lig4conn,14,4,1,2)
-        self.grid.addWidget(self.lig5conn,15,4,1,2)
-        self.grid.addWidget(self.lig6conn,16,4,1,2)
-        self.grid.addWidget(self.lig7conn,17,4,1,2)
-        ## keep Hydrogens #
-        self.lig0H = mQComboBox(['no','yes'],ctip3,12)
-        self.lig1H = mQComboBox(['no','yes'],ctip3,12)
-        self.lig2H = mQComboBox(['no','yes'],ctip3,12)
-        self.lig3H = mQComboBox(['no','yes'],ctip3,12)
-        self.lig4H = mQComboBox(['no','yes'],ctip3,12)
-        self.lig5H = mQComboBox(['no','yes'],ctip3,12)
-        self.lig6H = mQComboBox(['no','yes'],ctip3,12)
-        self.lig7H = mQComboBox(['no','yes'],ctip3,12)
-        # disable
-        self.lig1H.setDisabled(True)
-        self.lig2H.setDisabled(True)
-        self.lig3H.setDisabled(True)
-        self.lig4H.setDisabled(True)
-        self.lig5H.setDisabled(True)
-        self.lig6H.setDisabled(True)
-        self.lig7H.setDisabled(True)
-        # add to layout
-        self.grid.addWidget(self.lig0H,10,6,1,1)
-        self.grid.addWidget(self.lig1H,11,6,1,1)
-        self.grid.addWidget(self.lig2H,12,6,1,1)
-        self.grid.addWidget(self.lig3H,13,6,1,1)
-        self.grid.addWidget(self.lig4H,14,6,1,1)
-        self.grid.addWidget(self.lig5H,15,6,1,1)
-        self.grid.addWidget(self.lig6H,16,6,1,1)
-        self.grid.addWidget(self.lig7H,17,6,1,1)
-        ## ML bonds ##
-        self.lig0ML = mQLineEdit('',ctip4,'l',12)
-        self.lig1ML = mQLineEdit('',ctip4,'l',12)
-        self.lig2ML = mQLineEdit('',ctip4,'l',12)
-        self.lig3ML = mQLineEdit('',ctip4,'l',12)
-        self.lig4ML = mQLineEdit('',ctip4,'l',12)
-        self.lig5ML = mQLineEdit('',ctip4,'l',12)
-        self.lig6ML = mQLineEdit('',ctip4,'l',12)
-        self.lig7ML = mQLineEdit('',ctip4,'l',12)
-        # disable
-        self.lig1ML.setDisabled(True)
-        self.lig2ML.setDisabled(True)
-        self.lig3ML.setDisabled(True)
-        self.lig4ML.setDisabled(True)
-        self.lig5ML.setDisabled(True)
-        self.lig6ML.setDisabled(True)
-        self.lig7ML.setDisabled(True)
-        # add to layout
-        self.grid.addWidget(self.lig0ML,10,7,1,2)
-        self.grid.addWidget(self.lig1ML,11,7,1,2)
-        self.grid.addWidget(self.lig2ML,12,7,1,2)
-        self.grid.addWidget(self.lig3ML,13,7,1,2)
-        self.grid.addWidget(self.lig4ML,14,7,1,2)
-        self.grid.addWidget(self.lig5ML,15,7,1,2)
-        self.grid.addWidget(self.lig6ML,16,7,1,2)
-        self.grid.addWidget(self.lig7ML,17,7,1,2)
-        ## custom angles ##
-        self.lig0an = mQLineEdit('',ctip5,'l',12)
-        self.lig1an = mQLineEdit('',ctip5,'l',12)
-        self.lig2an = mQLineEdit('',ctip5,'l',12)
-        self.lig3an = mQLineEdit('',ctip5,'l',12)
-        self.lig4an = mQLineEdit('',ctip5,'l',12)
-        self.lig5an = mQLineEdit('',ctip5,'l',12)
-        self.lig6an = mQLineEdit('',ctip5,'l',12)
-        self.lig7an = mQLineEdit('',ctip5,'l',12)
-        # disable
-        self.lig1an.setDisabled(True)
-        self.lig2an.setDisabled(True)
-        self.lig3an.setDisabled(True)
-        self.lig4an.setDisabled(True)
-        self.lig5an.setDisabled(True)
-        self.lig6an.setDisabled(True)
-        self.lig7an.setDisabled(True)
-        # add to layout
-        self.grid.addWidget(self.lig0an,10,9,1,1)
-        self.grid.addWidget(self.lig1an,11,9,1,1)
-        self.grid.addWidget(self.lig2an,12,9,1,1)
-        self.grid.addWidget(self.lig3an,13,9,1,1)
-        self.grid.addWidget(self.lig4an,14,9,1,1)
-        self.grid.addWidget(self.lig5an,15,9,1,1)
-        self.grid.addWidget(self.lig6an,16,9,1,1)
-        self.grid.addWidget(self.lig7an,17,9,1,1)
-        ## ligand names ##
-        self.lig0nam = mQLineEdit('',ctip6,'l',12)
-        self.lig1nam = mQLineEdit('',ctip6,'l',12)
-        self.lig2nam = mQLineEdit('',ctip6,'l',12)
-        self.lig3nam = mQLineEdit('',ctip6,'l',12)
-        self.lig4nam = mQLineEdit('',ctip6,'l',12)
-        self.lig5nam = mQLineEdit('',ctip6,'l',12)
-        self.lig6nam = mQLineEdit('',ctip6,'l',12)
-        self.lig7nam = mQLineEdit('',ctip6,'l',12)
-        # disable
-        self.lig1nam.setDisabled(True)
-        self.lig2nam.setDisabled(True)
-        self.lig3nam.setDisabled(True)
-        self.lig4nam.setDisabled(True)
-        self.lig5nam.setDisabled(True)
-        self.lig6nam.setDisabled(True)
-        self.lig7nam.setDisabled(True)
-        # add to layout
-        self.grid.addWidget(self.lig0nam,10,10,1,1)
-        self.grid.addWidget(self.lig1nam,11,10,1,1)
-        self.grid.addWidget(self.lig2nam,12,10,1,1)
-        self.grid.addWidget(self.lig3nam,13,10,1,1)
-        self.grid.addWidget(self.lig4nam,14,10,1,1)
-        self.grid.addWidget(self.lig5nam,15,10,1,1)
-        self.grid.addWidget(self.lig6nam,16,10,1,1)
-        self.grid.addWidget(self.lig7nam,17,10,1,1)
-        ## add buttons ##
-        ctip = 'Add new ligand.'
-        self.lig0add = mQPushButton('+',ctip,12)
-        self.lig1add = mQPushButton('+',ctip,12)
-        self.lig2add = mQPushButton('+',ctip,12)
-        self.lig3add = mQPushButton('+',ctip,12)
-        self.lig4add = mQPushButton('+',ctip,12)
-        self.lig5add = mQPushButton('+',ctip,12)
-        self.lig6add = mQPushButton('+',ctip,12)
-        # add callbacks
-        self.lig0add.clicked.connect(self.addlig0)
-        self.lig1add.clicked.connect(self.addlig1)
-        self.lig2add.clicked.connect(self.addlig2)
-        self.lig3add.clicked.connect(self.addlig3)
-        self.lig4add.clicked.connect(self.addlig4)
-        self.lig5add.clicked.connect(self.addlig5)
-        self.lig6add.clicked.connect(self.addlig6)
-        # hide and disable
-        self.lig1add.hide()
-        self.lig1add.setDisabled(True)
-        self.lig2add.hide()
-        self.lig2add.setDisabled(True)
-        self.lig3add.hide()
-        self.lig3add.setDisabled(True)
-        self.lig4add.hide()
-        self.lig4add.setDisabled(True)
-        self.lig5add.hide()
-        self.lig5add.setDisabled(True)
-        self.lig6add.hide()
-        self.lig6add.setDisabled(True)
-        # add to layout
-        self.grid.addWidget(self.lig0add,10,13,1,1)
-        self.grid.addWidget(self.lig1add,11,13,1,1)
-        self.grid.addWidget(self.lig2add,12,13,1,1)
-        self.grid.addWidget(self.lig3add,13,13,1,1)
-        self.grid.addWidget(self.lig4add,14,13,1,1)
-        self.grid.addWidget(self.lig5add,15,13,1,1)
-        self.grid.addWidget(self.lig6add,16,13,1,1)
+        licores = list(sorted(readdict(globs.installdir+'/Ligands/ligands.dict')))
+        self.lig = []
+        self.ligocc = []
+        self.ligconn = []
+        self.ligH = []
+        self.ligML = []
+        self.ligan = []
+        self.lignam = []
+        self.ligadd = []
+        for ii in range(0,8):
+            ## ligands ##
+            self.lig.append(mQLineEditL('',ctip0,'l',12,licores))
+            self.grid.addWidget(self.lig[ii],10+ii,0,1,2) # add to layout
+            ## occurrences ##
+            self.ligocc.append(mQSpinBox(ctip1))
+            self.grid.addWidget(self.ligocc[ii],10+ii,2,1,2)
+            ## connections ##
+            self.ligconn.append(mQLineEdit('',ctip2,'l',12))
+            self.grid.addWidget(self.ligconn[ii],10+ii,4,1,2)
+            ## keep Hydrogens ##
+            self.ligH.append(mQComboBox(['no','yes'],ctip3,12))
+            self.grid.addWidget(self.ligH[ii],10+ii,6,1,1)
+            ## ML bond lengths ##
+            self.ligML.append(mQLineEdit('',ctip4,'l',12))
+            self.grid.addWidget(self.ligML[ii],10+ii,7,1,2)
+            ## custom angles ##
+            self.ligan.append(mQLineEdit('',ctip5,'l',12))
+            self.grid.addWidget(self.ligan[ii],10+ii,9,1,1)
+            ## ligand names ##
+            self.lignam.append(mQLineEdit('',ctip6,'l',12))
+            self.grid.addWidget(self.lignam[ii],10+ii,10,1,1)
+            ## ligand buttons ##
+            if ii < 7:
+                ctip = 'Add new ligand.'
+                self.ligadd.append(mQPushButton('+',ctip,12))
+                self.grid.addWidget(self.ligadd[ii],10+ii,13,1,1)
+                self.ligadd[ii].setDisabled(True)
+                self.ligadd[ii].hide()
+            if ii > 0:
+                self.lig[ii].setDisabled(True) # disable
+                self.ligocc[ii].setDisabled(True)
+                self.ligconn[ii].setDisabled(True)
+                self.ligH[ii].setDisabled(True)
+                self.ligML[ii].setDisabled(True)
+                self.ligan[ii].setDisabled(True)
+                self.lignam[ii].setDisabled(True)
+            self.ligadd[0].setDisabled(False)
+            self.ligadd[0].show()
+        # callbacks
+        self.ligadd[0].clicked.connect(self.addlig0) # callback
+        self.ligadd[1].clicked.connect(self.addlig1) # callback
+        self.ligadd[2].clicked.connect(self.addlig2) # callback
+        self.ligadd[3].clicked.connect(self.addlig3) # callback
+        self.ligadd[4].clicked.connect(self.addlig4) # callback
+        self.ligadd[5].clicked.connect(self.addlig5) # callback
+        self.ligadd[6].clicked.connect(self.addlig6) # callback
         #############################################
         ## List molecules  ##
         ctip = 'Generate 2D ligand representation.'
         self.butList = mQPushButton('List molecules',ctip,12)
         self.butList.clicked.connect(self.listmols)
-        self.grid.addWidget(self.butList,18,0,1,2)
+        self.grid.addWidget(self.butList,18,3,1,2)
         ## Draw ligand button ##
         ctip = 'Generate 2D ligand representation.'
         self.butDrl = mQPushButton('Draw ligands',ctip,12)
         self.butDrl.clicked.connect(self.drawligs)
-        self.grid.addWidget(self.butDrl,18,2,1,2)
-        ## Search DB button ##
-        ctip = 'Search for ligands in chemical databases.'
-        self.searchDB = mQPushButton('Search DB',ctip,12)
-        self.searchDB.clicked.connect(self.searchDBW)
-        self.grid.addWidget(self.searchDB,18,4,1,3)
+        self.grid.addWidget(self.butDrl,18,1,1,2)
         ## Local database button ##
         ctip = 'Add core/ligand/binding species to local database.'
         self.butADB = mQPushButton('Add to local DB',ctip,12)
         self.butADB.clicked.connect(self.enableDB)
-        self.grid.addWidget(self.butADB,18,7,1,3)
+        self.grid.addWidget(self.butADB,18,5,1,3)
         ##################################################
         ##################################################
         ########### GENERAL PARAMETERS INPUTS ############
@@ -558,6 +391,11 @@ class mGUI():
         self.butPost = mQPushButton('Post-process',ctip,16)
         self.butPost.clicked.connect(self.setupp)
         self.grid.addWidget(self.butPost,17,17,2,2)
+        ## Search DB button ##
+        ctip = 'Search for ligands in chemical databases.'
+        self.searchDB = mQPushButton('Search DB',ctip,12)
+        self.searchDB.clicked.connect(self.searchDBW)
+        self.grid.addWidget(self.searchDB,17,20,2,2)
         ###################################################
         ###################################################
         ########### ADDITIONAL MOLECULE INPUTS ############
@@ -575,7 +413,8 @@ class mGUI():
         # name of binding species
         ctip = 'Binding species'
         self.rtbind = mQLabel('Molecule:',ctip,'Cr',12)
-        self.etbind = mQLineEdit('',ctip,'l',12)
+        bicores = list(sorted(readdict(globs.installdir+'/Bind/bind.dict')))
+        self.etbind = mQLineEditL('',ctip,'l',12,bicores)
         self.rtbind.setDisabled(True)
         self.etbind.setDisabled(True)
         self.grid.addWidget(self.rtbind,8,20,1,1)
@@ -1387,25 +1226,35 @@ class mGUI():
         self.etgf = mQLineEdit('',ctip,'l',14)
         self.gegrid.addWidget(self.rtgf,3,0,1,1)
         self.gegrid.addWidget(self.etgf,3,1,1,1)
+        # png file
+        ctip = 'Load png file with chemdraw for geometry.'
+        self.rtgfc = mQLabel('Chemdraw file:','','r',14)
+        self.etgfc = mQLineEdit('',ctip,'l',14)
+        self.gegrid.addWidget(self.rtgfc,4,0,1,1)
+        self.gegrid.addWidget(self.etgfc,4,1,1,1)
         # load file
-        self.butge = mQPushButton('Load file..',ctip,14)
+        self.butge = mQPushButton('Load geometry file..',ctip,14)
         self.butge.clicked.connect(self.qgeomload)
-        self.gegrid.addWidget(self.butge,4,0,1,1)
+        self.gegrid.addWidget(self.butge,5,0,1,1)
+        # load file
+        self.butge2 = mQPushButton('Load Chemdraw file..',ctip,14)
+        self.butge2.clicked.connect(self.qgeomload2)
+        self.gegrid.addWidget(self.butge2,5,1,1,1)
         # button for addition
         ctip = 'Add new geometry to database'
         self.butgAub = mQPushButton('Add',ctip,14)
         self.butgAub.clicked.connect(self.qaddg)
-        self.gegrid.addWidget(self.butgAub,4,1,1,1)
+        self.gegrid.addWidget(self.butgAub,6,0,1,1)
         # button for removal
         ctip = 'Remove geometry from database'
         self.butgDub = mQPushButton('Remove',ctip,14)
         self.butgDub.clicked.connect(self.qdelg)
-        self.gegrid.addWidget(self.butgDub,5,0,1,1)
+        self.gegrid.addWidget(self.butgDub,6,1,1,1)
         # button for return
         ctip = 'Return to main menu'
         self.butgRet = mQPushButton('Return',ctip,14)
         self.butgRet.clicked.connect(self.qretmain)
-        self.gegrid.addWidget(self.butgRet,5,1,1,1)
+        self.gegrid.addWidget(self.butgRet,7,1,1,1)
         ################################
         ### create ligands 2D window ###
         ################################
@@ -1440,115 +1289,124 @@ class mGUI():
     ###### Add new ligands input ######
     ###################################
     def addlig0(self):
-        txt0 = self.lig0.text().replace(' ','')
+        idx = 0 
+        txt0 = self.lig[idx].currentText().replace(' ','')
         if len(txt0)==0:
             mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
         else:
-            self.lig0add.setDisabled(True)
-            self.lig0add.hide()
-            self.lig1add.setDisabled(False)
-            self.lig1add.show()
-            self.lig1.setDisabled(False)
-            self.lig1occ.setDisabled(False)
-            self.lig1conn.setDisabled(False)
-            self.lig1H.setDisabled(False)
-            self.lig1ML.setDisabled(False)
-            self.lig1an.setDisabled(False)
-            self.lig1nam.setDisabled(False)
+            self.ligadd[idx].setDisabled(True)
+            self.ligadd[idx].hide()
+            self.ligadd[idx+1].setDisabled(False)
+            self.ligadd[idx+1].show()
+            self.lig[idx+1].setDisabled(False)
+            self.ligocc[idx+1].setDisabled(False)
+            self.ligconn[idx+1].setDisabled(False)
+            self.ligH[idx+1].setDisabled(False)
+            self.ligML[idx+1].setDisabled(False)
+            self.ligan[idx+1].setDisabled(False)
+            self.lignam[idx+1].setDisabled(False)
     def addlig1(self):
-        txt0 = self.lig1.text().replace(' ','')
+        idx = 1 
+        txt0 = self.lig[idx].currentText().replace(' ','')
         if len(txt0)==0:
             mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
         else:
-            self.lig1add.setDisabled(True)
-            self.lig1add.hide()
-            self.lig2add.setDisabled(False)
-            self.lig2add.show()
-            self.lig2.setDisabled(False)
-            self.lig2occ.setDisabled(False)
-            self.lig2conn.setDisabled(False)
-            self.lig2H.setDisabled(False)
-            self.lig2ML.setDisabled(False)
-            self.lig2an.setDisabled(False)
-            self.lig2nam.setDisabled(False)
+            self.ligadd[idx].setDisabled(True)
+            self.ligadd[idx].hide()
+            self.ligadd[idx+1].setDisabled(False)
+            self.ligadd[idx+1].show()
+            self.lig[idx+1].setDisabled(False)
+            self.ligocc[idx+1].setDisabled(False)
+            self.ligconn[idx+1].setDisabled(False)
+            self.ligH[idx+1].setDisabled(False)
+            self.ligML[idx+1].setDisabled(False)
+            self.ligan[idx+1].setDisabled(False)
+            self.lignam[idx+1].setDisabled(False)
     def addlig2(self):
-        txt0 = self.lig2.text().replace(' ','')
+        idx = 2 
+        txt0 = self.lig[idx].currentText().replace(' ','')
         if len(txt0)==0:
             mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
         else:
-            self.lig2add.setDisabled(True)
-            self.lig2add.hide()
-            self.lig3add.setDisabled(False)
-            self.lig3add.show()
-            self.lig3.setDisabled(False)
-            self.lig3occ.setDisabled(False)
-            self.lig3conn.setDisabled(False)
-            self.lig3H.setDisabled(False)
-            self.lig3ML.setDisabled(False)
-            self.lig3an.setDisabled(False)
-            self.lig3nam.setDisabled(False)
+            self.ligadd[idx].setDisabled(True)
+            self.ligadd[idx].hide()
+            self.ligadd[idx+1].setDisabled(False)
+            self.ligadd[idx+1].show()
+            self.lig[idx+1].setDisabled(False)
+            self.ligocc[idx+1].setDisabled(False)
+            self.ligconn[idx+1].setDisabled(False)
+            self.ligH[idx+1].setDisabled(False)
+            self.ligML[idx+1].setDisabled(False)
+            self.ligan[idx+1].setDisabled(False)
+            self.lignam[idx+1].setDisabled(False)
     def addlig3(self):
-        txt0 = self.lig3.text().replace(' ','')
+        idx = 3 
+        txt0 = self.lig[idx].currentText().replace(' ','')
         if len(txt0)==0:
             mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
         else:
-            self.lig3add.setDisabled(True)
-            self.lig3add.hide()
-            self.lig4add.setDisabled(False)
-            self.lig4add.show()
-            self.lig4.setDisabled(False)
-            self.lig4occ.setDisabled(False)
-            self.lig4conn.setDisabled(False)
-            self.lig4H.setDisabled(False)
-            self.lig4ML.setDisabled(False)
-            self.lig4an.setDisabled(False)
-            self.lig4nam.setDisabled(False)
+            self.ligadd[idx].setDisabled(True)
+            self.ligadd[idx].hide()
+            self.ligadd[idx+1].setDisabled(False)
+            self.ligadd[idx+1].show()
+            self.lig[idx+1].setDisabled(False)
+            self.ligocc[idx+1].setDisabled(False)
+            self.ligconn[idx+1].setDisabled(False)
+            self.ligH[idx+1].setDisabled(False)
+            self.ligML[idx+1].setDisabled(False)
+            self.ligan[idx+1].setDisabled(False)
+            self.lignam[idx+1].setDisabled(False)
     def addlig4(self):
-        txt0 = self.lig4.text().replace(' ','')
+        idx = 4 
+        txt0 = self.lig[idx].currentText().replace(' ','')
         if len(txt0)==0:
             mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
         else:
-            self.lig4add.setDisabled(True)
-            self.lig4add.hide()
-            self.lig5add.setDisabled(False)
-            self.lig5add.show()
-            self.lig5.setDisabled(False)
-            self.lig5occ.setDisabled(False)
-            self.lig5conn.setDisabled(False)
-            self.lig5H.setDisabled(False)
-            self.lig5ML.setDisabled(False)
-            self.lig5an.setDisabled(False)
-            self.lig5nam.setDisabled(False)
+            self.ligadd[idx].setDisabled(True)
+            self.ligadd[idx].hide()
+            self.ligadd[idx+1].setDisabled(False)
+            self.ligadd[idx+1].show()
+            self.lig[idx+1].setDisabled(False)
+            self.ligocc[idx+1].setDisabled(False)
+            self.ligconn[idx+1].setDisabled(False)
+            self.ligH[idx+1].setDisabled(False)
+            self.ligML[idx+1].setDisabled(False)
+            self.ligan[idx+1].setDisabled(False)
+            self.lignam[idx+1].setDisabled(False)
     def addlig5(self):
-        txt0 = self.lig0.text().replace(' ','')
+        idx = 5 
+        txt0 = self.lig[idx].currentText().replace(' ','')
         if len(txt0)==0:
             mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
         else:
-            self.lig5add.setDisabled(True)
-            self.lig5add.hide()
-            self.lig6add.setDisabled(False)
-            self.lig6add.show()
-            self.lig6.setDisabled(False)
-            self.lig6occ.setDisabled(False)
-            self.lig6conn.setDisabled(False)
-            self.lig6H.setDisabled(False)
-            self.lig6ML.setDisabled(False)
-            self.lig6an.setDisabled(False)
-            self.lig6nam.setDisabled(False)
+            self.ligadd[idx].setDisabled(True)
+            self.ligadd[idx].hide()
+            self.ligadd[idx+1].setDisabled(False)
+            self.ligadd[idx+1].show()
+            self.lig[idx+1].setDisabled(False)
+            self.ligocc[idx+1].setDisabled(False)
+            self.ligconn[idx+1].setDisabled(False)
+            self.ligH[idx+1].setDisabled(False)
+            self.ligML[idx+1].setDisabled(False)
+            self.ligan[idx+1].setDisabled(False)
+            self.lignam[idx+1].setDisabled(False)
     def addlig6(self):
-        txt0 = self.lig0.text().replace(' ','')
+        idx = 6 
+        txt0 = self.lig[idx].currentText().replace(' ','')
         if len(txt0)==0:
             mQDialogWarn('No ligand specified','Please specify a ligand before adding another one.')
         else:
-            self.lig6add.setDisabled(True)
-            self.lig6add.hide()
-            self.lig7.setDisabled(False)
-            self.lig7occ.setDisabled(False)
-            self.lig7conn.setDisabled(False)
-            self.lig7H.setDisabled(False)
-            self.lig7ML.setDisabled(False)
-            self.lig7an.setDisabled(False)
-            self.lig7nam.setDisabled(False)
+            self.ligadd[idx].setDisabled(True)
+            self.ligadd[idx].hide()
+            self.ligadd[idx+1].setDisabled(False)
+            self.ligadd[idx+1].show()
+            self.lig[idx+1].setDisabled(False)
+            self.ligocc[idx+1].setDisabled(False)
+            self.ligconn[idx+1].setDisabled(False)
+            self.ligH[idx+1].setDisabled(False)
+            self.ligML[idx+1].setDisabled(False)
+            self.ligan[idx+1].setDisabled(False)
+            self.lignam[idx+1].setDisabled(False)
     def checkaxial(self):
         if self.dmolp.currentIndex() > 0:
             self.etplacephi.setText('')
@@ -1667,6 +1525,11 @@ class mGUI():
         name = QFileDialog.getOpenFileName(self.DBWindow,'Open File','.',"Molecule files *.xyz (*.xyz)")
         if name[0] != '':
             self.etgf.setText(os.path.relpath(name[0]))
+    ### load png from file
+    def qgeomload2(self):
+        name = QFileDialog.getOpenFileName(self.DBWindow,'Open File','.',"Geometry image files *.png (*.png)")
+        if name[0] != '':
+            self.etgfc.setText(os.path.relpath(name[0]))
     ### enable add new geometry
     def addgeom(self):
         self.geWindow.setWindowModality(2)
@@ -1678,6 +1541,7 @@ class mGUI():
         gname = gname.replace(' ','_')
         gshort = self.etgshort.text()
         gfile = self.etgf.text()
+        cfile = self.etgfc.text()
         if gname=='' or gfile=='':
             choice = QMessageBox.warning(self.geWindow,'Error','Please specify name and xyz file!')
         elif not glob.glob(gfile):
@@ -1710,8 +1574,12 @@ class mGUI():
             f = open(globs.installdir+'/Data/'+gshort+'.dat','w')
             f.write(xyzl)
             f.close()
+            # write png file
+            if glob.glob(cfile):
+                shutil.copy2(cfile,globs.installdir+'/icons/geoms/'+gshort+'.png')
             choice = QMessageBox.information(self.geWindow,'Add','Successfully added to the database!')
         self.matchgeomcoord()
+        
     ### callback for removal button, removes from db
     def qdelg(self):
         globs = globalvars()
@@ -1830,7 +1698,7 @@ class mGUI():
                 QMessageBox.critical(self.wmain,'Problem',emsg)
                 return
         # check for extra molecule
-        if self.chkM.getState() and self.etbind.text()=='':
+        if self.chkM.getState() and self.etbind.currentText()=='':
             emsg = 'You checked the extra molecule box but specified\nno extra molecule. No extra molecule will be generated.\n'
             QMessageBox.warning(self.wmain,'Warning',emsg)
         # get parameters
@@ -1921,7 +1789,7 @@ class mGUI():
             if globs.osx:
                 cmd = "/usr/local/bin/obabel -isdf "+outputf+" -O "+locf+".svg -xC -xi"
             else:
-                cmd = "obabel -sdf "+outputf+" -O "+locf+".svg -xC -xi"
+                cmd = "obabel -isdf "+outputf+" -O "+locf+".svg -xC -xi"
             t = mybash(cmd)
             print t
             if glob.glob(outputf):
@@ -1934,9 +1802,9 @@ class mGUI():
             ### draw ligands ###
             ####################
             if globs.osx:
-                cmd = '/usr/local/bin/convert -density 1500 '+locf+'.svg '+locf+'.png'
+                cmd = '/usr/local/bin/convert -density 500 '+locf+'.svg '+locf+'.png'
             else:
-                cmd = 'convert -density 1500 '+locf+'.svg '+locf+'.png'
+                cmd = 'convert -density 500 '+locf+'.svg '+locf+'.png'
             s = mybash(cmd)
             print s
             if not glob.glob(locf+'.png') :
@@ -1980,7 +1848,7 @@ class mGUI():
             self.lwclose.clicked.connect(self.qcloseligs)
             self.lgrid.addWidget(self.lwclose,1,0)
             self.lwindow.setWindowTitle('Geometry:'+self.dcoordg.currentText())
-            self.lwindow.showMaximized()
+            self.lwindow.show()
             center(self.lwindow)
         else:
             mQDialogWarn('Warning','No file '+gfname+' exists..')

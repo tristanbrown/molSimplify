@@ -289,26 +289,37 @@ class mQLineEdit(QLineEdit):
 ##########################
 #### Edit texts class ####
 ##########################
-class mQLineEditL(QLineEdit):
+class mQLineEditL(QComboBox):
     # constructor needs text, tip, alignment, fontsize
-    def __init__(self,txt,ctip,align,fontsize):
+    def __init__(self,txt,ctip,align,fontsize,licores):
         super(mQLineEditL,self).__init__()
-        self.setText(txt) # set text
-        # alignment
-        if align in 'Ll':
-            self.setAlignment(Qt.AlignLeft)
-        elif align in 'Rr':
-            self.setAlignment(Qt.AlignRight)
-        else:
-            self.setAlignment(Qt.AlignCenter)
         f = QFont("Helvetica",fontsize)
         self.setFont(f)
         self.setToolTip(ctip)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.setCursorPosition(0)
-    def focusOutEvent(self,event):
-        globs = globalvars()
-        #licores = readdict(globs.installdir+'/Ligands/ligands.dict')
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setEditable(True)
+        # add a filter model to filter matching items
+        self.pFilterModel = QSortFilterProxyModel(self)
+        self.pFilterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.pFilterModel.setSourceModel(self.model())
+        # add a completer, which uses the filter model
+        self.completer = QCompleter(self.pFilterModel, self)
+        # always show all (filtered) completions
+        self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+        self.setCompleter(self.completer)
+        # connect signals
+        def filter(text):
+            self.pFilterModel.setFilterFixedString(str(text))
+        self.lineEdit().textEdited[unicode].connect(filter)
+        self.completer.activated.connect(self.on_completer_activated)
+        self.addItems(licores)
+        self.setCurrentText(txt) # set text to empty
+    # on selection of an item from the completer, select the corresponding item from combobox
+    def on_completer_activated(self, text):
+        if text:
+            index = self.findText(str(text))
+            self.setCurrentIndex(index)
 
 ########################
 #### Spin box class ####
