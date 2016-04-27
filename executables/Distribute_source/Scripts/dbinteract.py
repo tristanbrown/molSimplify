@@ -223,6 +223,8 @@ def dbsearch(rundir,args,globs):
         from Classes.mWidgets import mQDialogInf
     ### in any case do similarity search over indexed db ###
     outf = args.dboutputf if args.dboutputf else 'simres.smi' # output file
+    cwd = os.getcwd()
+    os.chdir(globs.homedir)
     ### convert to SMILES/SMARTS if file
     if not args.dbbase:
         if args.gui:
@@ -332,6 +334,7 @@ def dbsearch(rundir,args,globs):
     flag = matchsmarts(smistr,outf,catoms,nres)
     os.rename(outf,args.rundir+'/'+outf)
     print t
+    os.chdir(cwd)
     return False
         
         

@@ -3,7 +3,7 @@
 # Dpt of Chemical Engineering, MIT
 
 
-import os, sys, subprocess
+import os, sys, subprocess, getpass
 from distutils.spawn import find_executable
 
 ########################################
@@ -32,27 +32,32 @@ def checkexist(cmd):
 if __name__ == '__main__':
     # check if brew is installed
     brew = checkexist('brew')
+    # get current user
+    user = mybash("logname").replace('\n','')
     # install brew
+    instbrew = '/usr/bin/ruby -e '
+    instbrew += '"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
+    instbrew += ' </dev/null'
     if not brew:
-        t = mybash('./brew')
+        # install brew as normal user
+        cmd = 'sudo -u ' + user +' '+ instbrew
+        t = mybash(cmd)
+        t = mybash('chown root /usr/local/bin/brew') # change permissions
     # check if openbabel is installed
-    babel = checkexist('babel')
-    # check if imagemagick is installed
-    immag = checkexist('convert')
-    # check if openbabel module is installed
-    imbabel = True
-    # try many times because of stochastic pybel error
     try:
         import openbabel
-        #import pybel
     except:
-        imbabel = False
-    if not babel and not imbabel:
-        t = mybash('./brew')
-    elif not imbabel:
-        t = mybash('./babel')
+        t = mybash('/usr/local/bin/brew install open-babel --with-python')
+        t = mybash('mkdir -p /Users/'+user+'/Library/Python/2.7/lib/python/site-packages')
+        cmd = "echo 'import site; site.addsitedir("+'"/usr/local/lib/python2.7/site-packages")'+"'"
+        cmd += '>> /Users/'+user+'/Library/Python/2.7/lib/python/site-packages/homebrew.pth'
+        t = mybash(cmd)
+    # check if imagemagick is installed
+    immag = checkexist('convert')
     if not immag:
-        t = mybash('./imagemagick')
+        t = mybash('/usr/local/bin/brew install imagemagick')
+        t = mybash('/usr/local/bin/brew install ghostscript')
+        t = mybash('/usr/local/bin/brew link --overwrite ghostscript')
 
 
 

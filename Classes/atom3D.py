@@ -11,7 +11,6 @@
 from math import sqrt 
 from Classes.globalvars import globalvars
 
-
 class atom3D:
     ################################
     ### constructor for 3D atoms ###

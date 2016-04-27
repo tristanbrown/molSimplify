@@ -276,6 +276,7 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
     A: ff whole structure after addition (each step)
     BA: 0 and 1 together
     '''
+    globs = globalvars()
     metals = range(21,31)+range(39,49)+range(72,81)
     ### check requested force field
     ffav = 'mmff94, uff, ghemical, gaff, mmff94s' # force fields
@@ -287,9 +288,9 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
         ### get metal
         midx = mol.findMetal()
         ### convert mol3D to OBmol via xyz file, because AFTER/END option have coordinates
-        mol.writexyz('tmp.xyz')
-        mol.OBmol = mol.getOBmol('tmp.xyz','xyzf')
-        os.remove('tmp.xyz')
+        mol.writexyz(globs.homedir+'/tmp.xyz')
+        mol.OBmol = mol.getOBmol(globs.homedir+'/tmp.xyz','xyzf')
+        os.remove(globs.homedir+'/tmp.xyz')
         ### initialize constraints
         constr = openbabel.OBFFConstraints()
         ### openbabel indexing starts at 1 ### !!!
@@ -713,8 +714,14 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                 lig3D.convert2mol3D() # convert to mol3D
                 if not keepHs or (len(keepHs) <= i or not keepHs[i]):
                     # remove one hydrogen
-                    Hs = lig3D.getHsbyIndex(lig.cat[0])
+                    Hs = []
+                    for cat in lig.cat:
+                        Hs += lig3D.getHsbyIndex(cat)
                     if len(Hs) > 0 and allremH:
+                        # check for cats indices
+                        for ii,cat in enumerate(lig.cat):
+                            if cat > Hs[0]:
+                                lig.cat[ii] -= 1
                         lig3D.deleteatom(Hs[0])
                 ### add atoms to connected atoms list
                 catoms = lig.cat # connection atoms
@@ -852,7 +859,10 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     # align center of mass to the middle
                     r21 = [a-b for a,b in zip(lig3D.getAtom(catoms[1]).coords(),r1)]
                     r21n = [a-b for a,b in zip(m3D.getAtom(batoms[1]).coords(),r1)]
-                    theta = 180*arccos(dot(r21,r21n)/(norm(r21)*norm(r21n)))/pi
+                    if (norm(r21)*norm(r21n)) > 1e-8:
+                        theta = 180*arccos(dot(r21,r21n)/(norm(r21)*norm(r21n)))/pi
+                    else:
+                        theta = 0.0
                     u = cross(r21,r21n)
                     lig3Db = mol3D()
                     lig3Db.copymol3D(lig3D)
@@ -877,7 +887,10 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                     urot = vecdiff(r1l,r0l)
                     theta,ub = rotation_params(mcoords,r0b,r1b)
                     theta,ul = rotation_params(rm,r0l,r1l)
-                    theta = 180*arccos(dot(ub,ul)/(norm(ub)*norm(ul)))/pi-180.0
+                    if (norm(ub)*norm(ul)) > 1e-8:
+                        theta = 180*arccos(dot(ub,ul)/(norm(ub)*norm(ul)))/pi-180.0
+                    else:
+                        theta = 0.0
                     # rotate around axis 
                     lig3Db = mol3D()
                     lig3Db.copymol3D(lig3D)
@@ -916,7 +929,7 @@ def mcomplex(args,core,ligs,ligoc,installdir,licores,globs):
                         ens.append(enl)
                         lig3D.getAtom(catoms[1]).translate(ddr)
                         # check fo cutoff
-                        if ens[-1] - ens[0] > 10.0:
+                        if ens[-1] - ens[0] > 5.0:
                             # fix ML bond length get optimum guess
                             r0,r1 = lig3D.getAtomCoords(catoms[0]),lig3D.getAtomCoords(catoms[1])
                             r01 = distance(r0,r1)

@@ -11,7 +11,7 @@ from structgen import *
 from io import *
 from jobgen import *
 from qcgen import *
-import argparse, sys, os, shutil, itertools
+import argparse, sys, os, shutil, itertools, random
 from collections import Counter
 import pybel
 
@@ -36,10 +36,11 @@ def getconstsample(no_rgen,args,licores,coord):
     occup=[]
     combos = []
     generated = 0 
+    if not coord:
+        coord = 6 # default octahedral
     # generate all combinations of ligands
-    for i in range(1,coord+1):
-        combos += (list(itertools.combinations_with_replacement(range(0,len(licores)),i)))
-        random.shuffle(combos)
+    combos += (list(itertools.combinations_with_replacement(range(0,len(licores)),coord)))
+    random.shuffle(combos) 
     for combo in combos:
         # get total denticity
         totdent = 0
@@ -131,6 +132,12 @@ def constrgen(installdir,rundir,args,globs):
                 elif args.ligctg and args.ligctg.lower() in licores[key][3]:
                     licoresnew[key] = licores[key]
         licores = licoresnew
+    # remove aminoacids
+    licoresnew = dict()
+    for key in licores.keys():
+        if 'aminoacid' not in licores[key][3]:
+            licoresnew[key] = licores[key]
+    licores = licoresnew
     # get a sample of these combinations
     samps = getconstsample(int(args.rgen[0]),args,licores,coord)
     if len(samps)==0:
@@ -448,7 +455,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
                     tstrfiles.append(strf+'FFML')
                     os.rename(strf+'.xyz',strf+'FFML.xyz')
                 # generate xyz with FF and covalent
-                args.MLbonds = ['c' for i in range(0,10)]
+                args.MLbonds = ['c' for i in range(0,len(args.lig))]
                 strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
                 for strf in strfiles:
                     tstrfiles.append(strf+'FFc')
@@ -461,7 +468,7 @@ def rungen(installdir,rundir,args,chspfname,globs):
                 for strf in strfiles:
                     tstrfiles.append(strf+'ML')
                     os.rename(strf+'.xyz',strf+'ML.xyz')
-                args.MLbonds = ['c' for i in range(0,10)]
+                args.MLbonds = ['c' for i in range(0,len(args.lig))]
                 # generate xyz without FF and covalent ML
                 strfiles,emsg = structgen(installdir,args,rootdir,ligands,ligocc,globs)
                 for strf in strfiles:

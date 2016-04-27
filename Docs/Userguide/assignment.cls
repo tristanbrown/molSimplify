@@ -48,14 +48,14 @@
 		\begin{center}
 		\vspace*{0.75cm}
 		\includegraphics[scale=0.2]{./mit_logo.png}\\
-		\vspace*{3.5cm}
+		\vspace*{4.5cm}
 		\LARGE\textmd{\textbf{User's Manual}}\\	
-		\vspace{0.25in}
+		\vspace{1.25in}
 		\LARGE\textmd{\textbf{\hmwkTitle}}\\	
 		\textbf{\Large \hmwkProblem} \\ 		
-		\vspace{0.5in} \large{by}\\
+%		\vspace{0.5in} \large{by}\\
 		\vspace*{0.5cm}
-		\textbf{\large\hmwkAuthor}\\
+%		\textbf{\large\hmwkAuthor}\\
 		\vspace*{4.0cm}
 		\includegraphics[scale=1.1]{./kulik_logo.png}\\
 		\vspace*{1.25cm}
@@ -70,8 +70,8 @@
 \pagestyle{fancy}
 \linespread{1.1} % Line spacing
 % Set up the header and footer
-\lhead{\hmwkAuthor} % Top left header
-\chead{\hmwkTitle} % Top center head
+\lhead{v1.0} % Top left header
+\chead{\texttt{molSimplify}} % Top center head
 \rhead{\includegraphics[scale=0.3]{./kulik_logo.png}} % Top right header
 \cfoot{} % Bottom center footer
 \rfoot{Page\ \thepage} % Bottom right footer

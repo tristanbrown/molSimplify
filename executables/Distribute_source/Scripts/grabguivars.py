@@ -23,70 +23,47 @@ def checkTrue(arg):
 #########################################
 def getligands(gui):
     ligs,ligoccs,lcats,kHs,MLb,lang,lname = '','','','','','',''
-    if len(gui.lig0.text().replace(' ','')) > 0:
-        ligs += gui.lig0.text().replace(' ','')
-        ligoccs += str(gui.lig0occ.value())
-        kHs += gui.lig0H.currentText()
-        lcats += gui.lig0conn.text().replace(' ','')
-        MLb += gui.lig0ML.text().replace(' ','')
-        lang += gui.lig0an.text().replace(' ','')
-        lname += gui.lig0nam.text().replace(' ','')
-    if len(gui.lig1.text().replace(' ','')) > 0:
-        ligs += ','+gui.lig1.text().replace(' ','')
-        ligoccs += ','+str(gui.lig1occ.value())
-        kHs += ','+gui.lig1H.currentText()
-        lcats += '/'+gui.lig1conn.text().replace(' ','')
-        MLb += ','+gui.lig1ML.text().replace(' ','')
-        lang += ','+gui.lig1an.text().replace(' ','')
-        lname += ','+gui.lig1nam.text().replace(' ','')
-    if len(gui.lig2.text().replace(' ','')) > 0:
-        ligs += ','+gui.lig2.text().replace(' ','')
-        ligoccs += ','+str(gui.lig2occ.value())
-        kHs += ','+gui.lig2H.currentText()
-        lcats += '/'+gui.lig2conn.text().replace(' ','')
-        MLb += ','+gui.lig2ML.text().replace(' ','')
-        lang += ','+gui.lig2an.text().replace(' ','')
-        lname += ','+gui.lig2nam.text().replace(' ','')
-    if len(gui.lig3.text().replace(' ','')) > 0:
-        ligs += ','+gui.lig3.text().replace(' ','')
-        ligoccs += ','+str(gui.lig3occ.value())
-        kHs += ','+gui.lig3H.currentText()
-        lcats += '/'+gui.lig3conn.text().replace(' ','')
-        MLb += ','+gui.lig3ML.text().replace(' ','')
-        lang += ','+gui.lig3an.text().replace(' ','')
-        lname += ','+gui.lig3nam.text().replace(' ','')
-    if len(gui.lig4.text().replace(' ','')) > 0:
-        ligs += ','+gui.lig4.text().replace(' ','')
-        ligoccs += ','+str(gui.lig4occ.value())
-        kHs += ','+gui.lig4H.currentText()
-        lcats += ','+gui.lig4conn.text().replace(' ','')
-        MLb += '/'+gui.lig4ML.text().replace(' ','')
-        lang += ','+gui.lig4an.text().replace(' ','')
-        lname += ','+gui.lig4nam.text().replace(' ','')
-    if len(gui.lig5.text().replace(' ','')) > 0:
-        ligs += ','+gui.lig5.text().replace(' ','')
-        ligoccs += ','+str(gui.lig5occ.value())
-        kHs += ','+gui.lig5H.currentText()
-        lcats += '/'+gui.lig5conn.text().replace(' ','')
-        MLb += ','+gui.lig5ML.text().replace(' ','')
-        lang += ','+gui.lig5an.text().replace(' ','')
-        lname += ','+gui.lig5nam.text().replace(' ','')
-    if len(gui.lig6.text().replace(' ','')) > 0:
-        ligs += ','+gui.lig6.text().replace(' ','')
-        ligoccs += ','+str(gui.lig6occ.value())
-        kHs += ','+gui.lig6H.currentText()
-        lcats += '/'+gui.lig6conn.text().replace(' ','')
-        MLb += ','+gui.lig6ML.text().replace(' ','')
-        lang += ','+gui.lig6an.text().replace(' ','')
-        lname += ','+gui.lig6nam.text().replace(' ','')
-    if len(gui.lig7.text().replace(' ','')) > 0:
-        ligs += ','+gui.lig7.text().replace(' ','')
-        ligoccs += ','+str(gui.lig7occ.value())
-        kHs += ','+gui.lig7H.currentText()
-        lcats += '/'+gui.lig7conn.text().replace(' ','')
-        MLb += ','+gui.lig7ML.text().replace(' ','')
-        lang += ','+gui.lig7an.text().replace(' ','')
-        lname += ','+gui.lig7nam.text().replace(' ','')
+    for ii in range(0,7):
+        if len(gui.lig[ii].currentText().replace(' ','')) > 0:
+            ligs += gui.lig[ii].currentText().replace(' ','')+','
+            ligoccs += str(gui.ligocc[ii].value())+','
+            kHs += gui.ligH[ii].currentText()+','
+            lcats += gui.ligconn[ii].text().replace(' ','')+'/'
+            MLb += gui.ligML[ii].text().replace(' ','')+','
+            lang += gui.ligan[ii].text().replace(' ','')+','
+            lname += gui.lignam[ii].text().replace(' ','')+','
+    # check for empty
+    ligs = ligs.rsplit(',',1)[0]
+    lgtxt = ligoccs.replace(',','')
+    if len(lgtxt) > 0:
+        ligoccs = ligoccs.rsplit(',',1)[0]
+    else:
+        ligoccs = ''
+    lgtxt = kHs.replace(',','')
+    if len(lgtxt) > 0:
+        kHs = kHs.rsplit(',',1)[0]
+    else:
+        kHs = ''
+    lgtxt = lcats.replace('/','')
+    if len(lgtxt) > 0:
+        lcats = lcats.rsplit('/',1)[0]
+    else:
+        lcats = ''
+    lgtxt = MLb.replace(',','')
+    if len(lgtxt) > 0:
+        MLb = MLb.rsplit(',',1)[0]
+    else:
+        MLb = ''
+    lgtxt = lang.replace(',','')
+    if len(lgtxt) > 0:
+        lang = lang.rsplit(',',1)[0]
+    else:
+        lang = ''
+    lgtxt = lname.replace(',','')
+    if len(lgtxt) > 0:
+        lname = lname.rsplit(',',1)[0]
+    else:
+        lname = ''
     return ligs,ligoccs,lcats,kHs,MLb,lang,lname
 
 
@@ -101,212 +78,34 @@ def setligands(gui,ligs,ligoccs,lcats,kHs,MLb,lang,lname):
     MLb = re.split(',|\t|&',MLb)
     lang = re.split(',|\t|&',lang)
     lname = re.split(',|\t|&',lname)
-    if len(ligs) > 0:
-        gui.lig0.setText(ligs[0])
-        if len(ligoccs) > 0 and ligoccs[0]!='':
-            gui.lig0occ.setValue(int(ligoccs[0]))
-        if len(lcats) > 0:
-            gui.lig0conn.setText(lcats[0])
-        if len(kHs) > 0:
-            if checkTrue(kHs[0]):
-                gui.lig0H.setCurrentText('yes')
+    for ii in range(0,len(ligs)):
+        gui.lig[ii].setCurrentText(ligs[ii])
+        if len(ligoccs) > ii and ligoccs[ii]!='':
+            gui.ligocc[ii].setValue(int(ligoccs[ii]))
+        if len(lcats) > ii:
+            gui.ligconn[ii].setText(lcats[ii])
+        if len(kHs) > ii:
+            if checkTrue(kHs[ii]):
+                gui.ligH[ii].setCurrentText('yes')
             else:
-                gui.lig0H.setCurrentText('no')
-        if len(MLb) > 0:
-            gui.lig0ML.setText(MLb[0])
+                gui.ligH[ii].setCurrentText('no')
+        if len(MLb) > ii:
+            gui.ligML[ii].setText(MLb[ii])
         if len(lang) > 0:
-            gui.lig0an.setText(lang[0])
+            gui.ligan[ii].setText(lang[ii])
         if len(lname) > 0:
-            gui.lig0nam.setText(lname[0])
-    if len(ligs) > 1:
-        gui.lig1.setText(ligs[1])
-        if len(ligoccs) > 1 and ligoccs[1]!='':
-            gui.lig1occ.setValue(int(ligoccs[1]))
-        if len(lcats) > 1:
-            gui.lig1conn.setText(lcats[1])
-        if len(kHs) > 1:
-            if checkTrue(kHs[1]):
-                gui.lig1H.setCurrentText('yes')
-            else:
-                gui.lig1H.setCurrentText('no')
-        if len(MLb) > 1:
-            gui.lig1ML.setText(MLb[1])
-        if len(lang) > 1:
-            gui.lig1an.setText(lang[1])
-        if len(lname) > 1:
-            gui.lig1nam.setText(lname[1])
-        gui.lig0add.hide()
-        gui.lig1.setDisabled(False)
-        gui.lig1occ.setDisabled(False)
-        gui.lig1conn.setDisabled(False)
-        gui.lig1H.setDisabled(False)
-        gui.lig1ML.setDisabled(False)
-        gui.lig1an.setDisabled(False)
-        gui.lig1nam.setDisabled(False)
-        gui.lig1add.show()
-        gui.lig1add.setDisabled(False)
-    if len(ligs) > 2:
-        gui.lig2.setText(ligs[2])
-        if len(ligoccs) > 2 and ligoccs[2]!='':
-            gui.lig2occ.setValue(int(ligoccs[2]))
-        if len(lcats) > 2:
-            gui.lig2conn.setText(lcats[2])
-        if len(kHs) > 2:
-            if checkTrue(kHs[2]):
-                gui.lig2H.setCurrentText('yes')
-            else:
-                gui.lig2H.setCurrentText('no')
-        if len(MLb) > 2:
-            gui.lig2ML.setText(MLb[2])
-        if len(lang) > 2:
-            gui.lig2an.setText(lang[2])
-        if len(lname) > 2:
-            gui.lig2nam.setText(lname[2])
-        gui.lig1add.hide()
-        gui.lig2.setDisabled(False)
-        gui.lig2occ.setDisabled(False)
-        gui.lig2conn.setDisabled(False)
-        gui.lig2H.setDisabled(False)
-        gui.lig2ML.setDisabled(False)
-        gui.lig2an.setDisabled(False)
-        gui.lig2nam.setDisabled(False)
-        gui.lig2add.show()
-        gui.lig2add.setDisabled(False)
-    if len(ligs) > 3:
-        gui.lig3.setText(ligs[3])
-        if len(ligoccs) > 3 and ligoccs[3]!='':
-            gui.lig3occ.setValue(int(ligoccs[3]))
-        if len(lcats) > 3:
-            gui.lig3conn.setText(lcats[3])
-        if len(kHs) > 3:
-            if checkTrue(kHs[3]):
-                gui.lig3H.setCurrentText('yes')
-            else:
-                gui.lig3H.setCurrentText('no')
-        if len(MLb) > 3:
-            gui.lig3ML.setText(MLb[3])
-        if len(lang) > 3:
-            gui.lig3an.setText(lang[3])
-        if len(lname) > 3:
-            gui.lig3nam.setText(lname[3])
-        gui.lig2add.hide()
-        gui.lig3.setDisabled(False)
-        gui.lig3occ.setDisabled(False)
-        gui.lig3conn.setDisabled(False)
-        gui.lig3H.setDisabled(False)
-        gui.lig3ML.setDisabled(False)
-        gui.lig3an.setDisabled(False)
-        gui.lig3nam.setDisabled(False)
-        gui.lig3add.show()
-        gui.lig3add.setDisabled(False)
-    if len(ligs) > 4:
-        gui.lig4.setText(ligs[4])
-        if len(ligoccs) > 4 and ligoccs[4]!='':
-            gui.lig4occ.setValue(int(ligoccs[4]))
-        if len(lcats) > 4:
-            gui.lig4conn.setText(lcats[4])
-        if len(kHs) > 4:
-            if checkTrue(kHs[4]):
-                gui.lig4H.setCurrentText('yes')
-            else:
-                gui.lig4H.setCurrentText('no')
-        if len(MLb) > 4:
-            gui.lig4ML.setText(MLb[4])
-        if len(lang) > 4:
-            gui.lig4an.setText(lang[4])
-        if len(lname) > 2:
-            gui.lig4nam.setText(lname[4])
-        gui.lig3add.hide()
-        gui.lig4.setDisabled(False)
-        gui.lig4occ.setDisabled(False)
-        gui.lig4conn.setDisabled(False)
-        gui.lig4H.setDisabled(False)
-        gui.lig4ML.setDisabled(False)
-        gui.lig4an.setDisabled(False)
-        gui.lig4nam.setDisabled(False)
-        gui.lig4add.show()
-        gui.lig4add.setDisabled(False)
-    if len(ligs) > 5:
-        gui.lig5.setText(ligs[5])
-        if len(ligoccs) > 5 and ligoccs[5]!='':
-            gui.lig5occ.setValue(int(ligoccs[5]))
-        if len(lcats) > 5:
-            gui.lig5conn.setText(lcats[5])
-        if len(kHs) > 5:
-            if checkTrue(kHs[5]):
-                gui.lig5H.setCurrentText('yes')
-            else:
-                gui.lig5H.setCurrentText('no')
-        if len(MLb) > 5:
-            gui.lig5ML.setText(MLb[5])
-        if len(lang) > 5:
-            gui.lig5an.setText(lang[5])
-        if len(lname) > 5:
-            gui.lig5nam.setText(lname[5])
-        gui.lig4add.hide()
-        gui.lig5.setDisabled(False)
-        gui.lig5occ.setDisabled(False)
-        gui.lig5conn.setDisabled(False)
-        gui.lig5H.setDisabled(False)
-        gui.lig5ML.setDisabled(False)
-        gui.lig5an.setDisabled(False)
-        gui.lig5nam.setDisabled(False)
-        gui.lig5add.show()
-        gui.lig5add.setDisabled(False)
-    if len(ligs) > 6:
-        gui.lig6.setText(ligs[6])
-        if len(ligoccs) > 6 and ligoccs[6]!='':
-            gui.lig6occ.setValue(int(ligoccs[6]))
-        if len(lcats) > 6:
-            gui.lig6conn.setText(lcats[6])
-        if len(kHs) > 6:
-            if checkTrue(kHs[6]):
-                gui.lig6H.setCurrentText('yes')
-            else:
-                gui.lig6H.setCurrentText('no')
-        if len(MLb) > 6:
-            gui.lig6ML.setText(MLb[6])
-        if len(lang) > 6:
-            gui.lig6an.setText(lang[6])
-        if len(lname) > 6:
-            gui.lig6nam.setText(lname[6])
-        gui.lig5add.hide()
-        gui.lig6.setDisabled(False)
-        gui.lig6occ.setDisabled(False)
-        gui.lig6conn.setDisabled(False)
-        gui.lig6H.setDisabled(False)
-        gui.lig6ML.setDisabled(False)
-        gui.lig6an.setDisabled(False)
-        gui.lig6nam.setDisabled(False)
-        gui.lig6add.setDisabled(False)
-        gui.lig6add.show()
-        gui.lig6add.setDisabled(False)
-    if len(ligs) > 7:
-        gui.lig7.setText(ligs[7])
-        if len(ligoccs) > 7 and ligoccs[7]!='':
-            gui.lig7occ.setValue(int(ligoccs[7]))
-        if len(lcats) > 7:
-            gui.lig7conn.setText(lcats[7])
-        if len(kHs) > 7:
-            if checkTrue(kHs[7]):
-                gui.lig7H.setCurrentText('yes')
-            else:
-                gui.lig7H.setCurrentText('no')
-        if len(MLb) > 7:
-            gui.lig7ML.setText(MLb[7])
-        if len(lang) > 7:
-            gui.lig7an.setText(lang[7])
-        if len(lname) > 7:
-            gui.lig7nam.setText(lname[7])
-        gui.lig6add.hide()
-        gui.lig7.setDisabled(False)
-        gui.lig7occ.setDisabled(False)
-        gui.lig7conn.setDisabled(False)
-        gui.lig7H.setDisabled(False)
-        gui.lig7ML.setDisabled(False)
-        gui.lig7an.setDisabled(False)
-        gui.lig7nam.setDisabled(False)
-        gui.lig7add.setDisabled(False)
+            gui.lignam[ii].setText(lname[ii])
+        if ii < 7:
+            gui.ligadd[ii].hide()
+            gui.lig[ii+1].setDisabled(False)
+            gui.ligocc[ii+1].setDisabled(False)
+            gui.ligconn[ii+1].setDisabled(False)
+            gui.ligH[ii+1].setDisabled(False)
+            gui.ligML[ii+1].setDisabled(False)
+            gui.ligan[ii+1].setDisabled(False)
+            gui.lignam[ii+1].setDisabled(False)
+            gui.ligadd[ii+1].show()
+            gui.ligadd[ii+1].setDisabled(False)
 
 #####################################################
 ########## write options to input file  #############
@@ -356,7 +155,7 @@ def grabguivars(gui):
     # list with arguments
     args = dict()
     ### general structure generation options ###
-    args['-core'] = gui.etcore.text()
+    args['-core'] = gui.etcore.currentText()
     args['-ccatoms'] = gui.etccat.text()
     ligs,ligoccs,lcats,kHs,MLb,lang,lname=getligands(gui)
     noligs = len(ligs.split(','))-1
@@ -400,7 +199,7 @@ def grabguivars(gui):
     args['-suff'] = gui.etsuff.text()
     ### binding molecule options ###
     if gui.chkM.getState():
-        args['-bind'] = gui.etbind.text()
+        args['-bind'] = gui.etbind.currentText()
         args['-bcharge'] = gui.etchbind.text()
         args['-nbind'] = gui.etnbind.text()
         if gui.chsep.getState():
@@ -779,7 +578,7 @@ def loadfrominputfile(gui,fname):
         if '-lig' not in st[0]:
             st[-1] = st[-1].split('#')[0]
         if '-core'==st[0]:
-            gui.etcore.setText(st[-1])
+            gui.etcore.setCurrentText(st[-1])
         if '-lig'==st[0]:
             ligs = st[-1]
         if '-ligocc'==st[0]:
@@ -836,7 +635,7 @@ def loadfrominputfile(gui,fname):
         if '-bind'==st[0]:
             gui.chkM.setChecked(True)
             gui.enableemol()
-            gui.etbind.setText(st[-1])
+            gui.etbind.setCurrentText(st[-1])
         if '-bsep'==st[0]:
             gui.chsep.setChecked(True)
         if '-bcharge'==st[0]:

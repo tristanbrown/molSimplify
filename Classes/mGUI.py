@@ -393,7 +393,7 @@ class mGUI():
         self.grid.addWidget(self.butPost,17,17,2,2)
         ## Search DB button ##
         ctip = 'Search for ligands in chemical databases.'
-        self.searchDB = mQPushButton('Search DB',ctip,12)
+        self.searchDB = mQPushButton('Search DB',ctip,16)
         self.searchDB.clicked.connect(self.searchDBW)
         self.grid.addWidget(self.searchDB,17,20,2,2)
         ###################################################
@@ -2170,7 +2170,9 @@ class mGUI():
         self.pWindow.show()
         # check if Multiwfn exists
         globs = globalvars()
-        inputtxt = '0\n0\n' 
+        cwd = os.getcwd()
+        os.chdir(globs.homedir)
+        inputtxt = '0\n0\n'
         f = open('input1','w')
         f.write(inputtxt)
         f.close()
@@ -2203,6 +2205,7 @@ class mGUI():
             self.pwfnav.setDisabled(True)
             self.pcub.setDisabled(True)
             self.pdeloc.setDisabled(True)
+        os.chdir(cwd)
     ### load directory
     def pdload(self):
         name = QFileDialog.getExistingDirectory(self.pWindow,'Select Directory')

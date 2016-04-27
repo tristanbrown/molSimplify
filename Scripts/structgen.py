@@ -276,6 +276,7 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
     A: ff whole structure after addition (each step)
     BA: 0 and 1 together
     '''
+    globs = globalvars()
     metals = range(21,31)+range(39,49)+range(72,81)
     ### check requested force field
     ffav = 'mmff94, uff, ghemical, gaff, mmff94s' # force fields
@@ -287,9 +288,9 @@ def ffopt(ff,mol,connected,constopt,frozenats,frozenangles,mlbonds):
         ### get metal
         midx = mol.findMetal()
         ### convert mol3D to OBmol via xyz file, because AFTER/END option have coordinates
-        mol.writexyz('tmp.xyz')
-        mol.OBmol = mol.getOBmol('tmp.xyz','xyzf')
-        os.remove('tmp.xyz')
+        mol.writexyz(globs.homedir+'/tmp.xyz')
+        mol.OBmol = mol.getOBmol(globs.homedir+'/tmp.xyz','xyzf')
+        os.remove(globs.homedir+'/tmp.xyz')
         ### initialize constraints
         constr = openbabel.OBFFConstraints()
         ### openbabel indexing starts at 1 ### !!!
