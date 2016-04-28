@@ -156,7 +156,7 @@ def spinnbo(s,metal):
     sNBO = []
     sLV = []
     # get molecular orbitals containing metal
-    ss = s.split('NATURAL BOND ORBITAL ANALYSIS')[1]
+    ss = s.split('NATURAL BOND ORBITAL')[1]
     ss2 = ss.split('DIRECTIONALITY')
     if len(ss2) > 1:
         slines = ss[1].splitlines()
@@ -164,7 +164,6 @@ def spinnbo(s,metal):
         slines = ss.splitlines()
     for i,line in enumerate(slines):
         if ((metal in line) and ('BD' in line)):
-            print line
             # get NBO occupation
             occup = find_between(line.split(None)[1],'(',')')
             # get block of NBO
@@ -174,7 +173,6 @@ def spinnbo(s,metal):
             for lt in slines[i:i+20]:
                 ttt+= lt + '\n'
             # find metal centered hybrid inside NBO block
-            print no[0:2]
             sa = find_between(ttt,no+' (',str(int(no[0:2])+1)+'. (').splitlines()
             ml = [ll for ll in sa[1:] if metal in ll] # metal centered hybrid
             if len(ml) > 0:
