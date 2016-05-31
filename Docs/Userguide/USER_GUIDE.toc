@@ -1,32 +1,37 @@
 \contentsline {section}{\numberline {1}General information}{3}{section.1}
-\contentsline {section}{\numberline {2}Installation}{3}{section.2}
-\contentsline {subsection}{\numberline {2.1}From source}{3}{subsection.2.1}
-\contentsline {subsection}{\numberline {2.2}Binaries}{3}{subsection.2.2}
-\contentsline {section}{\numberline {3}Structure generation module}{3}{section.3}
-\contentsline {subsection}{\numberline {3.1}test}{3}{subsection.3.1}
-\contentsline {subsection}{\numberline {3.2}Building simple structures}{3}{subsection.3.2}
-\contentsline {subsection}{\numberline {3.3}Force field optimization}{3}{subsection.3.3}
-\contentsline {subsection}{\numberline {3.4}Custom geometries}{4}{subsection.3.4}
-\contentsline {subsection}{\numberline {3.5}Chelating ligands}{4}{subsection.3.5}
-\contentsline {subsection}{\numberline {3.6}Building custom structures}{4}{subsection.3.6}
-\contentsline {subsection}{\numberline {3.7}Replacing existing ligands}{4}{subsection.3.7}
-\contentsline {subsection}{\numberline {3.8}Additional molecule placement}{4}{subsection.3.8}
-\contentsline {section}{\numberline {4}Random generation module}{4}{section.4}
-\contentsline {section}{\numberline {5}Input files \& Jobscripts}{4}{section.5}
-\contentsline {subsection}{\numberline {5.1}Input file generation}{4}{subsection.5.1}
-\contentsline {subsection}{\numberline {5.2}Jobscript generation}{4}{subsection.5.2}
-\contentsline {section}{\numberline {6}Interaction with chemical databases}{4}{section.6}
-\contentsline {subsection}{\numberline {6.1}Similarity search}{5}{subsection.6.1}
-\contentsline {subsection}{\numberline {6.2}Database screening}{5}{subsection.6.2}
-\contentsline {section}{\numberline {7}Post processing}{5}{section.7}
-\contentsline {subsection}{\numberline {7.1}Summary}{5}{subsection.7.1}
-\contentsline {subsection}{\numberline {7.2}Charges}{5}{subsection.7.2}
-\contentsline {subsection}{\numberline {7.3}Wavefunction}{5}{subsection.7.3}
-\contentsline {subsection}{\numberline {7.4}Cubefiles}{5}{subsection.7.4}
-\contentsline {subsection}{\numberline {7.5}Molecular orbitals}{5}{subsection.7.5}
-\contentsline {subsection}{\numberline {7.6}Natural Bonding Orbitals}{5}{subsection.7.6}
-\contentsline {subsection}{\numberline {7.7}Delocalization indices}{5}{subsection.7.7}
-\contentsline {section}{\numberline {8}Extras}{6}{section.8}
-\contentsline {subsection}{\numberline {8.1}Updating the database}{6}{subsection.8.1}
-\contentsline {subsection}{\numberline {8.2}Jobscript generation}{6}{subsection.8.2}
-\contentsline {section}{\numberline {9}Command line options}{6}{section.9}
+\contentsline {subsection}{\numberline {1.1}Obtaining molSimplify}{3}{subsection.1.1}
+\contentsline {subsection}{\numberline {1.2}Citing molSimplify}{3}{subsection.1.2}
+\contentsline {subsection}{\numberline {1.3}License}{3}{subsection.1.3}
+\contentsline {subsection}{\numberline {1.4}Acknowledgments}{4}{subsection.1.4}
+\contentsline {section}{\numberline {2}Installation}{5}{section.2}
+\contentsline {subsection}{\numberline {2.1}System requirements}{5}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Binaries}{5}{subsection.2.2}
+\contentsline {subsubsection}{\numberline {2.2.1}Linux}{5}{subsubsection.2.2.1}
+\contentsline {subsubsection}{\numberline {2.2.2}Mac OSX}{6}{subsubsection.2.2.2}
+\contentsline {subsection}{\numberline {2.3}From source}{6}{subsection.2.3}
+\contentsline {subsubsection}{\numberline {2.3.1}Linux}{6}{subsubsection.2.3.1}
+\contentsline {subsubsection}{\numberline {2.3.2}Mac OSX}{7}{subsubsection.2.3.2}
+\contentsline {subsection}{\numberline {2.4}Installed files}{7}{subsection.2.4}
+\contentsline {subsection}{\numberline {2.5}Databases \& Post-processing}{8}{subsection.2.5}
+\contentsline {subsubsection}{\numberline {2.5.1}Chemical database setup}{8}{subsubsection.2.5.1}
+\contentsline {subsubsection}{\numberline {2.5.2}Multiwfn setup}{8}{subsubsection.2.5.2}
+\contentsline {section}{\numberline {3}GUI overview}{9}{section.3}
+\contentsline {section}{\numberline {4}Structure generation module}{10}{section.4}
+\contentsline {subsection}{\numberline {4.1}Building simple structures}{10}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Building more complicated structures}{12}{subsection.4.2}
+\contentsline {subsection}{\numberline {4.3}Force field optimization}{13}{subsection.4.3}
+\contentsline {subsection}{\numberline {4.4}Smart alignment \& Force order}{14}{subsection.4.4}
+\contentsline {subsection}{\numberline {4.5}Custom angles}{15}{subsection.4.5}
+\contentsline {subsection}{\numberline {4.6}Building custom structures}{16}{subsection.4.6}
+\contentsline {subsection}{\numberline {4.7}Replacing existing ligands}{17}{subsection.4.7}
+\contentsline {subsection}{\numberline {4.8}Additional molecule placement}{19}{subsection.4.8}
+\contentsline {section}{\numberline {5}Random generation module}{21}{section.5}
+\contentsline {section}{\numberline {6}Input files \& jobscripts}{23}{section.6}
+\contentsline {subsection}{\numberline {6.1}Input file generation}{24}{subsection.6.1}
+\contentsline {subsection}{\numberline {6.2}Jobscript generation}{25}{subsection.6.2}
+\contentsline {section}{\numberline {7}Similarity search \& screening}{26}{section.7}
+\contentsline {section}{\numberline {8}Post processing}{28}{section.8}
+\contentsline {section}{\numberline {9}Extras}{29}{section.9}
+\contentsline {subsection}{\numberline {9.1}Updating the database}{29}{subsection.9.1}
+\contentsline {subsection}{\numberline {9.2}Add geometry}{30}{subsection.9.2}
+\contentsline {section}{\numberline {10}Command line options}{31}{section.10}

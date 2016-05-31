@@ -1,0 +1,10 @@
+# Input file generated from GUI options
+-dbcatoms 1,3
+-dbbase chembl
+-dbfinger FP2
+-dbresults 10
+-rundir /Users/timis/Runs
+-dboutputf carboxylates.smi
+-dbsim [O-]C(=O)
+-dbatoms <15
+

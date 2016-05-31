@@ -4,8 +4,8 @@
 3: trigonal_planar tpl
 4: square_planar sqp
 4: tetrahedral thd
-5: trigonal_bipyramidal tbp
 5: square_pyramidal spy
+5: trigonal_bipyramidal tbp
 6: octahedral oct
 6: trigonal_prismatic tpr
 7: pentagonal_bipyramidal pbp
