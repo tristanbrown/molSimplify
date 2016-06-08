@@ -66,11 +66,11 @@ def nbo_parser_unrestricted(s):
         sbeta = salpha.split('Beta  spin orbitals')[1]
         salpha = salpha.split('Beta  spin orbitals')[0]
         # parse alpha
-        [alphares,aLV] = spinnbo(salpha,res[0]) # output list with [occup,%metal hyb,%d in metal hyb]
+        [alphares] = spinnbo(salpha,res[0]) # output list with [occup,%metal hyb,%d in metal hyb]
         #anlmo = spinnlmo(salpha,res[0]) # output list with [occup,%metal hyb,%d in metal hyb]
         anlmo = [0.0,0.0,0.0]
         # parse beta
-        [betares,bLV] = spinnbo(sbeta,res[0]) # output list with [occup,%metal hyb,%d in metal hyb]
+        [betares] = spinnbo(sbeta,res[0]) # output list with [occup,%metal hyb,%d in metal hyb]
         #bnlmo = spinnlmo(sbeta,res[0]) # output list with [occup,%metal hyb,%d in metal hyb]
         bnlmo = [0.0,0.0,0.0]
         # average results from alpha, beta
@@ -97,21 +97,6 @@ def nbo_parser_unrestricted(s):
             nlmotot = (anlmo[1]+bnlmo[1])/(anlmo[0]+bnlmo[0])
             res.append(nlmotot)
         else:
-            res.append(0.0)
-        # normalize LVs
-        occlv = 0.0
-        lvdper = 0.0
-        for lv in aLV:
-            occlv += float(lv[0])
-            lvdper += 0.01*float(lv[0])*float(lv[1])
-        for lv in bLV:
-            occlv += float(lv[0])
-            lvdper += 0.01*float(lv[0])*float(lv[1])
-        if (occlv > 0.0):
-            res.append(occlv/(len(aLV)+len(bLV)))
-            res.append(lvdper/occlv)
-        else:
-            res.append(0.0)
             res.append(0.0)
     else:
         res += [0.0,0.0,0.0,0.0,0.0]
@@ -171,8 +156,12 @@ def spinnbo(s,metal):
     sNBO = []
     sLV = []
     # get molecular orbitals containing metal
-    ss = s.split('NATURAL BOND ORBITAL ANALYSIS')
-    slines = ss[1].split('NHO DIRECTIONALITY AND BOND BENDING')[0].splitlines()
+    ss = s.split('NATURAL BOND ORBITAL')[1]
+    ss2 = ss.split('DIRECTIONALITY')
+    if len(ss2) > 1:
+        slines = ss[1].splitlines()
+    else:
+        slines = ss.splitlines()
     for i,line in enumerate(slines):
         if ((metal in line) and ('BD' in line)):
             # get NBO occupation
@@ -192,14 +181,7 @@ def spinnbo(s,metal):
                 perd = perds[-1].split('%)')[0] # get d orbital character
                 # append result
                 sNBO.append([occup,perhyb,perd])
-        if ((metal in line) and ('LV' in line)):
-            # get LV occupation
-            occup = find_between(line.split(None)[1],'(',')')
-            # get d-orbital character
-            perds = line.rsplit('(',1)
-            perd = perds[-1].split('%)')[0] # get d orbital character
-            sLV.append([occup,perd])
-    return [sNBO,sLV]
+    return [sNBO]
 
 #######################################
 ### get nlmo info for unrestricted ####
@@ -224,7 +206,7 @@ def spinnlmo(s,metal):
 def nbopost(resfiles,folder,gui,flog):
     t=time.strftime('%c')
     headern="Date: " +  t+ "\nHere are the current results for runs in folder '"+folder+"'\n"
-    headern += "\nFolder                                           Metal  MCharge  AvhybNBO  AvDorbNBO   AvNLMO   AvLV    AvDorbLV   Doccup    Dband-center\n"
+    headern += "\nFolder                                           Metal  MCharge  AvhybNBO  AvDorbNBO   AvNLMO   Doccup    Dband-center\n"
     headern += "----------------------------------------------------------------------------------------------------------------------------------------\n"
     textnbo = []
     for numi,resf in enumerate(resfiles):
@@ -247,12 +229,12 @@ def nbopost(resfiles,folder,gui,flog):
             if 'Beta  spin orbitals' in s:
                 nbores,doccup,dband = nbo_parser_unrestricted(snbo)
                 tt = resfold.ljust(50)+ nbores[0].ljust(6)+"{:6.4f}".format(float(nbores[1])).ljust(10)+"{:6.4f}".format(nbores[2]).ljust(10)
-                tt += "{:6.4f}".format(nbores[3]).ljust(10)+"{:6.5f}".format(nbores[4]).ljust(9)+"{:6.5f}".format(nbores[5]).ljust(9)+"{:6.5f}".format(nbores[6]).ljust(12)
-                tt += "{:4.2f}".format(float(doccup)).ljust(10)+"{:4.2f}".format(dband).ljust(10)+'\n'
+                tt += "{:6.4f}".format(nbores[3]).ljust(10)+"{:6.5f}".format(nbores[4]).ljust(12)
+                tt += "{:4.2f}".format(float(doccup)).ljust(12)+"{:4.2f}".format(dband).ljust(10)+'\n'
             else: 
                 nbores = nbo_parser_restricted(snbo)
                 tt = resfold.ljust(50)+ nbores[0].ljust(6)+"{:6.4f}".format(float(nbores[1])).ljust(10)+"{:6.4f}".format(nbores[2]).ljust(10)
-                tt += "{:6.4f}".format(nbores[3]).ljust(10)+"{:6.5f}".format(nbores[4]).ljust(9)+'\n'
+                tt += "{:6.4f}".format(nbores[3]).ljust(10)+'\n'
             textnbo.append(tt)
     textnbo=sorted(textnbo)
     f=open(folder+'/nbo.txt','w')
