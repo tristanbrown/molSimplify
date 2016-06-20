@@ -280,7 +280,7 @@ def lig_load(installdir,userligand,licores):
             lig.OBmol = lig.getOBmol(flig,'smif')
             # generate coordinates if not existing
             lig.OBmol.make3D('mmff94',0) # add hydrogens and coordinates
-        if 'cm' in dbentry[2].lower():
+        if 'cm' in dbentry[2] or 'CM' in dbentry[2]:
             lig.cat = [len(lig.OBmol.atoms)]
         else:
             lig.cat = [int(l) for l in dbentry[2]]
