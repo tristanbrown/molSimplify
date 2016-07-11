@@ -3,6 +3,8 @@
 import os, sys
 import glob, re, math, random, string, numpy, pybel
 from math import pi
+from scipy.spatial import Delaunay, ConvexHull
+#import networkx as nx
 from geometry import *
 from Classes.atom3D import *
 from Classes.mol3D import*
@@ -26,6 +28,11 @@ def cell_ffopt(ff,mol,frozenats):
         print 'Requested force field not available. Defaulting to MMFF94'
         ff = 'mmff94'
     ### convert mol3D to OBmol via xyz file, because AFTER/END option have coordinates
+    backup_mol = mol3D()
+    backup_mol.copymol3D(mol)
+ #   print('bck ' + str(backup_mol.getAtom(0).coords()))
+ #   print('mol_ibf ' + str(mol.getAtom(0).coords()))
+
     mol.writexyz('tmp.xyz')
     mol.OBmol = mol.getOBmol('tmp.xyz','xyzf')
     os.remove('tmp.xyz')
@@ -39,25 +46,29 @@ def cell_ffopt(ff,mol,frozenats):
         if atom.atomicnum in metals:
             indmtls.append(iiat)
             mtlsnums.append(atom.atomicnum)
-            atom.OBAtom.SetAtomicNum(6)
+            atom.OBAtom.SetAtomicNum(19)
     for cat in frozenats:
         constr.AddAtomConstraint(cat+1) # indexing babel
-        ### set up forcefield
-        forcefield =pybel.ob.OBForceField.FindForceField(ff)
-        obmol = mol.OBmol.OBMol
-        forcefield.Setup(obmol,constr)
-        ### force field optimize structure
-    if obmol.NumAtoms() > 15:
-        forcefield.ConjugateGradients(2500)
-    else:
-        forcefield.ConjugateGradients(1000)
-        forcefield.GetCoordinates(obmol)
-        mol.OBmol = pybel.Molecule(obmol)
-        # reset atomic number to metal
+    ### set up forcefield
+    forcefield =pybel.ob.OBForceField.FindForceField(ff)
+    obmol = mol.OBmol.OBMol
+    forcefield.Setup(obmol,constr)
+    ## force field optimize structure
+    forcefield.ConjugateGradients(2500)
+    forcefield.GetCoordinates(obmol)
+    mol.OBmol = pybel.Molecule(obmol)
+
+    # reset atomic number to metal
     for i,iiat in enumerate(indmtls):
         mol.OBmol.atoms[iiat].OBAtom.SetAtomicNum(mtlsnums[i])
-        mol.convert2mol3D()
+    mol.convert2mol3D()
+
     en = forcefield.Energy()
+ #   print(str(mol.OBmol.atoms[1].OBAtom.GetVector().GetZ()))
+#    print(str(forcefield.Validate()))
+   # print('mol_af ' + str(mol.getAtom(0).coords()))
+
+  #  print('ff delta = ' + str(backup_mol.rmsd(mol)))
     del forcefield, constr, obmol
     return mol,en
 ################################
@@ -145,6 +156,36 @@ def shave_surface_layer(super_cell):
     shaved_cell.deleteatoms(del_list)
     return shaved_cell
 ###############################
+def shave_under_layer(super_cell):
+    shaved_cell = mol3D()
+    shaved_cell.copymol3D(super_cell)
+    TOL = 1e-1
+    zmin = 1000;
+    for i,atoms in enumerate(super_cell.getAtoms()):
+        coords = atoms.coords()
+        if (coords[2] < zmin):
+                zmin = coords[2]
+    del_list = list()
+    for i,atoms in enumerate(super_cell.getAtoms()):
+        coords = atoms.coords()
+        if abs(coords[2] - zmin) < TOL:
+            del_list.append(i)
+    shaved_cell.deleteatoms(del_list)
+    return shaved_cell
+###############################
+def zero_z(super_cell):
+        zeroed_cell = mol3D()
+        zeroed_cell.copymol3D(super_cell)
+        TOL = 1e-1
+        zmin = 1000;
+        for i,atoms in enumerate(super_cell.getAtoms()):
+                coords = atoms.coords()
+                if (coords[2] < zmin):
+                        zmin = coords[2]
+        zeroed_cell.translate([0,0,-1*zmin])
+        return zeroed_cell
+
+###############################
 def point_in_box(point,box):
     outcome = False
     fx=(box[0][0] <= point[0])*(point[0] < box[0][1])
@@ -163,55 +204,36 @@ def points_below_plane(point,w):
 #################################
 def cut_cell_to_index(unit_cell,cell_vector,miller_index):
     ## determine the plane:
-
-    extents = find_extents_cv(cell_vector)
-    zint = miller_index[2]*extents[2]
-    yint = miller_index[1]*extents[1]
-    xint = miller_index[0]*extents[0]
-    print(extents)
-    w = [0,0,0]
-    w[2] = zint
-    w[1] = -w[2]/yint
-    w[0] = -w[2]/xint
-    print('w = ' + str(w))
-    print(miller_index)
-    cut_cell = mol3D()
-    cut_cell.copymol3D(unit_cell)
-    extents = find_extents_cv(cell_vector)
-    ultra_cell = unit_to_super(unit_cell,cell_vector,[3,3,3])
-    big_cell_vector = [[3*i for i in cell_vector[j]] for j in [0,1,2]]
-    big_extents = find_extents_cv(big_cell_vector)
-    trans_vec  = [-big_extents[i] +  extents[i] for i in [0,1,2]]
-    ultra_cell.translate(trans_vec)
-    below_cell = mol3D()
-    for atoms in ultra_cell.getAtoms():
-        if points_below_plane(atoms.coords(),w):
-            below_cell.addAtom(atoms)
-
-    plane_normal = normalize_vector(numpy.cross(vecdiff([xint,0,0],[0,0,zint]),vecdiff([0,yint,0],[0,0,zint])))
-    angle = vecangle(plane_normal,[0,0,1])
-    u =  numpy.cross(plane_normal,[0,0,1])
-    print('plane normal is  = ' + str(plane_normal))
-    print('plane angle is  = ' +str(angle))
-    print('plane normal is = ' + str(u))
-    rot_cell = mol3D()
-    rot_cell.copymol3D(below_cell)
-    rot_cell = rotate_around_axis(rot_cell,[0,0,0],u,-1*angle)
-    ncv = list()
-    denom = numpy.power(miller_index[0]/extents[0],2) + numpy.power(miller_index[1]/extents[1],2) + numpy.power(miller_index[2]/extents[2],2)
-    d =sqrt(float(1)/denom)
-    ncv = [[d,0,0],[0,d,0],[0,0,d]]
-
-    trans_vec  = [big_extents[i] -  extents[i] for i in [0,1]]
-
-    trans_vec.append(0)
-    rot_cell.translate(trans_vec)
-    box_cell = mol3D()
-    for atoms in rot_cell.getAtoms():
-        coords = atoms.coords()
-        if point_in_box(coords,[[0,i] for i in big_extents]):
-            box_cell.addAtom(atoms)
-    return ultra_cell,below_cell,rot_cell,box_cell,ncv
+        cut_cell = mol3D()
+        cut_cell.copymol3D(unit_cell)
+        h,k,l = miller_index
+  #      print(str(h) + ' ' + str(k) +  ' ' +  str(l))
+        disc,p,q = xgcd(k,l)
+ #       print(str(p) + ' ' + str(q))
+        cell_vector = numpy.array(cell_vector)
+        k1= numpy.dot(p*(k*cell_vector[0]-h*cell_vector[1]) + q*(l*cell_vector[0] - h*cell_vector[2]),l*cell_vector[1] - k*cell_vector[2])
+        k2= numpy.dot(l*(k*cell_vector[0]-h*cell_vector[1]) -k*(l*cell_vector[0] - h*cell_vector[2]),l*cell_vector[1] - k*cell_vector[2])
+        tol = 1e-3
+        if abs(k2)> tol:
+            c = -1*int(round(k1/k2))
+            p,q = p+c*l,q - c*k
+        v1 = p*numpy.array(k*cell_vector[0]-h*cell_vector[1]) + q*numpy.array(l*cell_vector[0] + h*cell_vector[2])
+        v2 = numpy.array(l*cell_vector[1]-k*cell_vector[2])
+        disc,a,b = xgcd(p*k + q*l,h)
+        v3 = numpy.array(b*cell_vector[0] + a*p*cell_vector[1]  + a*q*cell_vector[2])
+        zint = miller_index[2]*cell_vector[2][2]
+        yint = miller_index[1]*cell_vector[1][1]
+        xint = miller_index[0]*cell_vector[0][0]
+        w = [0,0,0]
+        w[2] = zint
+        w[1] = -w[2]/yint
+        w[0] = -w[2]/xint
+#        print('w = ' + str(w))
+#        print(miller_index)
+        plane_normal = normalize_vector(numpy.cross(vecdiff([xint,0,0],[0,0,zint]),vecdiff([0,yint,0],[0,0,zint])))
+        angle = vecangle(plane_normal,[0,0,1])
+        u =  numpy.cross(plane_normal,[0,0,1])
+        return v1,v2,v3,angle,u
 ##################################
 def center_of_sym(list_of_points):
     n = len(list_of_points)
@@ -220,16 +242,28 @@ def center_of_sym(list_of_points):
     csym = [float(sum(x)/n) for x in zip(*list_of_points)]
     return csym
 ##################################
+def xgcd(b, n):
+    # calculate x,y such that b*x + n*y = gcd(b,n)
+    # by extended Euclidean algorithm 
+    x0, x1, y0, y1 = 1, 0, 0, 1
+    while n != 0:
+        q, b, n = b // n, n, b % n
+        x0, x1 = x1, x0 - q * x1
+        y0, y1 = y1, y0 - q * y1
+    return  b, x0, y0
+#
+##################################
+
 def distance_zw(r1,r2):
-    dx = r1[0] - r2[0] 
-    dy = r1[1] - r2[1] 
+    dx = r1[0] - r2[0]
+    dy = r1[1] - r2[1]
     dz =150*( r1[2] - r2[2])
     d = sqrt(dx**2+dy**2+dz**2)
     return d
 ##################################
 def mdistance(r1,r2):
-    dx = r1[0] - r2[0] 
-    dy = r1[1] - r2[1] 
+    dx = r1[0] - r2[0]
+    dy = r1[1] - r2[1]
     dz = r1[2] - r2[2]
     d = sqrt(numpy.power(dx,2) + numpy.power(dy,2) + numpy.power(dz,2))
     return d
@@ -237,20 +271,82 @@ def mdistance(r1,r2):
 ###################################
 def normalize_vector(v):
     length = distance(v,[0,0,0])
-    nv = [float(i)/length for i in v]
+    if length:
+        nv = [float(i)/length for i in v]
+    else:
+        nv = [0,0,0]
     return nv
 ###################################
-
-def distance_euclid_torus(R1,R2,dim):
+def distance_2d_torus(R1,R2,dim):
     ### distance between points in Euclidean torus 
     dx =abs( R1[0] - R2[0])
     dy = abs(R1[1] - R2[1] )
     dz =abs(( R1[2] - R2[2]))
-
-    d = sqrt(  numpy.power(min(dx,abs(dim[0] - dx)),2)
-             + numpy.power(min(dy,abs(dim[1] - dy)),2)
-             + numpy.power(min(dz,abs(dim[2]*0 - dz)),2))
+    d1 = sqrt(  numpy.power(dim[0] - dx,2)
+              + numpy.power(dim[1] - dy,2)
+              + numpy.power(dz,2))
+    d2 = sqrt(  numpy.power(dim[0] - dx,2)
+                     + numpy.power(dy,2)
+                     + numpy.power(dz,2))
+    d3 = sqrt(  numpy.power(dx,2)
+              + numpy.power(dim[1] - dy,2)
+              + numpy.power(dz,2))
+    d = min(d1,d2,d3)
     return d
+################################################################
+def periodic_2d_distance(R1,R2,cell_vector):
+    ### distance between points in Euclidean torus 
+    ## STILL UNDER CONSTRUCTION, WIP WIP WIP ***
+    dx =abs( R1[0] - R2[0])
+    dy = abs(R1[1] - R2[1] )
+    dz =abs(( R1[2] - R2[2]))
+    for v1shifts in [-1,0,1]:
+        for v1shifts in [-1,0,1]:
+            for yshifts in [-1,0,0]:
+                pass
+    d1 = sqrt(  numpy.power(dim[0] - dx,2)
+              + numpy.power(dim[1] - dy,2)
+              + numpy.power(dz,2))
+    d2 = sqrt(  numpy.power(dim[0] - dx,2)
+                     + numpy.power(dy,2)
+                     + numpy.power(dz,2))
+    d3 = sqrt(  numpy.power(dx,2)
+              + numpy.power(dim[1] - dy,2)
+              + numpy.power(dz,2))
+    d = min(d1,d2,d3)
+    return d
+################################################################
+def periodic_mindist(mol,surf,dim):
+    ### calculates minimum distance between atoms in 2 molecules ###
+    # INPUT
+    #   - mol: mol3D class,  molecule
+    #   - surf: mol3D class, the surface
+    #   - dim: list of float, replication 
+    # OUTPUT
+    #   - mind: minimum distance between atoms of the 2 mol objects
+    mind = 1000
+    for atom1 in mol.getAtoms():
+        for atom0 in surf.getAtoms():
+            if (distance_2d_torus(atom1.coords(),atom0.coords(),dim) < mind):
+                mind = distance(atom1.coords(),atom0.coords())
+    return mind
+################################################################
+def periodic_selfdist(mol,dim):
+    ### calculates minimum distance between atoms in 2 molecules ##
+    # INPUT
+    #   - mol: mol3D class,  molecule
+    #   - dim: list of floats, replication 
+    # OUTPUT
+    #   - mind: minimum distance between atoms of the 2 mol and periodic
+    #             images
+    mind = 1000
+    for ii,atom1 in enumerate(mol.getAtoms()):
+        for jj,atom0 in enumerate(mol.getAtoms()):
+            if (distance_2d_torus(atom1.coords(),atom0.coords(),dim) < mind) and (ii !=jj):
+                mind = distance(atom1.coords(),atom0.coords())
+    return mind
+
+
 ##################################
 def closest_torus_point(mol,dim):
     min_dist = 1000
@@ -258,25 +354,23 @@ def closest_torus_point(mol,dim):
         R1 = atom1.coords()
         for atom2 in mol.getAtoms():
             R2 = atom2.coords()
-            dx =abs( R1[0] - R2[0])
-            dy = abs(R1[1] - R2[1] )
-            dz =abs(( R1[2] - R2[2]))
-            d1 = sqrt(  numpy.power(dim[0] - dx,2)
-                     + numpy.power(dim[1] - dy,2)
-                     + numpy.power(dz,2))
-            d2 = sqrt(  numpy.power(dim[0] - dx,2)
-                     + numpy.power(dy,2)
-                     + numpy.power(dz,2))
-            d3 = sqrt(  numpy.power(dx,2)
-                     + numpy.power(dim[1] - dy,2)
-                     + numpy.power(dz,2))
-            d = min(d1,d2,d3)
+            d = distance_2d_torus(R1,R2,dim)
             if (d<min_dist):
                 min_dist = d
-#                print('between ' + atom1.symbol() + ' at ' + str(atom1.coords()))
-#                print(' and ' + atom2.symbol() + ' at ' + str(atom2.coords()))
-
     return min_dist
+##################################
+def concave_hull(points,alpha):
+    ## points should be tuples
+    de = Delaunay(points)
+    for i in de.simplices:
+        tmp = []
+        j = [points[c] for c in i]
+        print(i)
+        print(j)
+    print(de)
+
+points= [[1,1],[1,0],[0,1],[0,0]]
+
 ###################################
 def unit_to_super(unit_cell,cell_vector,duplication_vector):
     # INPUT
@@ -364,19 +458,91 @@ def find_extents_cv(super_cell_vector):
     zmax = 0
     ymax = 0
     for columns in super_cell_vector:
-        xmax = max(xmax,columns[0])
-        ymax = max(ymax,columns[1])
-        zmax = max(zmax,columns[2])
+        xmax = max(xmax,abs(columns[0]))
+        ymax = max(ymax,abs(columns[1]))
+        zmax = max(zmax,abs(columns[2]))
+    xmax = numpy.linalg.norm(super_cell_vector[0])
+    ymax = numpy.linalg.norm(super_cell_vector[1])
+    zmax = numpy.linalg.norm(super_cell_vector[2])
+
     extents = [xmax,ymax,zmax]
     return extents
 #############################
 def multialign_objective_function(payload,surface_coord_list,cand_list,bind_dist):
+    # INPUT
+    #   - payload: mol3D, the structure to add
+    #   - surface_coord_list: list of list of 3 float, coordinates of the 
+    #                        slab target points
+    #   - cand_list: list of int, indices of the attachment points in the 
+    #                payload
+    #   - bind_dist: float, target alignment distance
+    # OUPUT
+    #   - cost: float, sum of squared error, the difference between
+    #           the actual distance and the target
     cost = 0
     for indices in enumerate(cand_list):
        v1=(surface_coord_list[indices[0]])
        v2=payload.getAtom(int(indices[1])).coords()
        cost +=numpy.power((mdistance(v1,v2)) - bind_dist,2)
     return cost
+#############################
+def tracked_merge(payload,super_cell):
+    # INPUT
+    #   - super_cell: mol3D, the slab (and previously added adsorbates)
+    #   - payload: mol3D, the structure to add
+    # OUPUT
+    #   - merged_cell: mol3D, merged combintation of payload and cell
+    #   - payload_index: list of int, indices of payload atoms in cell
+    #   - slab_index: list of int, indices of slab atoms in the cell
+    payload_index = [i for i in xrange(0,payload.natoms)]
+    slab_index = [i + payload.natoms for i in xrange(0,super_cell.natoms)]
+    merged_cell = mol3D()
+    merged_cell.copymol3D(payload)
+    merged_cell.combine(super_cell)
+    return merged_cell,payload_index,slab_index
+#############################
+def force_field_relax_with_slab(super_cell,payload,cand_list,its):
+    # INPUT
+    #   - super_cell: mol3D, the slab (and previously added adsorbates)
+    #   - payload: mol3D, the structure to add
+    #   - can_ind:  list of int, indices of taget attachement points in molecule
+    # OUPUT
+    #   - new_payload: mol3D, payload relaxed by force field with slab fixed
+    new_payload = mol3D()
+    new_payload.copymol3D(payload)
+    cell_copy  = mol3D()
+    surface_sites_list = find_all_surface_atoms(super_cell,tol=1e-2)
+    for sites in surface_sites_list:
+        cell_copy.addAtom(super_cell.getAtom(sites))
+    merged_payload,payload_ind,slab_index = tracked_merge(new_payload,cell_copy)
+    merged_payload.writexyz('modi.xyz')
+    full_fixed_atoms_list = cand_list + slab_index # freeze the slab componentsp
+    distorted_payload = mol3D()
+    distorted_payload.copymol3D(merged_payload)
+    print('in ff, distorded coords' + str(distorted_payload.getAtom(0).coords()));
+    distorted_payload,enl = cell_ffopt('uff',merged_payload,full_fixed_atoms_list)
+    print('after ff, distorded coords' + str(distorted_payload.getAtom(0).coords()));
+    print(full_fixed_atoms_list)
+#    distorted_payload.writexyz(str(its)+'modr.xyz')
+    distorted_payload.deleteatoms(slab_index)
+    return distorted_payload
+#############################
+def surface_center(super_cell):
+    # INPUT
+    #   - super_cell: mol3D, the slab (and previously added adsorbates)
+    #   - payload: mol3D, the structure to add
+    #   - can_ind:  list of int, indices of taget attachement points in molecule
+    # OUPUT
+    #   - new_payload: mol3D, payload relaxed by force field with slab fixed
+    cell_copy  = mol3D()
+    surface_sites_list = find_all_surface_atoms(super_cell,tol=1e-2)
+    for sites in surface_sites_list:
+        cell_copy.addAtom(super_cell.getAtom(sites))
+    centroid = cell_copy.centersym()
+
+    return centroid
+
+
 ##############################
 def choose_nearest_neighbour(target_site,avail_sites_dict,occupied_sites_dict,super_cell,super_cell_vector):
     # INPUT
@@ -404,7 +570,7 @@ def choose_nearest_neighbour(target_site,avail_sites_dict,occupied_sites_dict,su
                 distance_to_nearest_occupied =1000 
                 for neighbours in occupied_sites_list:
                     # get distance to nearest neighbour
-                    distance_to_nearest_occupied = min(distance_euclid_torus(avail_sites_dict[indices],occupied_sites_dict[neighbours],extents),distance_to_nearest_occupied)
+                    distance_to_nearest_occupied = min(distance_2d_torus(avail_sites_dict[indices],occupied_sites_dict[neighbours],extents),distance_to_nearest_occupied)
                     this_score =(1 - weight)*distance_to_target -  weight*distance_to_nearest_occupied
                 if this_score < score:
                     score = this_score
@@ -429,21 +595,27 @@ def choose_best_site(avail_sites_dict,occupied_sites_dict,centroid,super_cell,su
     # OUPUT
     #   - target_site: index of target site, a key for avail_sites_dict
     extents = find_extents_cv(super_cell_vector)
+    centroid= surface_center(super_cell) 
+
     print('extents = ' + str(extents))
+    print('centroid is at '+ str(centroid))
     skipalign = 0
     score = 100000 # weighted assessment, lower is better
     avail_sites_list = avail_sites_dict.keys()
+    random.shuffle(avail_sites_list)
     occupied_sites_list = occupied_sites_dict.keys()
     print('oc sites list  = '+str(occupied_sites_list))
+    print('ac sites list  = '+str(avail_sites_list))
     if (len(avail_sites_list) > 1 ): # more than 1 option, pick closest to center of plane 
         for indices in avail_sites_list:
-                distance_to_center =  distance_euclid_torus(centroid,avail_sites_dict[indices],extents)
+#                distance_to_center =  distance_2d_torus(centroid,avail_sites_dict[indices],extents)
+                distance_to_center =  mdistance(centroid,avail_sites_dict[indices])
+
                 distance_to_nearest_occupied =1000 
                 for neighbours in occupied_sites_list:
                     # get distance to nearest neighbour
                     #print('Neighbour:' + str(occupied_sites_dict[neighbours]) + ' point is at ' + str(avail_sites_dict[indices])  
-                    #      + ' at dist '+ str(distance_euclid_torus(avail_sites_dict[indices],occupied_sites_dict[neighbours],extents)))
-                    distance_to_nearest_occupied = min(distance_euclid_torus(avail_sites_dict[indices],occupied_sites_dict[neighbours],extents),distance_to_nearest_occupied)
+                    distance_to_nearest_occupied = min(distance_2d_torus(avail_sites_dict[indices],occupied_sites_dict[neighbours],extents),distance_to_nearest_occupied)
 #                print('dist to nearest = '   + str(distance_to_nearest_occupied) + ' at ' + str(avail_sites_dict[indices]) )
                 if (method == 'linear'):
                     this_score =(1 - weight)*distance_to_center -  weight*distance_to_nearest_occupied
@@ -452,6 +624,7 @@ def choose_best_site(avail_sites_dict,occupied_sites_dict,centroid,super_cell,su
                 if this_score < score:
                     score = this_score
                     target_site = indices
+                    print('target site is ' + str(indices) + ' at ' +str(super_cell.getAtom(indices).coords()))  
     elif (len(avail_sites_list) == 1):
         target_site = avail_sites_list[0]
     else:
@@ -474,13 +647,8 @@ def align_payload_to_multi_site(payload,surface_coord_list,cand_list,bind_dist):
     new_payload = mol3D()
     new_payload.copymol3D(payload)
     #print(cand_list)
-    #print([new_payload.getAtom(i).coords() for i in cand_list ])
-
     payload_coord = center_of_sym([new_payload.getAtom(i).coords() for i in cand_list ])
     surface_coord = center_of_sym(surface_coord_list)
-
-    #print(payload_coord)
-    #print(surface_coord)
 
     vec1 =  vecdiff(surface_coord,payload.centersym())
     vec2 =  vecdiff(payload_coord,new_payload.centersym())
@@ -520,7 +688,6 @@ def align_payload_to_multi_site(payload,surface_coord_list,cand_list,bind_dist):
         new_u = numpy.cross(plane_vector,vecdiff(surface_coord,payload_coord))
         print('new u is ' + str(new_u))
 
-
     if collinear_flag or coplanar_flag:
         print('starting rotation')
         for rotate_angle in range(-100,100):
@@ -529,7 +696,7 @@ def align_payload_to_multi_site(payload,surface_coord_list,cand_list,bind_dist):
             this_payload = rotate_around_axis(this_payload,this_payload.centersym(),new_u,float(rotate_angle)/10) #fine grained check
             this_cost = multialign_objective_function(this_payload,surface_coord_list,cand_list,bind_dist)
             if (this_cost < (cost)):
-                print('current cost = ' + str(this_cost) + ', the max is ' + str(cost))
+                #print('current cost = ' + str(this_cost) + ', the max is ' + str(cost))
                 print('accepting rotate at theta  = ' + str(rotate_angle))
                 cost = this_cost
                 final_payload = this_payload
@@ -555,6 +722,10 @@ def combine_multi_aligned_payload_with_cell(super_cell,super_cell_vector,payload
     trial_cell = mol3D()
     trial_cell.copymol3D(combined_cell)
 
+    ######## DEBUG ONLY #####
+    backup_payload = mol3D()
+    backup_payload.copymol3D(payload)
+    ##########################
 
     extents = find_extents_cv(super_cell_vector)
     # the generalized distance descriptors
@@ -579,7 +750,8 @@ def combine_multi_aligned_payload_with_cell(super_cell,super_cell_vector,payload
 
     # lower into positon
     # step size:
-    deltaZ = 0.05*distance(payload_coord,surface_coord)
+    factor = 0.20
+    deltaZ =factor*(distance(payload_coord,surface_coord)-bind_dist)
     this_step_accepted = True
     num_bad_steps= 0 
     break_flag = False
@@ -587,28 +759,43 @@ def combine_multi_aligned_payload_with_cell(super_cell,super_cell_vector,payload
     its = 0
     while (not break_flag) and (its < maxits):
         its +=1
-        if (not this_step_accepted) and (num_bad_steps <= 3):
-            deltaZ = 0.25*deltaZ
-        elif (not this_step_accepted) and (num_bad_steps > 3):
+        if (not this_step_accepted) and (num_bad_steps <= 4):
+            factor = 0.1*factor
+        elif (not this_step_accepted) and (num_bad_steps > 4):
             break_flag = True
         payload_coord = center_of_sym([final_payload.getAtom(i).coords() for i in cand_list ])
         # this will be lowered slowly, then rotate to optimize at each height
-        trans_vec = [deltaZ*element for element  in normalize_vector(vec)]
+        trans_vec = [factor*deltaZ*element for element  in normalize_vector(vec)]
         this_payload = mol3D()
         this_payload.copymol3D(final_payload)
- #       print(this_payload.getAtom(0).coords())
         this_payload.translate(trans_vec)
-  #      print(this_payload.getAtom(0).coords())
         this_cost = multialign_objective_function(this_payload,surface_coord_list,cand_list,bind_dist)
-        this_dist = this_payload.mindist(combined_cell)
-#        print('current cost  = ' + str(this_cost) +  ' at i = ' + str(its) + ' with dz =  ' + str(deltaZ) + ' with dist  '+ str(this_dist) + ' num bad steps  = '+ str(num_bad_steps))
-        if (this_cost < (cost)) and (this_dist > 0.75):
- #         print('current cost = ' + str(this_cost) + ', the max is ' + str(cost))
-#            print('accepting down shift at i  = ' + str(its))
-#           print('frac is ' + str(i*this_frac) +  ' of total')
+        this_dist = min(periodic_mindist(this_payload,combined_cell,extents),this_payload.mindist(combined_cell))
+        this_coord = center_of_sym([this_payload.getAtom(i).coords() for i in cand_list ])
+
+        this_deltaZ =(distance(this_coord,surface_coord)-bind_dist)
+
+        print('cost  = ' + str(this_cost) +'/' +str(cost)+ '  i = ' + str(its) + '  dz =  ' + str(deltaZ) + ' dist  '+ str(this_dist) + ' b step  = '+ str(num_bad_steps) + ' nxt dz = ' + str(this_deltaZ))
+        if (this_cost < (cost)) and (this_dist > 0.75) and (deltaZ > 1e-2):
+            print('accepting down shift at i  = ' + str(its))
             cost = this_cost
-            final_payload = this_payload
+            del final_payload
+            final_payload = mol3D()
+            if ( this_payload.mindist(combined_cell) < 1.5):
+                print('ff on at iteration '  + str(its))
+                distorted_payload = mol3D()
+                distorted_payload.copymol3D(this_payload)
+                print('Warning, a force-field relaxation is in progress. For large molecules (Natoms > 50), this may take a few minutes. Please be patient.')
+                distorted_payload = force_field_relax_with_slab(super_cell,this_payload,cand_list,its)
+                print(this_payload.getAtom(0).symbol() + ' at ' + str(this_payload.getAtom(cand_list[0]).coords()) + 'target at ' + str(surface_coord_list[0]))
+                print(distorted_payload.getAtom(0).symbol() + ' at ' + str(distorted_payload.getAtom(cand_list[0]).coords()) + 'target at ' + str(surface_coord_list[0]))
+                final_payload.copymol3D(distorted_payload)
+                print(final_payload.getAtom(0).symbol() + ' at ' + str(final_payload.getAtom(cand_list[0]).coords()) + 'target at ' + str(surface_coord_list[0]))
+            else:
+                final_payload.copymol3D(this_payload)
             this_step_accepted = True
+            factor = min(1.25*factor,0.8)
+            deltaZ = this_deltaZ
             num_bad_steps = 0
         else:
             this_step_accepted = False
@@ -620,9 +807,7 @@ def combine_multi_aligned_payload_with_cell(super_cell,super_cell_vector,payload
         v1=(surface_coord_list[indices[0]])
         v2=final_payload.getAtom(int(indices[1])).coords()
         distances_list.append((distance(v1,v2)))
-    print(' Target distance was  ' + str(bind_dist)+', achievedd ' + str(distances_list))
-
-
+    print(' Target distance was  ' + str(bind_dist)+', achieved ' + str(distances_list))
     min_dist = final_payload.mindist(combined_cell)
    # now, rotate to maximize spacing, based on mask length
     rotate_on = False
@@ -643,7 +828,7 @@ def combine_multi_aligned_payload_with_cell(super_cell,super_cell_vector,payload
              this_payload.copymol3D(final_payload)
              payload_coord = center_of_sym([this_payload.getAtom(i).coords() for i in cand_list ])
              this_payload = rotate_around_axis(this_payload,payload_coord,vec,rotate_angle)
-             this_dist = this_payload.mindist(combined_cell)
+             this_dist = min(periodic_mindist(this_payload,combined_cell,extents),periodic_selfdist(this_payload,extents),this.payload.mindist(combined_cell))
              if (this_dist > (min_dist + 1e-3)):
                  print('current dist = ' + str(this_dist) + ', the max is ' + str(min_dist))
                  print('accepting rotate at theta  = ' + str(rotate_angle))
@@ -673,7 +858,7 @@ def combine_multi_aligned_payload_with_cell(super_cell,super_cell_vector,payload
             distorted_payload,enl = cell_ffopt('mmff94',distorted_payload,cand_list)
             ens.append(enl)
             this_cost = multialign_objective_function(distorted_payload,surface_coord_list,cand_list,bind_dist)
-            this_dist = distorted_payload.mindist(combined_cell)
+            this_dist =min(periodic_mindist(distorted_payload,combined_cell,extents),periodic_selfdist(distorted_payload,extents))
             del distances_list
             distances_list = list()
             for indices in enumerate(cand_list):
@@ -791,7 +976,7 @@ def molecule_placement_supervisor(super_cell,super_cell_vector,target_molecule,m
         trans_vec = vecdiff(align_coord,payload.centersym())
         payload.translate(trans_vec)
         extents = find_extents_cv(super_cell_vector)
-        payload.translate([0,0,extents[2]+payload_rad]) # place far above
+        payload.translate([0,0,extents[2]+1.15*(payload_rad + align_dist)]) # place far above
 
 
         ###############################
@@ -835,8 +1020,6 @@ def molecule_placement_supervisor(super_cell,super_cell_vector,target_molecule,m
             payload = axes_angle_align(payload,cand_ind,align_ind,align_axis,control_angle)
 
         print('payload cysm '+ str(payload.centersym()))
-        min_intercell_d = closest_torus_point(payload,extents)
-        print('minimum inter-cell adsorbate atom distance is ' + str(min_intercell_d))
         #######################################
         temp_pay2 = mol3D()
         temp_pay2.copymol3D(payload)
@@ -862,7 +1045,8 @@ def molecule_placement_supervisor(super_cell,super_cell_vector,target_molecule,m
         effectvie_coverage =  float(number_of_placements)/float(max_sites)
         print('giving effectvie coverage of ' + str(effectvie_coverage) + '\n')
     print('Is there overalp? ' + str(overlap_flag))
-    print('Minimum in cell interatomic distance = ' +str(min_dist))
+    min_intercell_d = closest_torus_point(payload,extents)
+    print('minimum inter-cell adsorbate atom distance is ' + str(min_intercell_d))
 
     return  loaded_cell
 
@@ -966,6 +1150,7 @@ def slab_module_supervisor(args,rootdir):
     import_success = True
     emsg = list()
     multi_placement_centering_overide = False
+    miller_flag  = False
     if (args.slab_gen): #0
         slab_gen = True
     if (args.unit_cell): #1 
@@ -991,6 +1176,7 @@ def slab_module_supervisor(args,rootdir):
         slab_size = args.slab_size
     if (args.miller_index): #6
         miller_index = args.miller_index
+        miller_flag = True
      # ## parse slab options
     if (args.place_on_slab): #0
         place_on_slab = True
@@ -1048,19 +1234,47 @@ def slab_module_supervisor(args,rootdir):
         emsg.append('Slab builder module not enabled, placement mode not enabled - no action taken ')
         print(emsg)
         return emsg
+    if place_on_slab and not target_molecule:
+        emsg.append('Placement requested, but no object given. Skipping')
+        print(emsg)
+    if place_on_slab and not align_dist and (align_distance_method =="custom"):
+        emsg.append('No placement distance given, defaulting to covalent radii')
+        print(emsg)
+    if place_on_slab and align_dist and not align_distance_method:
+        print("using custom align distance of " + str(align_dist))
+        align_distance_method = "custom"
+
+    ## resolve align distance
+    if align_distance_method == "chemisorption":
+        globs = globalvars()
+        if align_method == "alignpair":
+            if surface_atom_type in globs.elementsbynum():
+                surf_rad = globs.amass()[surface_atom_type][2]
+            if object_align in globs.elementsbynum():
+                obj_rad = globs.amass()[object_align][2]
+            else:
+                obj_rad = globs.amass()[globs.elementsbynum()[object_align[0]]]
+        align_dist = obj_rad + surf_rad
+        print('Chemisorption align distance set to  ' + str(align_dist))
+
 
     ## Main calls
-    elif slab_gen:
+    if slab_gen:
+        passivate = True
         if cif_path:
             try:
                 unit_cell,cell_vector = import_from_cif(cif_path)
             except:
                 emsg.append('unable to import cif at ' + str(cif_path))
                 return emsg
+        if miller_flag:
+                v1,v2,v3,angle,u = cut_cell_to_index(unit_cell,cell_vector,miller_index)
+                cell_vector = [v1,v2,v3]  # change basis of cell to reflect cut, will rotate after gen
+                print('cell vector is now ')
+                print(cell_vector)
         if slab_size:
-            max_dims = [max([vector[0] for vector in cell_vector]),
-                        max([vector[1] for vector in cell_vector]),
-                        max([vector[2] for vector in cell_vector])]
+            max_dims = find_extents_cv(cell_vector)
+            print('max dims are' + str(max_dims))
             duplication_vector = [int(numpy.ceil(slab_size[i]/max_dims[i])) for i in [0,1,2]]
         print('\n cell vector is '  + str(cell_vector))
         print('\n')
@@ -1069,22 +1283,46 @@ def slab_module_supervisor(args,rootdir):
         acell = duplication_vector[0]
         bcell = duplication_vector[1]
         ccell = duplication_vector[2]
+        if miller_flag:
+                duplication_vector[2] += 4 #enusre enough layers to get to height
         super_cell = unit_to_super(unit_cell,cell_vector,duplication_vector)
+        if miller_flag:
+                super_cell = rotate_around_axis(super_cell,[0,0,0],u,angle)
+                old_cv =  [PointRotateAxis(u,[0,0,0],list(i),angle) for i in cell_vector]
+                duplication_vector[2] -= 4
         super_cell_vector = [[i*duplication_vector[0] for i in cell_vector[0]],
                          [i*duplication_vector[1] for i in cell_vector[1]],
                          [i*duplication_vector[2] for i in cell_vector[2]]]
+        if miller_flag:
+            old_cell_vector = [[i*duplication_vector[0] for i in old_cv[0]],
+                             [i*duplication_vector[1] for i in old_cv[1]],
+                             [i*duplication_vector[2] for i in old_cv[2]]]
+
         super_cell_dim = find_extents(super_cell)
+        if miller_flag:
+                super_cell= shave_under_layer(super_cell)
+                super_cell= shave_under_layer(super_cell)
+                super_cell = zero_z(super_cell) 
+                if not slab_size:
+                        extents = find_extents_cv(super_cell_vector)
+                        target_size = extents[2]
+                        while super_cell_dim[2] > 1.1*slab_size[2]:
+                                print('slab is too thick, shaving...')
+                                super_cell = shave_surface_layer(super_cell)
+                                super_cell_dim = find_extents(super_cell)
         if slab_size:
             while super_cell_dim[2] > 1.1*slab_size[2]:
                 print('slab is too thick, shaving...')
                 super_cell = shave_surface_layer(super_cell)
                 super_cell_dim = find_extents(super_cell)
-
+        if passivate:
+            pass
         if not os.path.exists(rootdir + 'slab'):
                 os.makedirs(rootdir + 'slab')
         super_cell.writexyz(rootdir + 'slab/super' +''.join( [str(i) for i in duplication_vector])+'.xyz')
         print ('\n Created a ' + str(acell)+'x'+str(bcell)+'x' + str(ccell)+' supercell.\n')
-
+        points = [[1,1],[2,1],[0,1],[0,0],[0.5,0.5],[0,2]]
+        concave_hull(points,0.1)
     elif not slab_gen: #placement only, skip slabbing!
         super_cell = unit_cell
         super_cell_vector = cell_vector
@@ -1099,9 +1337,13 @@ def slab_module_supervisor(args,rootdir):
                                                  align_method,object_align,align_dist,surface_atom_type,
                                                  control_angle = control_angle, align_ind = angle_control_partner, align_axis = angle_surface_axis,
                                                  duplicate = duplicate, number_of_placements = num_placements, coverage = coverage,
-                                                 weighting_method = 'linear' ,weight = multi_placement_centering, masklength = num_surface_atoms)
+                                                 weighting_method = 'linear' ,weight = 0, masklength = num_surface_atoms)
+        super_duper_cell = unit_to_super(loaded_cell,old_cell_vector,[2,2,1])
+       
         if not os.path.exists(rootdir + 'loaded_slab'):
                 os.makedirs(rootdir + 'loaded_slab')
         loaded_cell.writexyz(rootdir + 'loaded_slab/loaded.xyz')
+        super_duper_cell.writexyz(rootdir + 'loaded_slab/SD.xyz')
+
 
 

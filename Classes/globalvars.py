@@ -59,6 +59,7 @@ class globalvars:
         s += 'Developed by: Efthymios Ioannidis (timis@mit.edu)\n\n'
         s += 'Contributions by:\n\tHeather J. Kulik (hjkulik@mit.edu)\n'
         s += '\tTerry Gani (terryg@mit.edu)\n'
+        s += '\n slab builder extension by JP Janet (jpjanet@mit.edu)\n'
         self.about = s
         ###### GET INFORMATION ######
         runfromcmd, Linux, OSX = False, False, False
