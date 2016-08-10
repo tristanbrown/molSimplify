@@ -33,7 +33,7 @@ class mGUI():
         ### check for configuration file ###
         homedir = os.path.expanduser("~")
         globs = globalvars() # global variables
-        overX = True if 'localhost' in os.environ['DISPLAY'].lower() else False # detect running over X
+        #overX = True if 'localhost' in os.environ['DISPLAY'].lower() else False # detect running over X
         configfile = False if not glob.glob(homedir+'/.molSimplify') else True
         if not configfile:
             self.wwindow = mQMainWindow() 
